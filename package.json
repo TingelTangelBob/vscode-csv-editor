@@ -4,6 +4,14 @@
   "description": "View and edit CSV and TSV files as a table in VS Code. Auto-detect delimiters, sort and filter data, edit cells, and add or delete rows and columns.",
   "version": "1.2.1",
   "publisher": "tingeltangelbob",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TingelTangelBob/vscode-csv-editor.git"
+  },
+  "homepage": "https://github.com/TingelTangelBob/vscode-csv-editor#readme",
+  "bugs": {
+    "url": "https://github.com/TingelTangelBob/vscode-csv-editor/issues"
+  },
   "icon": "./media/extension-icon.png",
   "keywords": [
     "csv",
