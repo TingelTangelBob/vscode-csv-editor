@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP_SOURCE}} data:; style-src {{CSP_SOURCE}}; script-src {{CSP_SOURCE}} 'nonce-{{NONCE}}';">
+  <title>CSV-Tabelle</title>
+  <link rel="stylesheet" href="{{STYLESHEET_URI}}">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="toolbar" aria-label="Tabellenwerkzeuge">
+      <span class="table-status" id="table-status" aria-live="polite"></span>
+      <span class="toolbar-spacer"></span>
+      <div class="toolbar-actions">
+      <div class="tool-group">
+        <button class="tool-button" id="add-row" type="button" title="Zeile hinzufügen" aria-label="Zeile hinzufügen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16M12 8v8m-4-4h8"></path></svg>
+        </button>
+        <button class="tool-button" id="add-column" type="button" title="Spalte hinzufügen" aria-label="Spalte hinzufügen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16M9 12h6m-3-3v6"></path></svg>
+        </button>
+        <button class="tool-button danger-tool" id="delete-selected" type="button" title="Ausgewählte Zeilen löschen" aria-label="Ausgewählte Zeilen löschen" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m3 4v5m6-5v5"></path></svg>
+          <span class="selection-count" id="selection-count" hidden>0</span>
+        </button>
+      </div>
+      <button class="tool-button" id="tools-menu-button" type="button" title="Weitere Werkzeuge" aria-label="Weitere Werkzeuge" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
+      </button>
+      </div>
+    </header>
+
+    <section class="table-scroll" id="table-scroll" aria-label="CSV-Tabelle">
+      <table id="csv-table">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </section>
+
+    <div class="popover tools-popover" id="tools-popover" hidden>
+      <div class="popover-section">
+        <label class="menu-label" for="delimiter-select">Trennzeichen</label>
+        <select id="delimiter-select" aria-label="CSV-Trennzeichen">
+          <option value=",">Komma ,</option>
+          <option value=";">Semikolon ;</option>
+          <option value="tab">Tabulator</option>
+          <option value="|">Senkrechter Strich |</option>
+        </select>
+      </div>
+      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span>Filter zurücksetzen</span></button>
+      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0-14L5 8m3-3 3 3m8 11V5m0 14 3-3m-3 3-3-3"></path></svg></span><span>Sortierung zurücksetzen</span></button>
+      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h8M5 19h8"></path></svg></span><span>Textansicht öffnen</span></button>
+    </div>
+
+    <div class="popover filter-popover" id="filter-popover" hidden>
+      <label class="menu-label" id="filter-label" for="column-filter-input">Spalte filtern</label>
+      <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Enthält …">
+      <button class="menu-action clear-column-filter" type="button" data-action="clear-column-filter">Filter entfernen</button>
+    </div>
+
+    <div class="popover context-popover" id="context-popover" hidden role="menu">
+      <div class="popover-caption" id="context-caption">Spalte</div>
+      <button class="menu-action context-cell-action" type="button" data-action="copy-cell"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg></span><span>Zelle kopieren</span></button>
+      <button class="menu-action context-cell-action" type="button" data-action="copy-row"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M4 10h16m-11-5v14m6-14v14"></path></svg></span><span>Zeile kopieren</span></button>
+      <span class="menu-separator context-cell-action" aria-hidden="true"></span>
+      <button class="menu-action" type="button" data-action="filter-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span>Spaltenfilter öffnen</span></button>
+      <button class="menu-action context-cell-action" type="button" data-action="filter-value"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path><path d="M8 5v2"></path></svg></span><span>Nach diesem Text filtern</span></button>
+      <button class="menu-action " type="button" data-action="sort-ascending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19V5m0 0L5 8m3-3 3 3M15 7h5m-5 5h3m-3 5h1"></path></svg></span><span>Aufsteigend sortieren</span></button>
+      <button class="menu-action " type="button" data-action="sort-descending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0 0-3-3m3 3 3-3m4-9h5m-5 5h3m-3 5h1"></path></svg></span><span>Absteigend sortieren</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <button class="menu-action" type="button" data-action="rename-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L19 8.5 15.5 5 4 16.5Z"></path><path d="m13.8 6.7 3.5 3.5"></path></svg></span><span>Überschrift bearbeiten</span></button>
+      <button class="menu-action danger-action" type="button" data-action="delete-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7"></path></svg></span><span>Spalte löschen</span></button>
+    </div>
+
+    <dialog class="app-dialog" id="column-dialog" aria-labelledby="column-dialog-title">
+      <form id="column-form" method="dialog">
+        <h2 id="column-dialog-title">Spalte hinzufügen</h2>
+        <label class="dialog-field" for="column-name">Überschrift<input id="column-name" type="text" maxlength="120" placeholder="z. B. Artikelnummer" required></label>
+        <div class="dialog-actions"><button class="dialog-button" type="button" data-column-cancel>Abbrechen</button><button class="dialog-button primary-dialog-button" type="submit" value="save">Übernehmen</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="app-dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <h2 id="confirm-title">Löschen bestätigen</h2>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions"><button class="dialog-button" type="submit" value="cancel">Abbrechen</button><button class="dialog-button danger-dialog-button" id="confirm-action" type="submit" value="confirm">Löschen</button></div>
+      </form>
+    </dialog>
+  </main>
+  <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}"></script>
+</body>
+</html>

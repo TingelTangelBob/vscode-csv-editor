@@ -1,0 +1,95 @@
+{
+  "name": "csv-grid-editor",
+  "displayName": "CSV Simple Editor",
+  "description": "View and edit CSV and TSV files as a table in VS Code. Auto-detect delimiters, sort and filter data, edit cells, and add or delete rows and columns.",
+  "version": "1.2.0",
+  "publisher": "tingeltangelbob",
+  "icon": "./media/extension-icon.png",
+  "keywords": [
+    "csv",
+    "csv editor",
+    "csv viewer",
+    "csv file editor",
+    "csv table editor",
+    "csv table",
+    "tsv",
+    "tsv editor",
+    "table editor",
+    "spreadsheet editor",
+    "data editor",
+    "data viewer",
+    "csv preview",
+    "edit csv",
+    "filter csv",
+    "sort csv",
+    "delimiter detection",
+    "tabular data",
+    "comma separated values",
+    "semicolon separated values",
+    "delimited text",
+    "csv bearbeiten",
+    "csv anzeigen",
+    "tabelleneditor",
+    "trennzeichen"
+  ],
+  "scripts": {
+    "package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./package-vsix.ps1"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Data Science",
+    "Visualization"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:tingeltangelbob.csv-grid-editor.open",
+    "onCommand:tingeltangelbob.csv-grid-editor.openAsText",
+    "onCustomEditor:tingeltangelbob.csv-grid-editor.csvGrid"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "tingeltangelbob.csv-grid-editor.open",
+        "title": "CSV-Vorschau öffnen",
+        "icon": {
+          "light": "./media/csv-table-light.svg",
+          "dark": "./media/csv-table-dark.svg"
+        }
+      },
+      {
+        "command": "tingeltangelbob.csv-grid-editor.openAsText",
+        "title": "CSV als Text öffnen",
+        "icon": "$(file-code)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "tingeltangelbob.csv-grid-editor.csvGrid",
+        "displayName": "CSV Simple Editor",
+        "selector": [
+          { "filenamePattern": "*.csv" },
+          { "filenamePattern": "*.CSV" },
+          { "filenamePattern": "*.tsv" },
+          { "filenamePattern": "*.TSV" }
+        ],
+        "priority": "default"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "tingeltangelbob.csv-grid-editor.open",
+          "when": "(resourceExtname == .csv || resourceExtname == .CSV || resourceExtname == .tsv || resourceExtname == .TSV) && activeCustomEditorId != tingeltangelbob.csv-grid-editor.csvGrid",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tingeltangelbob.csv-grid-editor.openAsText",
+          "when": "activeCustomEditorId == tingeltangelbob.csv-grid-editor.csvGrid",
+          "group": "navigation@1"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+name: Release VSIX
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v4
+
+      - name: Package extension
+        shell: pwsh
+        run: ./package-vsix.ps1
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $package = Get-Content -Raw package.json | ConvertFrom-Json
+          $expectedTag = "v$($package.version)"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) { throw "Tag $env:GITHUB_REF_NAME does not match package version $($package.version)." }
+          $vsixFile = "$($package.name)-$($package.version).vsix"
+          if (-not (Test-Path -LiteralPath $vsixFile)) { throw "Missing package file: $vsixFile" }
+          gh release create $env:GITHUB_REF_NAME $vsixFile --generate-notes

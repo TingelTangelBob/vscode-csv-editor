@@ -1,0 +1,112 @@
+:root {
+  color-scheme: light dark;
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  font-synthesis: none;
+  --accent: var(--vscode-button-background, #d86613);
+  --foreground: var(--vscode-editor-foreground, #242424);
+  --muted: var(--vscode-descriptionForeground, #858585);
+  --focus: var(--vscode-focusBorder, #e87925);
+  --danger: var(--vscode-errorForeground, #c13b36);
+  --hover: var(--vscode-list-hoverBackground, #f2f2f2);
+  --selection: var(--vscode-list-activeSelectionBackground, #d8661318);
+  --background: var(--vscode-editor-background, #fff);
+  --widget: var(--vscode-editorWidget-background, var(--background));
+  color: var(--foreground);
+  background: var(--background);
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; min-width: 0; margin: 0; overflow: hidden; }
+body { color: var(--foreground); background: var(--background); }
+button, input, select, textarea { font: inherit; }
+button { color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: .38; }
+svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+[hidden] { display: none !important; }
+
+.app-shell { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
+.toolbar { display: flex; flex: none; align-items: center; gap: 3px; width: min(100%, 980px); height: 36px; margin: 0 auto; padding: 0 8px; }
+.toolbar-actions { display: flex; align-items: center; gap: 3px; }
+.tool-group { display: flex; align-items: center; gap: 2px; }
+.tool-button { position: relative; display: inline-grid; flex: none; place-items: center; width: 27px; height: 27px; padding: 0; border: 0; border-radius: 4px; outline: 0; background: transparent; color: var(--muted); }
+.tool-button:hover:not(:disabled), .tool-button[aria-expanded="true"] { background: var(--hover); color: var(--foreground); }
+.tool-button:focus-visible, .header-button:focus-visible, .sort-button:focus-visible, .menu-action:focus-visible { outline: 1px solid var(--focus); outline-offset: -1px; }
+.tool-button svg { width: 15px; height: 15px; }
+.danger-tool:hover:not(:disabled) { color: var(--danger); }
+.selection-count { position: absolute; top: -2px; right: -3px; display: grid; min-width: 14px; height: 14px; place-items: center; padding: 0 3px; border-radius: 7px; color: var(--vscode-button-foreground, #fff); background: var(--accent); font-size: 9px; line-height: 14px; font-variant-numeric: tabular-nums; }
+.toolbar-divider { display: none; }
+.toolbar-spacer { flex: 1 1 auto; }
+.table-status { overflow: hidden; max-width: 52vw; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+.table-scroll { position: relative; flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0; margin: 0; padding: 0; overflow: auto; overscroll-behavior: contain; }
+table { width: max-content; min-width: max-content; margin: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed; text-align: left; }
+thead { position: sticky; top: 0; z-index: 3; }
+thead th { height: 35px; padding: 0 5px; color: var(--muted); background: var(--background); font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+thead th:first-child { position: sticky; left: 0; z-index: 4; }
+.row-number-head, .row-number-cell { width: 43px; min-width: 43px; max-width: 43px; }
+.row-number-head { padding: 0 12px !important; }
+.row-number-head input, .row-number-cell input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
+.row-number-head input { opacity: .7; }
+.heading-content { display: flex; align-items: center; gap: 1px; min-width: 0; height: 100%; }
+.sort-button { display: flex; align-items: center; gap: 4px; min-width: 0; height: 28px; overflow: hidden; padding: 0 3px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+.sort-button:hover, .sort-button.is-sorted { color: var(--foreground); }
+.sort-button > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.sort-indicator { display: inline-grid; flex: none; place-items: center; width: 12px; min-width: 12px; height: 18px; color: var(--muted); font-size: 10px; }
+.sort-button.is-sorted .sort-indicator { color: var(--accent); }
+.header-button { display: inline-grid; flex: none; place-items: center; width: 21px; height: 22px; padding: 0; border: 0; border-radius: 3px; outline: 0; background: transparent; color: var(--muted); }
+.header-button:hover, .header-button.is-active { color: var(--accent); background: var(--hover); }
+.header-button svg { width: 13px; height: 13px; }
+thead th[data-column] { width: var(--column-width, 12ch); min-width: 7ch; max-width: 48ch; }
+tbody .data-cell { width: var(--column-width, 12ch); min-width: 7ch; max-width: 48ch; overflow: hidden; padding: 0 9px; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
+.row-number-cell { position: sticky; left: 0; z-index: 1; height: 27px; padding: 0 8px; color: var(--muted); background: var(--background); font-size: 10px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.row-number-cell input { position: absolute; left: 7px; opacity: 0; }
+tbody tr:hover .row-number-cell input, .row-number-cell input:checked, .row-number-cell input:focus-visible { opacity: 1; }
+tbody td { height: 27px; padding: 0 9px; color: var(--foreground); background: var(--background); font-size: 12px; line-height: 1.25; vertical-align: middle; }
+tbody tr:hover td { background: var(--hover); }
+tbody tr.is-selected td { background: color-mix(in srgb, var(--accent) 9%, var(--background)); }
+tbody tr:hover .row-number-cell, tbody tr.is-selected .row-number-cell { background: var(--hover); }
+tbody .data-cell:focus { outline: 1px solid var(--focus); outline-offset: -1px; }
+.cell-editor { display: block; width: calc(100% + 18px); min-height: 27px; max-height: 150px; margin: 0 -9px; padding: 3px 8px; resize: vertical; border: 1px solid var(--focus); border-radius: 0; outline: 0; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 12px; line-height: 1.35; white-space: pre-wrap; }
+.empty-cell { color: transparent; }
+.empty-state { padding: 24px 12px; color: var(--muted); font-size: 12px; text-align: center; }
+
+.popover { position: fixed; z-index: 10; width: 210px; max-height: calc(100vh - 16px); overflow: auto; padding: 6px; border: 0; border-radius: 5px; color: var(--foreground); background: var(--widget); box-shadow: 0 4px 16px #0003, 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent); }
+.tools-popover { width: 205px; }
+.filter-popover { width: 220px; padding: 9px; }
+.context-popover { width: 220px; }
+.popover-section { display: grid; gap: 4px; padding: 4px 5px 7px; }
+.menu-label, .popover-caption { display: block; padding: 3px 6px; color: var(--muted); font-size: 10px; }
+.popover select, .filter-popover input { width: 100%; height: 28px; padding: 0 7px; border: 0; border-radius: 3px; outline: 0; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 11px; }
+.popover select:focus, .filter-popover input:focus { box-shadow: 0 0 0 1px var(--focus); }
+.menu-action { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 29px; padding: 0 8px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: var(--foreground); font-size: 11px; text-align: left; }
+.action-icon { display: grid; flex: none; width: 15px; height: 15px; place-items: center; color: var(--muted); }
+.action-icon svg { width: 14px; height: 14px; }
+.menu-action:hover { background: var(--hover); }
+.danger-action { color: var(--danger); }
+.danger-action .action-icon { color: var(--danger); }
+.menu-separator { display: block; height: 1px; margin: 4px 6px; background: color-mix(in srgb, var(--foreground) 12%, transparent); }
+.context-cell-action[hidden] { display: none; }
+.clear-column-filter { margin-top: 5px; color: var(--muted); }
+
+.app-dialog { width: min(360px, calc(100vw - 24px)); padding: 0; border: 0; border-radius: 7px; color: var(--foreground); background: var(--widget); box-shadow: 0 10px 30px #0004; }
+.app-dialog::backdrop { background: #0005; }
+.app-dialog form { padding: 18px; }
+.app-dialog h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; }
+.app-dialog p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.dialog-field { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
+.dialog-field input { width: 100%; height: 30px; padding: 0 8px; border: 0; border-radius: 3px; outline: 0; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 12px; }
+.dialog-field input:focus { box-shadow: 0 0 0 1px var(--focus); }
+.dialog-actions { display: flex; justify-content: end; gap: 6px; margin-top: 17px; }
+.dialog-button { min-height: 27px; padding: 0 9px; border: 0; border-radius: 3px; background: var(--hover); color: var(--foreground); font-size: 11px; }
+.dialog-button:hover { filter: brightness(.96); }
+.primary-dialog-button { background: var(--vscode-button-background, var(--accent)); color: var(--vscode-button-foreground, #fff); }
+.danger-dialog-button { background: var(--danger); color: #fff; }
+
+@media (max-width: 520px) {
+  .toolbar { padding: 0 5px; }
+  .table-status { max-width: 40vw; font-size: 10px; }
+  .row-number-head, .row-number-cell { width: 35px; min-width: 35px; max-width: 35px; }
+  .row-number-cell { padding-right: 5px; }
+  .row-number-cell input { left: 4px; }
+}
