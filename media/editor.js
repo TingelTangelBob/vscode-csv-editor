@@ -39,6 +39,7 @@ let visibleRows = [];
 let activeColumn = -1;
 let activePopover = null;
 let contextTarget = null;
+let filterRenderTimer = null;
 
 function createEmptySheet() {
   return {
@@ -204,11 +205,19 @@ function sendEdit() {
 }
 
 function getVisibleRows() {
-  const rows = sheet.rows.map((row, index) => ({ row, index }));
-  const filtered = rows.filter(({ row }) => columnFilters.every((filter, index) => {
+  const activeFilters = [];
+  columnFilters.forEach((filter, column) => {
     const query = String(filter || '').trim().toLocaleLowerCase();
-    return !query || String(row.cells[index] ?? '').toLocaleLowerCase().includes(query);
-  }));
+    if (query) activeFilters.push({ column, query });
+  });
+
+  const filtered = [];
+  sheet.rows.forEach((row, index) => {
+    for (const { column, query } of activeFilters) {
+      if (!String(row.cells[column] ?? '').toLocaleLowerCase().includes(query)) return;
+    }
+    filtered.push({ row, index });
+  });
 
   if (sortState) {
     const { column, direction } = sortState;
@@ -348,21 +357,29 @@ function updateToolbar() {
 }
 
 function renderTable() {
+  if (filterRenderTimer !== null) {
+    window.clearTimeout(filterRenderTimer);
+    filterRenderTimer = null;
+  }
   visibleRows = getVisibleRows();
   renderHeader();
   renderBody();
   updateToolbar();
 }
 
-function recalculateColumnWidths() {
-  columnWidths = sheet.headers.map((header, column) => {
+function recalculateColumnWidths(columns = null) {
+  const columnsToMeasure = columns ?? sheet.headers.map((_, column) => column);
+  if (columns === null) columnWidths = Array(sheet.headers.length);
+
+  for (const column of columnsToMeasure) {
+    const header = sheet.headers[column] ?? '';
     let longest = Math.max(header.trim() ? header.length : `Spalte ${column + 1}`.length, 3);
     for (const row of sheet.rows) {
       const value = String(row.cells[column] ?? '');
       for (const line of value.split(/\r?\n/)) longest = Math.max(longest, line.length);
     }
-    return Math.max(7, Math.min(48, longest + 8));
-  });
+    columnWidths[column] = Math.max(7, Math.min(48, longest + 8));
+  }
 }
 
 function focusCell(rowId, column) {
@@ -410,7 +427,7 @@ function beginCellEdit(cell) {
     finished = true;
     if (save) {
       row.cells[column] = editor.value;
-      recalculateColumnWidths();
+      recalculateColumnWidths([column]);
       sendEdit();
     }
     renderTable();
@@ -549,7 +566,6 @@ function addRow() {
     cells: Array(sheet.headers.length).fill(''),
   };
   sheet.rows.push(row);
-  recalculateColumnWidths();
   renderTable();
   sendEdit();
   focusCell(row.id, 0);
@@ -561,7 +577,7 @@ async function addColumn() {
   sheet.headers.push(name);
   sheet.rows.forEach((row) => row.cells.push(''));
   columnFilters.push('');
-  recalculateColumnWidths();
+  recalculateColumnWidths([sheet.headers.length - 1]);
   renderTable();
   sendEdit();
 }
@@ -571,7 +587,7 @@ async function renameColumn(column) {
   const name = await openColumnDialog('rename', column);
   if (!name) return;
   sheet.headers[column] = name;
-  recalculateColumnWidths();
+  recalculateColumnWidths([column]);
   renderTable();
   sendEdit();
 }
@@ -586,11 +602,11 @@ async function deleteColumn(column) {
   sheet.headers.splice(column, 1);
   sheet.rows.forEach((row) => row.cells.splice(column, 1));
   columnFilters.splice(column, 1);
+  columnWidths.splice(column, 1);
   if (sortState) {
     if (sortState.column === column) sortState = null;
     else if (sortState.column > column) sortState.column -= 1;
   }
-  recalculateColumnWidths();
   renderTable();
   sendEdit();
 }
@@ -695,11 +711,12 @@ elements.table.addEventListener('keydown', (event) => {
 elements.filterInput.addEventListener('input', () => {
   if (activeColumn < 0) return;
   const column = activeColumn;
-  const cursor = elements.filterInput.selectionStart;
   columnFilters[column] = elements.filterInput.value;
-  renderTable();
-  elements.filterInput.focus();
-  elements.filterInput.setSelectionRange(cursor, cursor);
+  if (filterRenderTimer !== null) window.clearTimeout(filterRenderTimer);
+  filterRenderTimer = window.setTimeout(() => {
+    filterRenderTimer = null;
+    renderTable();
+  }, 90);
 });
 
 elements.delimiter.addEventListener('change', () => {

@@ -2,7 +2,7 @@
   "name": "csv-grid-editor",
   "displayName": "CSV Simple Editor",
   "description": "View and edit CSV and TSV files as a table in VS Code. Auto-detect delimiters, sort and filter data, edit cells, and add or delete rows and columns.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "tingeltangelbob",
   "icon": "./media/extension-icon.png",
   "keywords": [

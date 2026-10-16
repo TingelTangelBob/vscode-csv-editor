@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.2.1
+
+- Filterabfragen werden für jede Eingabe nur einmal vorbereitet; die Tabelle wird nach einer kurzen Eingabepause neu aufgebaut.
+- Nach Zell- und Überschriftenänderungen werden nur betroffene Spaltenbreiten neu berechnet.
+- Das Hinzufügen einer leeren Zeile löst keine vollständige Spaltenbreitenberechnung mehr aus.
+
 ## 1.2.0
 
 - Oberfläche vereinfacht und Tabellenbreite an den Inhalt angepasst.
