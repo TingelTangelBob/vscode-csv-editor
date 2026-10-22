@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3
+
+- Added adjustable column widths with saved overrides and a reset action.
+- Added optional theme-based column colors in table settings.
+- Added column selection and copy-as-list actions for row and column headings.
+
 ## 1.2.2
 
 - Updated the editor interface, Marketplace description, and documentation to English.

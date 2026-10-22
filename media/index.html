@@ -25,6 +25,9 @@
           <span class="selection-count" id="selection-count" hidden>0</span>
         </button>
       </div>
+      <button class="tool-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2L6.5 12l1.4-2.4 1.7.7a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.9Z"></path></svg>
+      </button>
       <button class="tool-button" id="tools-menu-button" type="button" title="More tools" aria-label="More tools" aria-haspopup="true" aria-expanded="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
       </button>
@@ -53,6 +56,15 @@
       <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h8M5 19h8"></path></svg></span><span>Open as text</span></button>
     </div>
 
+    <div class="popover settings-popover" id="settings-popover" hidden>
+      <div class="popover-caption">Table settings</div>
+      <label class="setting-toggle" for="colorize-columns">
+        <input id="colorize-columns" type="checkbox">
+        <span class="setting-copy"><span>Colorize columns</span><span class="setting-help">Applies theme colors by column. CSV files do not store colors.</span></span>
+      </label>
+      <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.5 9a7 7 0 0 1 11.8-2L20 12M4 12l2.7 5a7 7 0 0 0 11.8-2"></path></svg></span><span>Reset column widths</span></button>
+    </div>
+
     <div class="popover filter-popover" id="filter-popover" hidden>
       <label class="menu-label" id="filter-label" for="column-filter-input">Filter column</label>
       <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Contains…">
@@ -63,14 +75,17 @@
       <div class="popover-caption" id="context-caption">Column</div>
       <button class="menu-action context-cell-action" type="button" data-action="copy-cell"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg></span><span>Copy cell</span></button>
       <button class="menu-action context-cell-action" type="button" data-action="copy-row"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M4 10h16m-11-5v14m6-14v14"></path></svg></span><span>Copy row</span></button>
+      <button class="menu-action context-row-or-cell-action" type="button" data-action="copy-row-list"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg></span><span>Copy row as list</span></button>
       <span class="menu-separator context-cell-action" aria-hidden="true"></span>
-      <button class="menu-action" type="button" data-action="filter-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span>Open column filter</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="filter-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span>Open column filter</span></button>
       <button class="menu-action context-cell-action" type="button" data-action="filter-value"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path><path d="M8 5v2"></path></svg></span><span>Filter by this value</span></button>
-      <button class="menu-action " type="button" data-action="sort-ascending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19V5m0 0L5 8m3-3 3 3M15 7h5m-5 5h3m-3 5h1"></path></svg></span><span>Sort ascending</span></button>
-      <button class="menu-action " type="button" data-action="sort-descending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0 0-3-3m3 3 3-3m4-9h5m-5 5h3m-3 5h1"></path></svg></span><span>Sort descending</span></button>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <button class="menu-action" type="button" data-action="rename-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L19 8.5 15.5 5 4 16.5Z"></path><path d="m13.8 6.7 3.5 3.5"></path></svg></span><span>Rename column</span></button>
-      <button class="menu-action danger-action" type="button" data-action="delete-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7"></path></svg></span><span>Delete column</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="sort-ascending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19V5m0 0L5 8m3-3 3 3M15 7h5m-5 5h3m-3 5h1"></path></svg></span><span>Sort ascending</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="sort-descending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0 0-3-3m3 3 3-3m4-9h5m-5 5h3m-3 5h1"></path></svg></span><span>Sort descending</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="select-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="1"></rect><path d="M9 4v16m6-16v16"></path></svg></span><span>Select column</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="copy-column-list"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg></span><span>Copy visible column as list (with header)</span></button>
+      <span class="menu-separator context-column-action" aria-hidden="true"></span>
+      <button class="menu-action context-column-action" type="button" data-action="rename-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L19 8.5 15.5 5 4 16.5Z"></path><path d="m13.8 6.7 3.5 3.5"></path></svg></span><span>Rename column</span></button>
+      <button class="menu-action danger-action context-column-action" type="button" data-action="delete-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7"></path></svg></span><span>Delete column</span></button>
     </div>
 
     <dialog class="app-dialog" id="column-dialog" aria-labelledby="column-dialog-title">

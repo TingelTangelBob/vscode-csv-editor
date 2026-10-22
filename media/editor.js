@@ -15,6 +15,9 @@ const elements = {
   delimiter: document.getElementById('delimiter-select'),
   toolsButton: document.getElementById('tools-menu-button'),
   toolsPopover: document.getElementById('tools-popover'),
+  settingsButton: document.getElementById('settings-button'),
+  settingsPopover: document.getElementById('settings-popover'),
+  colorizeColumns: document.getElementById('colorize-columns'),
   filterPopover: document.getElementById('filter-popover'),
   filterLabel: document.getElementById('filter-label'),
   filterInput: document.getElementById('column-filter-input'),
@@ -34,12 +37,49 @@ let lastSerializedText = '';
 let selectedRows = new Set();
 let columnFilters = [];
 let columnWidths = [];
+let columnWidthOverrides = Array.isArray(vscode.getState()?.columnWidthOverrides)
+  ? vscode.getState().columnWidthOverrides
+  : [];
+let colorizeColumns = vscode.getState()?.colorizeColumns === true;
+let selectedColumn = -1;
 let sortState = null;
 let visibleRows = [];
 let activeColumn = -1;
 let activePopover = null;
 let contextTarget = null;
 let filterRenderTimer = null;
+let resizeState = null;
+
+const COLUMN_COLORS = [
+  'var(--vscode-charts-blue, #2678c8)',
+  'var(--vscode-charts-orange, #c77b18)',
+  'var(--vscode-charts-green, #3b8d5a)',
+  'var(--vscode-charts-purple, #8957b2)',
+  'var(--vscode-charts-red, #c84949)',
+  'var(--vscode-charts-yellow, #9a7c12)',
+  'var(--vscode-charts-blue, #2678c8)',
+  'var(--vscode-charts-foreground, #777)',
+];
+
+function persistViewState() {
+  vscode.setState({
+    columnWidthOverrides,
+    colorizeColumns,
+  });
+}
+
+function columnWidthCss(column) {
+  const override = columnWidthOverrides[column];
+  return Number.isFinite(override) && override > 0
+    ? `${override}px`
+    : `${columnWidths[column] || 12}ch`;
+}
+
+function applyColumnColor(element, column) {
+  element.classList.toggle('is-colorized', colorizeColumns);
+  if (colorizeColumns) element.style.setProperty('--column-color', COLUMN_COLORS[column % COLUMN_COLORS.length]);
+  else element.style.removeProperty('--column-color');
+}
 
 function createEmptySheet() {
   return {
@@ -187,6 +227,12 @@ function serializeCsv() {
 
 function setDocument(rawText) {
   sheet = parseCsv(rawText);
+  columnWidthOverrides = sheet.headers.map((_, column) => {
+    const width = columnWidthOverrides[column];
+    return Number.isFinite(width) && width >= 72 && width <= 640 ? width : null;
+  });
+  if (selectedColumn >= sheet.headers.length) selectedColumn = -1;
+  elements.colorizeColumns.checked = colorizeColumns;
   lastSerializedText = rawText;
   selectedRows.clear();
   sortState = null;
@@ -263,7 +309,9 @@ function renderHeader() {
   sheet.headers.forEach((header, column) => {
     const th = createElement('th', 'data-heading');
     th.dataset.column = String(column);
-    th.style.setProperty('--column-width', `${columnWidths[column] || 12}ch`);
+    th.style.setProperty('--column-width', columnWidthCss(column));
+    th.classList.toggle('is-column-selected', selectedColumn === column);
+    applyColumnColor(th, column);
 
     const layout = createElement('div', 'heading-content');
     const sortButton = document.createElement('button');
@@ -293,6 +341,14 @@ function renderHeader() {
 
     layout.append(sortButton, filterButton);
     th.append(layout);
+    const resizeHandle = createElement('span', 'column-resize-handle');
+    resizeHandle.dataset.resizeColumn = String(column);
+    resizeHandle.title = 'Drag to resize column';
+    resizeHandle.setAttribute('role', 'separator');
+    resizeHandle.setAttribute('aria-orientation', 'vertical');
+    resizeHandle.setAttribute('aria-label', `Resize ${header.trim() || `Column ${column + 1}`}`);
+    resizeHandle.tabIndex = 0;
+    th.append(resizeHandle);
     titleRow.append(th);
   });
   elements.tableHead.replaceChildren(titleRow);
@@ -328,7 +384,9 @@ function renderBody() {
         const td = createElement('td', 'data-cell', value);
         td.dataset.rowId = String(row.id);
         td.dataset.column = String(column);
-        td.style.setProperty('--column-width', `${columnWidths[column] || 12}ch`);
+        td.style.setProperty('--column-width', columnWidthCss(column));
+        td.classList.toggle('is-column-selected', selectedColumn === column);
+        applyColumnColor(td, column);
         td.tabIndex = 0;
         td.title = value ? `${value}\nDouble-click to edit` : 'Double-click to edit';
         if (!value) td.classList.add('empty-cell');
@@ -380,6 +438,25 @@ function recalculateColumnWidths(columns = null) {
     }
     columnWidths[column] = Math.max(7, Math.min(48, longest + 8));
   }
+}
+
+function applyColumnWidth(column, width, updateCells = true) {
+  const value = Math.max(72, Math.min(640, width));
+  columnWidthOverrides[column] = value;
+  const cssWidth = `${value}px`;
+  elements.tableHead.querySelector(`th[data-column="${column}"]`)?.style.setProperty('--column-width', cssWidth);
+  if (updateCells) {
+    elements.tableBody.querySelectorAll(`td[data-column="${column}"]`).forEach((cell) => {
+      cell.style.setProperty('--column-width', cssWidth);
+    });
+  }
+}
+
+function resetColumnWidths() {
+  columnWidthOverrides = Array(sheet.headers.length).fill(null);
+  persistViewState();
+  closePopovers();
+  renderTable();
 }
 
 function focusCell(rowId, column) {
@@ -487,7 +564,7 @@ function positionPopover(popover, anchor) {
 }
 
 function closePopovers() {
-  for (const popover of [elements.toolsPopover, elements.filterPopover, elements.contextPopover]) popover.hidden = true;
+  for (const popover of [elements.toolsPopover, elements.settingsPopover, elements.filterPopover, elements.contextPopover]) popover.hidden = true;
   document.querySelectorAll('[aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
   activePopover = null;
   activeColumn = -1;
@@ -503,6 +580,17 @@ function openToolsPopover() {
   activePopover = elements.toolsPopover;
   elements.toolsButton.setAttribute('aria-expanded', 'true');
   positionPopover(elements.toolsPopover, elements.toolsButton);
+}
+
+function openSettingsPopover() {
+  if (activePopover === elements.settingsPopover) {
+    closePopovers();
+    return;
+  }
+  closePopovers();
+  activePopover = elements.settingsPopover;
+  elements.settingsButton.setAttribute('aria-expanded', 'true');
+  positionPopover(elements.settingsPopover, elements.settingsButton);
 }
 
 function openFilterPopover(column, anchor) {
@@ -526,17 +614,29 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   activePopover = elements.contextPopover;
   activeColumn = column;
   contextTarget = { rowId, column, kind };
-  const header = sheet.headers[column]?.trim() || `Column ${column + 1}`;
+  const header = column >= 0 ? (sheet.headers[column]?.trim() || `Column ${column + 1}`) : '';
   const row = rowId === null ? null : sheet.rows.find((item) => item.id === rowId);
-  const value = row ? String(row.cells[column] ?? '') : '';
-  elements.contextCaption.textContent = kind === 'cell' ? `${header}: ${value || '(empty)'}` : header;
+  const value = row && column >= 0 ? String(row.cells[column] ?? '') : '';
+  elements.contextCaption.textContent = kind === 'cell'
+    ? header + ': ' + (value || '(empty)')
+    : (kind === 'row' ? 'Row ' + rowId : header);
   elements.contextPopover.querySelectorAll('.context-cell-action').forEach((item) => {
     item.hidden = kind !== 'cell';
+  });
+  elements.contextPopover.querySelectorAll('.context-column-action').forEach((item) => {
+    item.hidden = kind !== 'column' && kind !== 'cell';
+  });
+  elements.contextPopover.querySelectorAll('.context-row-or-cell-action').forEach((item) => {
+    item.hidden = kind !== 'row' && kind !== 'cell';
   });
   const filterValueButton = elements.contextPopover.querySelector('[data-action="filter-value"]');
   filterValueButton.disabled = !value;
   const deleteButton = elements.contextPopover.querySelector('[data-action="delete-column"]');
   deleteButton.disabled = sheet.headers.length <= 1;
+  const selectColumnButton = elements.contextPopover.querySelector('[data-action="select-column"]');
+  selectColumnButton.querySelector('span:last-child').textContent = selectedColumn === column ? 'Deselect column' : 'Select column';
+  selectColumnButton.setAttribute('aria-pressed', String(selectedColumn === column));
+  elements.contextPopover.querySelector('[data-action="copy-row-list"]').disabled = !row;
   elements.contextPopover.hidden = false;
   const rect = elements.contextPopover.getBoundingClientRect();
   const left = Math.max(8, Math.min(clientX, window.innerWidth - rect.width - 8));
@@ -577,6 +677,8 @@ async function addColumn() {
   sheet.headers.push(name);
   sheet.rows.forEach((row) => row.cells.push(''));
   columnFilters.push('');
+  columnWidthOverrides.push(null);
+  persistViewState();
   recalculateColumnWidths([sheet.headers.length - 1]);
   renderTable();
   sendEdit();
@@ -603,6 +705,10 @@ async function deleteColumn(column) {
   sheet.rows.forEach((row) => row.cells.splice(column, 1));
   columnFilters.splice(column, 1);
   columnWidths.splice(column, 1);
+  columnWidthOverrides.splice(column, 1);
+  persistViewState();
+  if (selectedColumn === column) selectedColumn = -1;
+  else if (selectedColumn > column) selectedColumn -= 1;
   if (sortState) {
     if (sortState.column === column) sortState = null;
     else if (sortState.column > column) sortState.column -= 1;
@@ -638,6 +744,51 @@ document.getElementById('add-row').addEventListener('click', addRow);
 document.getElementById('add-column').addEventListener('click', () => void addColumn());
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());
 elements.toolsButton.addEventListener('click', openToolsPopover);
+elements.settingsButton.addEventListener('click', openSettingsPopover);
+elements.colorizeColumns.addEventListener('change', () => {
+  colorizeColumns = elements.colorizeColumns.checked;
+  persistViewState();
+  renderTable();
+});
+
+elements.table.addEventListener('pointerdown', (event) => {
+  const handle = event.target.closest('[data-resize-column]');
+  if (!handle || event.button !== 0) return;
+  event.preventDefault();
+  const column = Number(handle.dataset.resizeColumn);
+  const header = elements.tableHead.querySelector('th[data-column="' + column + '"]');
+  if (!header) return;
+  resizeState = {
+    column,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startWidth: header.getBoundingClientRect().width,
+  };
+  document.body.classList.add('is-resizing-column');
+});
+
+document.addEventListener('pointermove', (event) => {
+  if (!resizeState || event.pointerId !== resizeState.pointerId) return;
+  applyColumnWidth(resizeState.column, resizeState.startWidth + event.clientX - resizeState.startX, false);
+});
+
+document.addEventListener('pointerup', (event) => {
+  if (!resizeState || event.pointerId !== resizeState.pointerId) return;
+  const resizedColumn = resizeState.column;
+  resizeState = null;
+  document.body.classList.remove('is-resizing-column');
+  applyColumnWidth(resizedColumn, columnWidthOverrides[resizedColumn]);
+  persistViewState();
+});
+
+document.addEventListener('pointercancel', (event) => {
+  if (!resizeState || event.pointerId !== resizeState.pointerId) return;
+  const resizedColumn = resizeState.column;
+  resizeState = null;
+  document.body.classList.remove('is-resizing-column');
+  applyColumnWidth(resizedColumn, columnWidthOverrides[resizedColumn]);
+  persistViewState();
+});
 
 elements.table.addEventListener('click', (event) => {
   const filterButton = event.target.closest('[data-filter-toggle]');
@@ -649,6 +800,7 @@ elements.table.addEventListener('click', (event) => {
   const sortButton = event.target.closest('[data-sort]');
   if (sortButton) {
     const column = Number(sortButton.dataset.sort);
+    selectedColumn = column;
     sortState = sortState?.column === column
       ? { column, direction: sortState.direction * -1 }
       : { column, direction: 1 };
@@ -674,26 +826,54 @@ elements.table.addEventListener('click', (event) => {
       else selectedRows.delete(row.id);
     });
     renderTable();
+    return;
+  }
+
+  const heading = event.target.closest('th[data-column]');
+  if (heading && !event.target.closest('button, [data-resize-column]')) {
+    const column = Number(heading.dataset.column);
+    selectedColumn = selectedColumn === column ? -1 : column;
+    renderTable();
   }
 });
 
 elements.table.addEventListener('contextmenu', (event) => {
   const cell = event.target.closest('[data-row-id][data-column]');
   const heading = event.target.closest('th[data-column]');
-  const target = cell || heading;
+  const rowHeading = event.target.closest('.row-number-cell');
+  const target = cell || heading || rowHeading;
   if (!target) return;
   event.preventDefault();
-  const column = Number(target.dataset.column);
+  const column = target.dataset.column === undefined ? -1 : Number(target.dataset.column);
   const rowId = cell ? Number(cell.dataset.rowId) : null;
-  openContextPopover(column, rowId, cell ? 'cell' : 'column', event.clientX, event.clientY);
+  const rowHeaderId = rowHeading ? Number(rowHeading.querySelector('[data-select-row]')?.dataset.selectRow || rowHeading.textContent.trim()) : null;
+  openContextPopover(column, rowId ?? rowHeaderId, cell ? 'cell' : (rowHeading ? 'row' : 'column'), event.clientX, event.clientY);
 });
 
 elements.table.addEventListener('dblclick', (event) => {
+  const resizeHandle = event.target.closest('[data-resize-column]');
+  if (resizeHandle) {
+    const column = Number(resizeHandle.dataset.resizeColumn);
+    columnWidthOverrides[column] = null;
+    persistViewState();
+    renderTable();
+    return;
+  }
   const cell = event.target.closest('[data-row-id][data-column]');
   if (cell) beginCellEdit(cell);
 });
 
 elements.table.addEventListener('keydown', (event) => {
+  const resizeHandle = event.target.closest('[data-resize-column]');
+  if (resizeHandle && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    event.preventDefault();
+    const column = Number(resizeHandle.dataset.resizeColumn);
+    const header = elements.tableHead.querySelector('th[data-column="' + column + '"]');
+    const currentWidth = header?.getBoundingClientRect().width || 120;
+    applyColumnWidth(column, currentWidth + (event.key === 'ArrowRight' ? 12 : -12));
+    persistViewState();
+    return;
+  }
   const cell = event.target.closest('[data-row-id][data-column]');
   if (cell && event.target === cell && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
     event.preventDefault();
@@ -726,7 +906,7 @@ elements.delimiter.addEventListener('change', () => {
 });
 
 document.addEventListener('click', (event) => {
-  if (event.target.closest('.popover, #tools-menu-button, [data-filter-toggle]')) return;
+  if (event.target.closest('.popover, #tools-menu-button, #settings-button, [data-filter-toggle]')) return;
   if (activePopover) closePopovers();
 });
 
@@ -737,7 +917,8 @@ document.addEventListener('click', (event) => {
   const column = activeColumn;
   const target = contextTarget;
 
-  if (action === 'clear-filters') clearFilters();
+  if (action === 'reset-column-widths') resetColumnWidths();
+  else if (action === 'clear-filters') clearFilters();
   else if (action === 'clear-sort') clearSort();
   else if (action === 'open-text') {
     closePopovers();
@@ -754,6 +935,20 @@ document.addEventListener('click', (event) => {
       : row.cells.map((value) => escapeCell(value, '\t')).join('\t');
     closePopovers();
     vscode.postMessage({ type: 'copyToClipboard', text: copiedText });
+  } else if (action === 'copy-row-list' && (target?.kind === 'row' || target?.kind === 'cell')) {
+    const row = sheet.rows.find((item) => item.id === target.rowId);
+    if (!row) return;
+    closePopovers();
+    vscode.postMessage({ type: 'copyToClipboard', text: row.cells.map((value) => String(value ?? '')).join('\n') });
+  } else if (action === 'copy-column-list' && column >= 0) {
+    const values = [sheet.headers[column] || 'Column ' + (column + 1)];
+    visibleRows.forEach(({ row }) => values.push(String(row.cells[column] ?? '')));
+    closePopovers();
+    vscode.postMessage({ type: 'copyToClipboard', text: values.join('\n') });
+  } else if (action === 'select-column' && column >= 0) {
+    selectedColumn = selectedColumn === column ? -1 : column;
+    closePopovers();
+    renderTable();
   } else if (action === 'filter-column' && column >= 0) {
     const filterButton = elements.tableHead.querySelector(`th[data-column="${column}"] [data-filter-toggle]`);
     closePopovers();
@@ -766,6 +961,7 @@ document.addEventListener('click', (event) => {
     renderTable();
   } else if ((action === 'sort-ascending' || action === 'sort-descending') && target) {
     sortState = { column: target.column, direction: action === 'sort-ascending' ? 1 : -1 };
+    selectedColumn = target.column;
     closePopovers();
     renderTable();
   } else if (action === 'rename-column' && column >= 0) {
@@ -776,7 +972,7 @@ document.addEventListener('click', (event) => {
 });
 
 elements.tableScroll.addEventListener('scroll', () => {
-  if (activePopover === elements.filterPopover || activePopover === elements.contextPopover) closePopovers();
+  if (activePopover === elements.filterPopover || activePopover === elements.contextPopover || activePopover === elements.settingsPopover) closePopovers();
 }, { passive: true });
 
 window.addEventListener('resize', () => {
