@@ -85,7 +85,7 @@
     "customEditors": [
       {
         "viewType": "tingeltangelbob.csv-simple-editor.csvGrid",
-        "displayName": "CSV Simple Editor",
+        "displayName": "CSV Table",
         "selector": [
           { "filenamePattern": "*.csv" },
           { "filenamePattern": "*.CSV" },
