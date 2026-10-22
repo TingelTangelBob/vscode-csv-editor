@@ -59,6 +59,7 @@ thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .header-button svg { width: 13px; height: 13px; }
 .filter-button { position: absolute; top: 50%; right: 1px; z-index: 1; visibility: hidden; opacity: 0; transform: translateY(-50%); transition: opacity 90ms ease; }
 th[data-column]:hover .filter-button, th[data-column]:focus-within .filter-button, .filter-button.is-active { visibility: visible; opacity: 1; }
+.filter-button.is-active svg path { fill: currentColor; }
 thead th[data-column] { width: var(--column-width, 12ch); min-width: 7ch; max-width: 48ch; }
 tbody .data-cell { width: var(--column-width, 12ch); min-width: 7ch; max-width: 48ch; overflow: hidden; padding: 0 9px; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
 .row-number-cell { position: sticky; left: 0; z-index: 1; height: 27px; padding: 0 8px; color: var(--muted); background: var(--background); font-size: 10px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
