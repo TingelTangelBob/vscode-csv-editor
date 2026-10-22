@@ -132,15 +132,28 @@ function activate(context) {
         }
 
         if (message?.type === 'setDefaultEditorPreference' && typeof message.enabled === 'boolean') {
+          const previousValue = getDefaultEditorPreference();
           try {
+            // Apply the editor association first so the UI never reports a saved option
+            // when VS Code rejected the association update.
+            await applyDefaultEditorPreference(message.enabled);
             await vscode.workspace.getConfiguration('csvSimpleEditor').update(
               'openByDefault',
               message.enabled,
               vscode.ConfigurationTarget.Global,
             );
-            await applyDefaultEditorPreference(message.enabled);
             notifyDefaultEditorPreference();
           } catch (error) {
+            try {
+              await applyDefaultEditorPreference(previousValue);
+              await vscode.workspace.getConfiguration('csvSimpleEditor').update(
+                'openByDefault',
+                previousValue,
+                vscode.ConfigurationTarget.Global,
+              );
+            } catch (rollbackError) {
+              void vscode.window.showErrorMessage(`Could not restore the default CSV editor setting: ${rollbackError.message}`);
+            }
             void vscode.window.showErrorMessage(`Could not update the default CSV editor: ${error.message}`);
             notifyDefaultEditorPreference();
           }

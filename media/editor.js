@@ -2,7 +2,73 @@
 
 const vscode = acquireVsCodeApi();
 const { createEmptySheet, parseCsv, escapeCell, serializeCsv } = CsvData;
-const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+let collator = new Intl.Collator(navigator.language, { numeric: true, sensitivity: 'base' });
+const TRANSLATIONS = {
+  en: {},
+  de: {
+    'Add row':'Zeile hinzufügen','Add column':'Spalte hinzufügen','Delete selected rows':'Ausgewählte Zeilen löschen',
+    'Table settings':'Tabelleneinstellungen','More tools':'Weitere Optionen','Delimiter':'Trennzeichen','CSV delimiter':'CSV-Trennzeichen',
+    'Comma ,':'Komma ,','Semicolon ;':'Semikolon ;','Tab':'Tabulator','Pipe |':'Pipe |','Clear filters':'Filter zurücksetzen',
+    'Clear sorting':'Sortierung zurücksetzen','Open as text':'Als Text öffnen','Buy me a coffee':'Unterstütze das Projekt',
+    'Language':'Sprache','Colorize columns':'Spaltenfarben anzeigen','Show table gridlines':'Tabellenlinien anzeigen',
+    'Open CSV files in the table by default':'CSV-Dateien standardmäßig als Tabelle öffnen','Reset column widths':'Spaltenbreiten zurücksetzen',
+    'Filter column':'Spalte filtern','Contains…':'Enthält …','Clear filter':'Filter löschen','Copy cell':'Zelle kopieren',
+    'Copy row':'Zeile kopieren','Copy row as list':'Zeile als Liste kopieren','Open column filter':'Spaltenfilter öffnen',
+    'Filter by this value':'Nach diesem Wert filtern','Sort ascending':'Aufsteigend sortieren','Sort descending':'Absteigend sortieren',
+    'Select column':'Spalte auswählen','Deselect column':'Spalte abwählen','Copy visible column as list (with header)':'Sichtbare Spalte samt Kopfzeile kopieren',
+    'Rename column':'Spalte umbenennen','Delete column':'Spalte löschen','Add column':'Spalte hinzufügen','Column name':'Spaltenname',
+    'e.g. Product ID':'z. B. Produktnummer','Apply':'Übernehmen','Cancel':'Abbrechen',
+    'Confirm deletion':'Löschen bestätigen','Delete':'Löschen','No data rows yet. Add a row to get started.':'Noch keine Datenzeilen. Füge eine Zeile hinzu, um zu beginnen.',
+    'No matching rows. Clear or adjust your column filters.':'Keine passenden Zeilen. Setze die Spaltenfilter zurück oder passe sie an.',
+    'Select all visible rows':'Alle sichtbaren Zeilen auswählen','Drag to resize column':'Ziehen, um die Spalte zu verbreitern',
+    'Double-click to edit':'Doppelklicken zum Bearbeiten','Edit filter':'Filter bearbeiten','Sort by':'Sortieren nach',
+    'Resize':'Breite ändern','row':'Zeile','rows':'Zeilen','column':'Spalte','columns':'Spalten','of':'von','filter':'Filter','filters':'Filter',
+    'Column':'Spalte','Select row':'Zeile auswählen','Original row number':'Ursprüngliche Zeilennummer',
+  },
+  fr: {
+    'Add row':'Ajouter une ligne','Add column':'Ajouter une colonne','Delete selected rows':'Supprimer les lignes sélectionnées',
+    'Table settings':'Paramètres du tableau','More tools':'Plus d’outils','Delimiter':'Séparateur','CSV delimiter':'Séparateur CSV',
+    'Comma ,':'Virgule ,','Semicolon ;':'Point-virgule ;','Tab':'Tabulation','Pipe |':'Barre verticale |','Clear filters':'Effacer les filtres',
+    'Clear sorting':'Effacer le tri','Open as text':'Ouvrir en texte','Buy me a coffee':'Soutenir le projet',
+    'Language':'Langue','Colorize columns':'Colorer les colonnes','Show table gridlines':'Afficher le quadrillage',
+    'Open CSV files in the table by default':'Ouvrir les fichiers CSV dans le tableau par défaut','Reset column widths':'Réinitialiser la largeur des colonnes',
+    'Filter column':'Filtrer la colonne','Contains…':'Contient…','Clear filter':'Effacer le filtre','Copy cell':'Copier la cellule',
+    'Copy row':'Copier la ligne','Copy row as list':'Copier la ligne sous forme de liste','Open column filter':'Ouvrir le filtre de colonne',
+    'Filter by this value':'Filtrer par cette valeur','Sort ascending':'Trier par ordre croissant','Sort descending':'Trier par ordre décroissant',
+    'Select column':'Sélectionner la colonne','Deselect column':'Désélectionner la colonne','Copy visible column as list (with header)':'Copier la colonne visible avec son en-tête',
+    'Rename column':'Renommer la colonne','Delete column':'Supprimer la colonne','Column name':'Nom de la colonne',
+    'e.g. Product ID':'p. ex. ID produit','Apply':'Appliquer','Cancel':'Annuler','Confirm deletion':'Confirmer la suppression',
+    'Delete':'Supprimer','No data rows yet. Add a row to get started.':'Aucune ligne pour le moment. Ajoutez une ligne pour commencer.',
+    'No matching rows. Clear or adjust your column filters.':'Aucun résultat. Effacez ou ajustez vos filtres.',
+    'Select all visible rows':'Sélectionner toutes les lignes visibles','Drag to resize column':'Faites glisser pour redimensionner la colonne',
+    'Double-click to edit':'Double-cliquez pour modifier','Edit filter':'Modifier le filtre','Sort by':'Trier par',
+    'Resize':'Redimensionner','row':'ligne','rows':'lignes','column':'colonne','columns':'colonnes','of':'sur','filter':'filtre','filters':'filtres',
+    'Column':'Colonne','Select row':'Sélectionner la ligne','Original row number':'Numéro de ligne d’origine',
+  },
+};
+const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR' };
+const savedState = vscode.getState() ?? {};
+const systemLanguage = navigator.language.slice(0, 2).toLowerCase();
+let language = savedState.language in TRANSLATIONS ? savedState.language : (systemLanguage in TRANSLATIONS ? systemLanguage : 'en');
+
+function t(key) { return TRANSLATIONS[language][key] ?? key; }
+
+function applyTranslations() {
+  document.documentElement.lang = language;
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+    element.title = t(element.dataset.i18nTitle);
+    element.setAttribute('aria-label', element.title);
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
+    element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+}
 
 const elements = {
   table: document.getElementById('csv-table'),
@@ -10,7 +76,6 @@ const elements = {
   tableBody: document.getElementById('table-body'),
   tableScroll: document.getElementById('table-scroll'),
   tableStatus: document.getElementById('table-status'),
-  documentName: document.getElementById('document-name'),
   deleteSelected: document.getElementById('delete-selected'),
   selectionCount: document.getElementById('selection-count'),
   delimiter: document.getElementById('delimiter-select'),
@@ -21,6 +86,7 @@ const elements = {
   colorizeColumns: document.getElementById('colorize-columns'),
   showGridlines: document.getElementById('show-gridlines'),
   openByDefault: document.getElementById('open-by-default'),
+  language: document.getElementById('language-select'),
   filterPopover: document.getElementById('filter-popover'),
   filterLabel: document.getElementById('filter-label'),
   filterInput: document.getElementById('column-filter-input'),
@@ -45,6 +111,7 @@ let columnWidthOverrides = Array.isArray(vscode.getState()?.columnWidthOverrides
   : [];
 let colorizeColumns = vscode.getState()?.colorizeColumns === true;
 let showGridlines = vscode.getState()?.showGridlines === true;
+let lastFilename = '';
 let selectedColumn = -1;
 let sortState = null;
 let visibleRows = [];
@@ -73,6 +140,7 @@ function persistViewState() {
     columnWidthOverrides,
     colorizeColumns,
     showGridlines,
+    language,
   });
 }
 
@@ -89,10 +157,9 @@ function applyColumnColor(element, column) {
   else element.style.removeProperty('--column-color');
 }
 
-function setDocument(rawText, filename = elements.documentName.textContent) {
-  elements.documentName.textContent = filename;
-  elements.documentName.title = filename;
-  sheet = parseCsv(rawText, /\.tsv$/i.test(filename) ? '\t' : ',');
+function setDocument(rawText, filename = lastFilename) {
+  lastFilename = filename || lastFilename;
+  sheet = parseCsv(rawText, /\.tsv$/i.test(lastFilename) ? '\t' : ',');
   columnWidthOverrides = sheet.headers.map((_, column) => {
     const width = columnWidthOverrides[column];
     return Number.isFinite(width) && width >= 72 && width <= 640 ? width : null;
@@ -166,8 +233,8 @@ function renderHeader() {
   const selectAll = document.createElement('input');
   selectAll.type = 'checkbox';
   selectAll.id = 'select-visible-rows';
-  selectAll.title = 'Select all visible rows';
-  selectAll.setAttribute('aria-label', 'Select all visible rows');
+  selectAll.title = t('Select all visible rows');
+  selectAll.setAttribute('aria-label', selectAll.title);
   selectAll.disabled = visibleRows.length === 0;
   updateSelectAll(selectAll);
   selectHeader.append(selectAll);
@@ -185,19 +252,29 @@ function renderHeader() {
     sortButton.type = 'button';
     sortButton.className = 'sort-button';
     sortButton.dataset.sort = String(column);
-    sortButton.title = `Sort by ${header.trim() || `Column ${column + 1}`}`;
+    sortButton.title = `${t('Sort by')} ${header.trim() || `${t('Column')} ${column + 1}`}`;
     sortButton.setAttribute('aria-label', sortButton.title);
     if (sortState?.column === column) sortButton.classList.add('is-sorted');
     th.setAttribute('aria-sort', sortState?.column === column
       ? (sortState.direction > 0 ? 'ascending' : 'descending')
       : 'none');
-    const name = createElement('span', '', header.trim() ? header : `Column ${column + 1}`);
-    const direction = createElement('span', 'sort-indicator', sortState?.column === column ? (sortState.direction > 0 ? '↑' : '↓') : '↕');
-    sortButton.append(name, direction);
+    const name = createElement('span', '', header.trim() ? header : `${t('Column')} ${column + 1}`);
+    sortButton.append(name);
+    const indicators = createElement('span', 'sort-indicators');
+    for (const direction of [1, -1]) {
+      const directionButton = createElement('button', 'sort-direction', direction > 0 ? '↑' : '↓');
+      directionButton.type = 'button';
+      directionButton.dataset.sort = String(column);
+      directionButton.dataset.sortDirection = String(direction);
+      directionButton.title = t(direction > 0 ? 'Sort ascending' : 'Sort descending');
+      directionButton.setAttribute('aria-label', directionButton.title);
+      directionButton.setAttribute('aria-pressed', String(sortState?.column === column && sortState.direction === direction));
+      indicators.append(directionButton);
+    }
 
     const filterButton = makeIconButton(
       'header-button filter-button',
-      columnFilters[column] ? 'Edit filter' : 'Filter column',
+      columnFilters[column] ? t('Edit filter') : t('Filter column'),
       'filterToggle',
       column,
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg>',
@@ -206,14 +283,14 @@ function renderHeader() {
     filterButton.setAttribute('aria-haspopup', 'true');
     filterButton.setAttribute('aria-expanded', String(activePopover === elements.filterPopover && activeColumn === column));
 
-    layout.append(sortButton, filterButton);
+    layout.append(sortButton, indicators, filterButton);
     th.append(layout);
     const resizeHandle = createElement('span', 'column-resize-handle');
     resizeHandle.dataset.resizeColumn = String(column);
-    resizeHandle.title = 'Drag to resize column';
+    resizeHandle.title = t('Drag to resize column');
     resizeHandle.setAttribute('role', 'separator');
     resizeHandle.setAttribute('aria-orientation', 'vertical');
-    resizeHandle.setAttribute('aria-label', `Resize ${header.trim() || `Column ${column + 1}`}`);
+    resizeHandle.setAttribute('aria-label', `${t('Resize')} ${header.trim() || `${t('Column')} ${column + 1}`}`);
     resizeHandle.tabIndex = 0;
     th.append(resizeHandle);
     titleRow.append(th);
@@ -226,9 +303,9 @@ function renderBody() {
 
   if (visibleRows.length === 0) {
     const row = document.createElement('tr');
-    const cell = createElement('td', 'empty-state', sheet.rows.length === 0
+    const cell = createElement('td', 'empty-state', t(sheet.rows.length === 0
       ? 'No data rows yet. Add a row to get started.'
-      : 'No matching rows. Clear or adjust your column filters.');
+      : 'No matching rows. Clear or adjust your column filters.'));
     cell.colSpan = sheet.headers.length + 1;
     row.append(cell);
     fragment.append(row);
@@ -242,9 +319,9 @@ function renderBody() {
       checkbox.type = 'checkbox';
       checkbox.checked = selectedRows.has(row.id);
       checkbox.dataset.selectRow = String(row.id);
-      checkbox.title = `Select row ${row.id}`;
-      checkbox.setAttribute('aria-label', `Select row ${row.id}`);
-      rowHeader.title = `Original row number ${row.id}`;
+      checkbox.title = `${t('Select row')} ${row.id}`;
+      checkbox.setAttribute('aria-label', checkbox.title);
+      rowHeader.title = `${t('Original row number')} ${row.id}`;
       rowHeader.append(checkbox, createElement('span', '', String(row.id)));
       tr.append(rowHeader);
 
@@ -268,18 +345,20 @@ function renderBody() {
 }
 
 function updateToolbar() {
+  const locale = LOCALES[language] || LOCALES.en;
+  const number = (value) => value.toLocaleString(locale);
   const filterCount = columnFilters.filter((value) => String(value || '').trim()).length;
   const visibleCount = visibleRows.length;
   const filtered = visibleCount !== sheet.rows.length;
   const rowCount = sheet.rows.length;
   const result = filtered
-    ? `${visibleCount.toLocaleString('en-US')} of ${rowCount.toLocaleString('en-US')} ${rowCount === 1 ? 'row' : 'rows'}`
-    : `${rowCount.toLocaleString('en-US')} ${rowCount === 1 ? 'row' : 'rows'}`;
-  const filterStatus = filterCount ? ` · ${filterCount} ${filterCount === 1 ? 'filter' : 'filters'}` : '';
+    ? `${number(visibleCount)} ${t('of')} ${number(rowCount)} ${t(rowCount === 1 ? 'row' : 'rows')}`
+    : `${number(rowCount)} ${t(rowCount === 1 ? 'row' : 'rows')}`;
+  const filterStatus = filterCount ? ` · ${number(filterCount)} ${t(filterCount === 1 ? 'filter' : 'filters')}` : '';
   const columnCount = sheet.headers.length;
-  elements.tableStatus.textContent = `${result} · ${columnCount} ${columnCount === 1 ? 'column' : 'columns'}${filterStatus}`;
+  elements.tableStatus.textContent = `${result} · ${number(columnCount)} ${t(columnCount === 1 ? 'column' : 'columns')}${filterStatus}`;
   elements.deleteSelected.disabled = selectedRows.size === 0;
-  elements.selectionCount.textContent = selectedRows.size.toLocaleString('en-US');
+  elements.selectionCount.textContent = selectedRows.size.toLocaleString(locale);
   elements.selectionCount.hidden = selectedRows.size === 0;
 }
 
@@ -436,9 +515,9 @@ window.addEventListener('blur', () => {
 });
 
 function openColumnDialog(mode, column = -1) {
-  elements.columnTitle.textContent = mode === 'rename' ? 'Rename column' : 'Add column';
+  elements.columnTitle.textContent = t(mode === 'rename' ? 'Rename column' : 'Add column');
   elements.columnName.value = mode === 'rename' ? (sheet.headers[column] || '') : '';
-  elements.columnName.placeholder = mode === 'rename' ? 'Column name' : 'e.g. Product ID';
+  elements.columnName.placeholder = t(mode === 'rename' ? 'Column name' : 'e.g. Product ID');
 
   return new Promise((resolve) => {
     elements.columnDialog.addEventListener('close', () => {
@@ -452,6 +531,7 @@ function openColumnDialog(mode, column = -1) {
 
 function confirmAction(message) {
   elements.confirmMessage.textContent = message;
+  document.getElementById('confirm-title').textContent = t('Confirm deletion');
   return new Promise((resolve) => {
     elements.confirmDialog.addEventListener('close', () => {
       resolve(elements.confirmDialog.returnValue === 'confirm');
@@ -509,7 +589,7 @@ function openSettingsPopover() {
   popoverAnchor = elements.settingsButton;
   elements.settingsButton.setAttribute('aria-expanded', 'true');
   positionPopover(elements.settingsPopover, elements.settingsButton);
-  elements.colorizeColumns.focus();
+  elements.language.focus();
 }
 
 function openFilterPopover(column, anchor) {
@@ -521,7 +601,7 @@ function openFilterPopover(column, anchor) {
   activePopover = elements.filterPopover;
   activeColumn = column;
   popoverAnchor = anchor;
-  elements.filterLabel.textContent = `Filter ${sheet.headers[column]?.trim() || `Column ${column + 1}`}`;
+  elements.filterLabel.textContent = `${t('Filter column')}: ${sheet.headers[column]?.trim() || `${t('Column')} ${column + 1}`}`;
   elements.filterInput.value = columnFilters[column] || '';
   positionPopover(elements.filterPopover, anchor);
   anchor.setAttribute('aria-expanded', 'true');
@@ -535,12 +615,12 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   activeColumn = column;
   contextTarget = { rowId, column, kind };
   popoverAnchor = document.activeElement;
-  const header = column >= 0 ? (sheet.headers[column]?.trim() || `Column ${column + 1}`) : '';
+  const header = column >= 0 ? (sheet.headers[column]?.trim() || `${t('Column')} ${column + 1}`) : '';
   const row = rowId === null ? null : sheet.rows.find((item) => item.id === rowId);
   const value = row && column >= 0 ? String(row.cells[column] ?? '') : '';
   elements.contextCaption.textContent = kind === 'cell'
     ? header + ': ' + (value || '(empty)')
-    : (kind === 'row' ? 'Row ' + rowId : header);
+    : (kind === 'row' ? `${t('row')} ${rowId}` : header);
   elements.contextPopover.querySelectorAll('.context-cell-action').forEach((item) => {
     item.hidden = kind !== 'cell';
   });
@@ -555,7 +635,7 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   const deleteButton = elements.contextPopover.querySelector('[data-action="delete-column"]');
   deleteButton.disabled = sheet.headers.length <= 1;
   const selectColumnButton = elements.contextPopover.querySelector('[data-action="select-column"]');
-  selectColumnButton.querySelector('span:last-child').textContent = selectedColumn === column ? 'Deselect column' : 'Select column';
+  selectColumnButton.querySelector('span:last-child').textContent = t(selectedColumn === column ? 'Deselect column' : 'Select column');
   selectColumnButton.setAttribute('aria-pressed', String(selectedColumn === column));
   elements.contextPopover.querySelector('[data-action="copy-row-list"]').disabled = !row;
   elements.contextPopover.hidden = false;
@@ -677,7 +757,17 @@ elements.showGridlines.addEventListener('change', () => {
   persistViewState();
   renderTable();
 });
+elements.language.value = language;
+applyTranslations();
+elements.language.addEventListener('change', () => {
+  language = elements.language.value in TRANSLATIONS ? elements.language.value : 'en';
+  collator = new Intl.Collator(LOCALES[language] || LOCALES.en, { numeric: true, sensitivity: 'base' });
+  persistViewState();
+  applyTranslations();
+  renderTable();
+});
 elements.openByDefault.addEventListener('change', () => {
+  elements.openByDefault.disabled = true;
   vscode.postMessage({ type: 'setDefaultEditorPreference', enabled: elements.openByDefault.checked });
 });
 
@@ -731,9 +821,10 @@ elements.table.addEventListener('click', (event) => {
   if (sortButton) {
     const column = Number(sortButton.dataset.sort);
     selectedColumn = column;
-    sortState = sortState?.column === column
-      ? { column, direction: sortState.direction * -1 }
-      : { column, direction: 1 };
+    const direction = Number(sortButton.dataset.sortDirection);
+    sortState = Number.isFinite(direction) && direction !== 0
+      ? { column, direction }
+      : (sortState?.column === column ? { column, direction: sortState.direction * -1 } : { column, direction: 1 });
     renderTable();
     return;
   }
@@ -945,6 +1036,7 @@ window.addEventListener('message', (event) => {
   if ((message.type === 'load' || message.type === 'editRejected') && typeof message.text === 'string') setDocument(message.text, message.filename);
   if (message.type === 'defaultEditorPreference' && typeof message.enabled === 'boolean') {
     elements.openByDefault.checked = message.enabled;
+    elements.openByDefault.disabled = false;
   }
 });
 

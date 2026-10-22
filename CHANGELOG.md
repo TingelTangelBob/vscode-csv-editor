@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.7
+
+- Removed the filename header and side padding, and made the toolbar and column headings more compact.
+- Added separate ascending and descending sort controls, visible on hover or while sorting.
+- Redrew the toolbar icons on a crisp 16px grid and aligned menu icons and labels consistently.
+- Added English, German, and French interface languages and removed explanatory subtitles from table settings.
+- Fixed missing hidden status markup that could stop the table from rendering, and made the default-editor setting apply before it is confirmed in the UI.
+
 ## 1.2.6
 
 - Renamed the table editor to "CSV Table" so VS Code shows a distinct name from the extension.
