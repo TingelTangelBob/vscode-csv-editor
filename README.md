@@ -1,38 +1,25 @@
 # CSV Simple Editor
 
-CSV-Editor und CSV-Viewer für Visual Studio Code: CSV- und TSV-Dateien als Tabelle anzeigen und bearbeiten. Das Trennzeichen wird automatisch erkannt; Zellen lassen sich bearbeiten, Zeilen und Spalten sortieren und filtern.
+View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Editor detects the delimiter, keeps your data in the same editor tab, and makes common table edits quick.
 
-## Funktionen
+![CSV Simple Editor displaying a sales table with column sorting and filters](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
 
-- Erkennt Komma, Semikolon, Tabulator oder senkrechten Strich und erhält das Trennzeichen beim Speichern.
-- Öffnet CSV- und TSV-Dateien in der Tabellenansicht im selben Editor-Tab.
-- Passt Spaltenbreiten an den Inhalt an und begrenzt sehr breite Spalten.
-- Sortiert per Spaltenkopf oder Rechtsklick und filtert direkt am Trichtersymbol oder über das Kontextmenü.
-- Behält die ursprünglichen Zeilennummern bei, auch wenn die Ansicht sortiert wird.
-- Verwendet `Strg+F` für die native VS-Code-Suche in allen Tabellenzeilen.
-- Bearbeitet Zellen per Doppelklick, `Enter` oder `F2`; `Tab` springt zur nächsten Zelle.
-- Kopiert eine Zelle mit `Strg+C` oder über das Rechtsklick-Menü. Ganze Zeilen lassen sich ebenfalls kopieren.
-- Fügt Zeilen und Spalten hinzu und löscht ausgewählte Zeilen oder einzelne Spalten.
-- Übernimmt Änderungen in das normale VS-Code-Dokument. Speichern funktioniert mit `Strg+S`.
-- Bietet Trennzeichenwahl sowie Filter- und Sortierreset im kompakten Drei-Punkte-Menü.
+## Features
 
-## Installation
+- Automatically detects commas, semicolons, tabs, and pipes, and preserves the delimiter when saving.
+- Opens CSV and TSV files in a table in the same editor tab.
+- Sizes columns to their contents and limits very wide columns.
+- Sorts columns from the header or context menu; filter each column from its header icon.
+- Keeps original row numbers visible when the table is sorted.
+- Uses VS Code's native Find (`Ctrl+F` / `Cmd+F`) across table rows.
+- Edits cells with a double-click, `Enter`, or `F2`; `Tab` moves to the next cell.
+- Copies individual cells or whole rows from the context menu.
+- Adds rows and columns; deletes selected rows or individual columns.
+- Syncs edits with the regular VS Code document. Save with `Ctrl+S` / `Cmd+S`.
+- Changes the delimiter and clears filters or sorting from the compact tools menu.
 
-1. `csv-simple-editor-1.2.1.vsix` über **Erweiterungen: Aus VSIX installieren…** öffnen.
-2. Eine CSV- oder TSV-Datei öffnen. Sie startet direkt in der Tabellenansicht.
-3. Über das Editor-Symbol **CSV als Text öffnen** zur Textansicht wechseln. Dort bringt das CSV-Symbol wieder die Tabelle.
+## Usage
 
-Alternativ kannst du die Erweiterung im Entwicklungsmodus laden: Diesen Ordner in VS Code öffnen und `F5` drücken.
+Open a `.csv` or `.tsv` file to start in table view. Click a column heading to sort; click its filter icon to filter. Right-click a cell or heading for more actions. Use the editor title action to switch back to the text view.
 
-## Bedienung
-
-- Zelle doppelklicken oder mit `Enter` beziehungsweise `F2` bearbeiten.
-- Auf den Spaltennamen klicken, um aufsteigend zu sortieren. Erneutes Klicken wechselt die Richtung.
-- Mit Rechtsklick auf eine Zelle kannst du sie oder die ganze Zeile kopieren, nach ihrem Text filtern oder die Spalte sortieren.
-- Mit Rechtsklick auf eine Spaltenüberschrift kannst du den Filter öffnen, sortieren, die Überschrift bearbeiten oder die Spalte löschen.
-- Das Trichtersymbol im Spaltenkopf öffnet direkt den passenden Filter.
-- Die Zeilennummer links bleibt beim Sortieren an ihrem ursprünglichen Datensatz.
-- Mit dem Kästchen links Zeilen auswählen und über das Papierkorbsymbol löschen.
-- Über das Drei-Punkte-Menü Filter zurücksetzen, Sortierung zurücksetzen, das Trennzeichen ändern oder die Textansicht öffnen.
-
-Die Oberfläche übernimmt die Farben des aktiven VS-Code-Designs und hält Tabelle und Werkzeugleiste kompakt.
+The table follows the active VS Code color theme and keeps the toolbar compact.

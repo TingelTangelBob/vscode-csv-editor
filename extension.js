@@ -85,7 +85,7 @@ function activate(context) {
             await vscode.env.clipboard.writeText(message.text);
             void panel.webview.postMessage({ type: 'clipboardCopied' });
           } catch (error) {
-            void vscode.window.showErrorMessage(`Kopieren fehlgeschlagen: ${error.message}`);
+            void vscode.window.showErrorMessage(`Copy failed: ${error.message}`);
           }
           return;
         }
@@ -114,7 +114,7 @@ function activate(context) {
                   filename: path.basename(document.uri.path),
                   dirty: document.isDirty,
                 });
-                void vscode.window.showErrorMessage('Die CSV-Änderung konnte nicht übernommen werden.');
+                void vscode.window.showErrorMessage('Could not apply the CSV changes.');
                 return;
               }
             } finally {
@@ -124,7 +124,7 @@ function activate(context) {
 
           void panel.webview.postMessage({ type: 'editApplied', dirty: document.isDirty });
         }).catch((error) => {
-          void vscode.window.showErrorMessage(`CSV-Änderung fehlgeschlagen: ${error.message}`);
+          void vscode.window.showErrorMessage(`CSV edit failed: ${error.message}`);
         });
       }, null, context.subscriptions);
     },
@@ -147,7 +147,7 @@ function activate(context) {
     vscode.commands.registerCommand(`${EXTENSION_ID}.open`, async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor || !isCsvDocument(editor.document.uri)) {
-        void vscode.window.showInformationMessage('Öffne eine CSV- oder TSV-Datei, um die Tabellenansicht zu starten.');
+        void vscode.window.showInformationMessage('Open a CSV or TSV file to start the table view.');
         return;
       }
 

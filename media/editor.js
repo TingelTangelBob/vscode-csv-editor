@@ -253,8 +253,8 @@ function renderHeader() {
   const selectAll = document.createElement('input');
   selectAll.type = 'checkbox';
   selectAll.id = 'select-visible-rows';
-  selectAll.title = 'Alle gefilterten Zeilen auswählen';
-  selectAll.setAttribute('aria-label', 'Alle gefilterten Zeilen auswählen');
+  selectAll.title = 'Select all visible rows';
+  selectAll.setAttribute('aria-label', 'Select all visible rows');
   selectAll.disabled = visibleRows.length === 0;
   selectAll.checked = visibleRows.length > 0 && visibleRows.every(({ row }) => selectedRows.has(row.id));
   selectHeader.append(selectAll);
@@ -270,19 +270,19 @@ function renderHeader() {
     sortButton.type = 'button';
     sortButton.className = 'sort-button';
     sortButton.dataset.sort = String(column);
-    sortButton.title = `Nach ${header.trim() || `Spalte ${column + 1}`} sortieren`;
+    sortButton.title = `Sort by ${header.trim() || `Column ${column + 1}`}`;
     sortButton.setAttribute('aria-label', sortButton.title);
     if (sortState?.column === column) sortButton.classList.add('is-sorted');
     th.setAttribute('aria-sort', sortState?.column === column
       ? (sortState.direction > 0 ? 'ascending' : 'descending')
       : 'none');
-    const name = createElement('span', '', header.trim() ? header : `Spalte ${column + 1}`);
+    const name = createElement('span', '', header.trim() ? header : `Column ${column + 1}`);
     const direction = createElement('span', 'sort-indicator', sortState?.column === column ? (sortState.direction > 0 ? '↑' : '↓') : '↕');
     sortButton.append(name, direction);
 
     const filterButton = makeIconButton(
       'header-button filter-button',
-      columnFilters[column] ? 'Filter bearbeiten' : 'Spalte filtern',
+      columnFilters[column] ? 'Edit filter' : 'Filter column',
       'filterToggle',
       column,
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg>',
@@ -303,7 +303,7 @@ function renderBody() {
 
   if (visibleRows.length === 0) {
     const row = document.createElement('tr');
-    const cell = createElement('td', 'empty-state', sheet.rows.length === 0 ? 'Keine Datenzeilen' : 'Keine passenden Zeilen');
+    const cell = createElement('td', 'empty-state', sheet.rows.length === 0 ? 'No data rows' : 'No matching rows');
     cell.colSpan = sheet.headers.length + 1;
     row.append(cell);
     fragment.append(row);
@@ -317,9 +317,9 @@ function renderBody() {
       checkbox.type = 'checkbox';
       checkbox.checked = selectedRows.has(row.id);
       checkbox.dataset.selectRow = String(row.id);
-      checkbox.title = `Zeile ${row.id} auswählen`;
-      checkbox.setAttribute('aria-label', `Zeile ${row.id} auswählen`);
-      rowHeader.title = `Feste Nummer der ursprünglichen Zeile ${row.id}`;
+      checkbox.title = `Select row ${row.id}`;
+      checkbox.setAttribute('aria-label', `Select row ${row.id}`);
+      rowHeader.title = `Original row number ${row.id}`;
       rowHeader.append(checkbox, createElement('span', '', String(row.id)));
       tr.append(rowHeader);
 
@@ -330,7 +330,7 @@ function renderBody() {
         td.dataset.column = String(column);
         td.style.setProperty('--column-width', `${columnWidths[column] || 12}ch`);
         td.tabIndex = 0;
-        td.title = value ? `${value}\nDoppelklicken zum Bearbeiten` : 'Doppelklicken zum Bearbeiten';
+        td.title = value ? `${value}\nDouble-click to edit` : 'Double-click to edit';
         if (!value) td.classList.add('empty-cell');
         tr.append(td);
       });
@@ -346,13 +346,13 @@ function updateToolbar() {
   const filtered = visibleCount !== sheet.rows.length;
   const rowCount = sheet.rows.length;
   const result = filtered
-    ? `${visibleCount.toLocaleString()} von ${rowCount.toLocaleString()} ${rowCount === 1 ? 'Zeile' : 'Zeilen'}`
-    : `${rowCount.toLocaleString()} ${rowCount === 1 ? 'Zeile' : 'Zeilen'}`;
-  const filterStatus = filterCount ? ` · ${filterCount} Filter` : '';
+    ? `${visibleCount.toLocaleString('en-US')} of ${rowCount.toLocaleString('en-US')} ${rowCount === 1 ? 'row' : 'rows'}`
+    : `${rowCount.toLocaleString('en-US')} ${rowCount === 1 ? 'row' : 'rows'}`;
+  const filterStatus = filterCount ? ` · ${filterCount} ${filterCount === 1 ? 'filter' : 'filters'}` : '';
   const columnCount = sheet.headers.length;
-  elements.tableStatus.textContent = `${result} · ${columnCount} ${columnCount === 1 ? 'Spalte' : 'Spalten'}${filterStatus}`;
+  elements.tableStatus.textContent = `${result} · ${columnCount} ${columnCount === 1 ? 'column' : 'columns'}${filterStatus}`;
   elements.deleteSelected.disabled = selectedRows.size === 0;
-  elements.selectionCount.textContent = selectedRows.size.toLocaleString();
+  elements.selectionCount.textContent = selectedRows.size.toLocaleString('en-US');
   elements.selectionCount.hidden = selectedRows.size === 0;
 }
 
@@ -373,7 +373,7 @@ function recalculateColumnWidths(columns = null) {
 
   for (const column of columnsToMeasure) {
     const header = sheet.headers[column] ?? '';
-    let longest = Math.max(header.trim() ? header.length : `Spalte ${column + 1}`.length, 3);
+    let longest = Math.max(header.trim() ? header.length : `Column ${column + 1}`.length, 3);
     for (const row of sheet.rows) {
       const value = String(row.cells[column] ?? '');
       for (const line of value.split(/\r?\n/)) longest = Math.max(longest, line.length);
@@ -416,7 +416,7 @@ function beginCellEdit(cell) {
   editor.className = 'cell-editor';
   editor.rows = Math.min(4, Math.max(1, originalValue.split('\n').length));
   editor.value = originalValue;
-  editor.setAttribute('aria-label', `${sheet.headers[column] || `Spalte ${column + 1}`} bearbeiten`);
+  editor.setAttribute('aria-label', `Edit ${sheet.headers[column] || `Column ${column + 1}`}`);
   cell.replaceChildren(editor);
   editor.focus();
   editor.select();
@@ -451,9 +451,9 @@ function beginCellEdit(cell) {
 }
 
 function openColumnDialog(mode, column = -1) {
-  elements.columnTitle.textContent = mode === 'rename' ? 'Überschrift bearbeiten' : 'Spalte hinzufügen';
+  elements.columnTitle.textContent = mode === 'rename' ? 'Rename column' : 'Add column';
   elements.columnName.value = mode === 'rename' ? (sheet.headers[column] || '') : '';
-  elements.columnName.placeholder = mode === 'rename' ? 'Spaltenname' : 'z. B. Artikelnummer';
+  elements.columnName.placeholder = mode === 'rename' ? 'Column name' : 'e.g. Product ID';
 
   return new Promise((resolve) => {
     elements.columnDialog.addEventListener('close', () => {
@@ -513,7 +513,7 @@ function openFilterPopover(column, anchor) {
   closePopovers();
   activePopover = elements.filterPopover;
   activeColumn = column;
-  elements.filterLabel.textContent = `${sheet.headers[column]?.trim() || `Spalte ${column + 1}`} filtern`;
+  elements.filterLabel.textContent = `Filter ${sheet.headers[column]?.trim() || `Column ${column + 1}`}`;
   elements.filterInput.value = columnFilters[column] || '';
   positionPopover(elements.filterPopover, anchor);
   anchor.setAttribute('aria-expanded', 'true');
@@ -526,10 +526,10 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   activePopover = elements.contextPopover;
   activeColumn = column;
   contextTarget = { rowId, column, kind };
-  const header = sheet.headers[column]?.trim() || `Spalte ${column + 1}`;
+  const header = sheet.headers[column]?.trim() || `Column ${column + 1}`;
   const row = rowId === null ? null : sheet.rows.find((item) => item.id === rowId);
   const value = row ? String(row.cells[column] ?? '') : '';
-  elements.contextCaption.textContent = kind === 'cell' ? `${header}: ${value || '(leer)'}` : header;
+  elements.contextCaption.textContent = kind === 'cell' ? `${header}: ${value || '(empty)'}` : header;
   elements.contextPopover.querySelectorAll('.context-cell-action').forEach((item) => {
     item.hidden = kind !== 'cell';
   });
@@ -594,9 +594,9 @@ async function renameColumn(column) {
 
 async function deleteColumn(column) {
   if (sheet.headers.length <= 1) return;
-  const columnName = sheet.headers[column]?.trim() || `Spalte ${column + 1}`;
+  const columnName = sheet.headers[column]?.trim() || `Column ${column + 1}`;
   closePopovers();
-  const confirmed = await confirmAction(`„${columnName}“ und alle Werte dieser Spalte löschen?`);
+  const confirmed = await confirmAction(`Delete “${columnName}” and all values in this column?`);
   if (!confirmed) return;
 
   sheet.headers.splice(column, 1);
@@ -614,7 +614,7 @@ async function deleteColumn(column) {
 async function deleteSelectedRows() {
   if (selectedRows.size === 0) return;
   const selectedCount = selectedRows.size;
-  const confirmed = await confirmAction(`${selectedCount.toLocaleString()} ausgewählte ${selectedCount === 1 ? 'Zeile löschen' : 'Zeilen löschen'}?`);
+  const confirmed = await confirmAction(`Delete ${selectedCount.toLocaleString('en-US')} selected ${selectedCount === 1 ? 'row' : 'rows'}?`);
   if (!confirmed) return;
 
   sheet.rows = sheet.rows.filter((row) => !selectedRows.has(row.id));
