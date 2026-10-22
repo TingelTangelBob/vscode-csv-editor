@@ -18,6 +18,7 @@ const elements = {
   settingsButton: document.getElementById('settings-button'),
   settingsPopover: document.getElementById('settings-popover'),
   colorizeColumns: document.getElementById('colorize-columns'),
+  showGridlines: document.getElementById('show-gridlines'),
   filterPopover: document.getElementById('filter-popover'),
   filterLabel: document.getElementById('filter-label'),
   filterInput: document.getElementById('column-filter-input'),
@@ -41,6 +42,7 @@ let columnWidthOverrides = Array.isArray(vscode.getState()?.columnWidthOverrides
   ? vscode.getState().columnWidthOverrides
   : [];
 let colorizeColumns = vscode.getState()?.colorizeColumns === true;
+let showGridlines = vscode.getState()?.showGridlines === true;
 let selectedColumn = -1;
 let sortState = null;
 let visibleRows = [];
@@ -65,6 +67,7 @@ function persistViewState() {
   vscode.setState({
     columnWidthOverrides,
     colorizeColumns,
+    showGridlines,
   });
 }
 
@@ -233,6 +236,7 @@ function setDocument(rawText) {
   });
   if (selectedColumn >= sheet.headers.length) selectedColumn = -1;
   elements.colorizeColumns.checked = colorizeColumns;
+  elements.showGridlines.checked = showGridlines;
   lastSerializedText = rawText;
   selectedRows.clear();
   sortState = null;
@@ -420,6 +424,7 @@ function renderTable() {
     filterRenderTimer = null;
   }
   visibleRows = getVisibleRows();
+  elements.table.classList.toggle('has-gridlines', showGridlines);
   renderHeader();
   renderBody();
   updateToolbar();
@@ -747,6 +752,11 @@ elements.toolsButton.addEventListener('click', openToolsPopover);
 elements.settingsButton.addEventListener('click', openSettingsPopover);
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;
+  persistViewState();
+  renderTable();
+});
+elements.showGridlines.addEventListener('change', () => {
+  showGridlines = elements.showGridlines.checked;
   persistViewState();
   renderTable();
 });

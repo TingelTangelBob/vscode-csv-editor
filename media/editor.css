@@ -42,14 +42,14 @@ svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColo
 .table-scroll { position: relative; flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0; margin: 0; padding: 0; overflow: auto; overscroll-behavior: contain; }
 table { width: max-content; min-width: max-content; margin: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed; text-align: left; }
 thead { position: sticky; top: 0; z-index: 3; }
-thead th { height: 35px; padding: 0 5px; color: var(--muted); background: var(--background); font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+thead th { height: 35px; padding: 0 5px; color: var(--muted); background: var(--background); font-size: 11px; font-weight: 600; text-align: left; vertical-align: middle; white-space: nowrap; }
 thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .row-number-head, .row-number-cell { width: 43px; min-width: 43px; max-width: 43px; }
-.row-number-head { padding: 0 12px !important; }
+.row-number-head { padding: 0 !important; text-align: center; }
 .row-number-head input, .row-number-cell input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
-.row-number-head input { opacity: .7; }
-.heading-content { position: relative; display: flex; align-items: center; gap: 1px; min-width: 0; height: 100%; }
-.sort-button { display: flex; flex: 1 1 auto; align-items: center; gap: 4px; min-width: 0; height: 28px; overflow: hidden; padding: 0 24px 0 3px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+.row-number-head input { position: absolute; top: 50%; left: 50%; opacity: .7; transform: translate(-50%, -50%); }
+.heading-content { position: relative; display: flex; align-items: center; gap: 1px; width: 100%; min-width: 0; height: 35px; }
+.sort-button { display: flex; flex: 1 1 auto; align-items: center; gap: 4px; min-width: 0; height: 28px; overflow: hidden; padding: 0 3px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
 .sort-button:hover, .sort-button.is-sorted { color: var(--foreground); }
 .sort-button > span:first-child { overflow: hidden; text-overflow: ellipsis; }
 .sort-indicator { display: inline-grid; flex: none; place-items: center; width: 12px; min-width: 12px; height: 18px; color: var(--muted); font-size: 10px; }
@@ -57,9 +57,10 @@ thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .header-button { display: inline-grid; flex: none; place-items: center; width: 21px; height: 22px; padding: 0; border: 0; border-radius: 3px; outline: 0; background: transparent; color: var(--muted); }
 .header-button:hover, .header-button.is-active { color: var(--accent); background: var(--hover); }
 .header-button svg { width: 13px; height: 13px; }
-.filter-button { position: absolute; top: 50%; right: 8px; z-index: 1; visibility: hidden; opacity: 0; transform: translateY(-50%); transition: opacity 90ms ease; }
+.filter-button { position: relative; z-index: 1; visibility: hidden; opacity: 0; transform: none; transition: opacity 90ms ease; }
 th[data-column]:hover .filter-button, th[data-column]:focus-within .filter-button, .filter-button.is-active { visibility: visible; opacity: 1; }
 .filter-button.is-active svg path { fill: currentColor; }
+.has-gridlines thead th, .has-gridlines tbody td { border-right: 1px solid color-mix(in srgb, var(--foreground) 13%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--foreground) 13%, transparent); }
 thead th[data-column] { position: relative; width: var(--column-width, 12ch); min-width: 7ch; max-width: 640px; }
 tbody .data-cell { width: var(--column-width, 12ch); min-width: 7ch; max-width: 640px; overflow: hidden; padding: 0 9px; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
 .column-resize-handle { position: absolute; top: 0; right: -3px; z-index: 2; width: 7px; height: 100%; cursor: col-resize; touch-action: none; }

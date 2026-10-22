@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.4
+
+- Added an optional table gridlines setting.
+- Aligned the select-all checkbox, sort indicator, and filter button within the column header row.
+
 ## 1.2.3
 
 - Added adjustable column widths with saved overrides and a reset action.
