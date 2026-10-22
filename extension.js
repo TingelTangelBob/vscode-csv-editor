@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vscode = require('vscode');
 
-const VIEW_TYPE = 'tingeltangelbob.csv-grid-editor.csvGrid';
-const EXTENSION_ID = 'tingeltangelbob.csv-grid-editor';
+const VIEW_TYPE = 'tingeltangelbob.csv-simple-editor.csvGrid';
+const EXTENSION_ID = 'tingeltangelbob.csv-simple-editor';
 
 function isCsvDocument(uri) {
   return ['.csv', '.tsv'].includes(path.extname(uri.path).toLowerCase());

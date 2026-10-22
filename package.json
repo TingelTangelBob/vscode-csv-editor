@@ -1,5 +1,5 @@
 {
-  "name": "csv-grid-editor",
+  "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
   "description": "View and edit CSV and TSV files as a table in VS Code. Auto-detect delimiters, sort and filter data, edit cells, and add or delete rows and columns.",
   "version": "1.2.1",
@@ -52,14 +52,14 @@
   ],
   "main": "./extension.js",
   "activationEvents": [
-    "onCommand:tingeltangelbob.csv-grid-editor.open",
-    "onCommand:tingeltangelbob.csv-grid-editor.openAsText",
-    "onCustomEditor:tingeltangelbob.csv-grid-editor.csvGrid"
+    "onCommand:tingeltangelbob.csv-simple-editor.open",
+    "onCommand:tingeltangelbob.csv-simple-editor.openAsText",
+    "onCustomEditor:tingeltangelbob.csv-simple-editor.csvGrid"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "tingeltangelbob.csv-grid-editor.open",
+        "command": "tingeltangelbob.csv-simple-editor.open",
         "title": "CSV-Vorschau öffnen",
         "icon": {
           "light": "./media/csv-table-light.svg",
@@ -67,14 +67,14 @@
         }
       },
       {
-        "command": "tingeltangelbob.csv-grid-editor.openAsText",
+        "command": "tingeltangelbob.csv-simple-editor.openAsText",
         "title": "CSV als Text öffnen",
         "icon": "$(file-code)"
       }
     ],
     "customEditors": [
       {
-        "viewType": "tingeltangelbob.csv-grid-editor.csvGrid",
+        "viewType": "tingeltangelbob.csv-simple-editor.csvGrid",
         "displayName": "CSV Simple Editor",
         "selector": [
           { "filenamePattern": "*.csv" },
@@ -88,13 +88,13 @@
     "menus": {
       "editor/title": [
         {
-          "command": "tingeltangelbob.csv-grid-editor.open",
-          "when": "(resourceExtname == .csv || resourceExtname == .CSV || resourceExtname == .tsv || resourceExtname == .TSV) && activeCustomEditorId != tingeltangelbob.csv-grid-editor.csvGrid",
+          "command": "tingeltangelbob.csv-simple-editor.open",
+          "when": "(resourceExtname == .csv || resourceExtname == .CSV || resourceExtname == .tsv || resourceExtname == .TSV) && activeCustomEditorId != tingeltangelbob.csv-simple-editor.csvGrid",
           "group": "navigation@1"
         },
         {
-          "command": "tingeltangelbob.csv-grid-editor.openAsText",
-          "when": "activeCustomEditorId == tingeltangelbob.csv-grid-editor.csvGrid",
+          "command": "tingeltangelbob.csv-simple-editor.openAsText",
+          "when": "activeCustomEditorId == tingeltangelbob.csv-simple-editor.csvGrid",
           "group": "navigation@1"
         }
       ]

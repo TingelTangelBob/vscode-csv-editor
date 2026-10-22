@@ -18,7 +18,7 @@ CSV-Editor und CSV-Viewer für Visual Studio Code: CSV- und TSV-Dateien als Tabe
 
 ## Installation
 
-1. `csv-grid-editor-1.2.1.vsix` über **Erweiterungen: Aus VSIX installieren…** öffnen.
+1. `csv-simple-editor-1.2.1.vsix` über **Erweiterungen: Aus VSIX installieren…** öffnen.
 2. Eine CSV- oder TSV-Datei öffnen. Sie startet direkt in der Tabellenansicht.
 3. Über das Editor-Symbol **CSV als Text öffnen** zur Textansicht wechseln. Dort bringt das CSV-Symbol wieder die Tabelle.
 
