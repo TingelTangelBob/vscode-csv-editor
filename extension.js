@@ -7,6 +7,9 @@ const vscode = require('vscode');
 
 const VIEW_TYPE = 'tingeltangelbob.csv-simple-editor.csvGrid';
 const EXTENSION_ID = 'tingeltangelbob.csv-simple-editor';
+const DEFAULT_EDITOR_SETTING = 'csvSimpleEditor.openByDefault';
+const DEFAULT_EDITOR_PATTERNS = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
+const PROJECT_URL = 'https://github.com/TingelTangelBob/vscode-csv-editor';
 
 function isCsvDocument(uri) {
   return ['.csv', '.tsv'].includes(path.extname(uri.path).toLowerCase());
@@ -20,19 +23,73 @@ function renderWebview(webview, extensionUri) {
   const mediaUri = vscode.Uri.joinPath(extensionUri, 'media');
   const stylesheetUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.css'));
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.js'));
+  const csvScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv.js'));
+  const iconUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv-simple-editor-favicon.svg'));
   const nonce = createNonce();
   const template = fs.readFileSync(path.join(extensionUri.fsPath, 'media', 'index.html'), 'utf8');
 
   return template
     .replaceAll('{{CSP_SOURCE}}', webview.cspSource)
-    .replace('{{NONCE}}', nonce)
+    .replaceAll('{{NONCE}}', nonce)
     .replace('{{STYLESHEET_URI}}', stylesheetUri.toString())
-    .replace('{{SCRIPT_URI}}', scriptUri.toString());
+    .replace('{{SCRIPT_URI}}', scriptUri.toString())
+    .replace('{{CSV_SCRIPT_URI}}', csvScriptUri.toString())
+    .replace('{{ICON_URI}}', iconUri.toString());
+}
+
+function getDefaultEditorPreference() {
+  return vscode.workspace.getConfiguration('csvSimpleEditor').get('openByDefault', true);
+}
+
+async function applyDefaultEditorPreference(enabled) {
+  const workbench = vscode.workspace.getConfiguration('workbench');
+  // Only update user associations; workspace settings must stay in their scope.
+  const current = workbench.inspect('editorAssociations')?.globalValue ?? {};
+  const targetViewType = enabled ? VIEW_TYPE : 'default';
+
+  if (Array.isArray(current)) {
+    const patterns = new Set(DEFAULT_EDITOR_PATTERNS);
+    const next = current.filter((entry) => !patterns.has(entry?.filenamePattern));
+    for (const filenamePattern of DEFAULT_EDITOR_PATTERNS) {
+      next.push({ viewType: targetViewType, filenamePattern });
+    }
+    const unchanged = DEFAULT_EDITOR_PATTERNS.every((filenamePattern) =>
+      current.some((entry) => entry?.filenamePattern === filenamePattern && entry.viewType === targetViewType),
+    ) && next.length === current.length;
+    if (unchanged) return;
+    await workbench.update('editorAssociations', next, vscode.ConfigurationTarget.Global);
+    return;
+  }
+
+  const next = current && typeof current === 'object' ? { ...current } : {};
+  let changed = false;
+  for (const filenamePattern of DEFAULT_EDITOR_PATTERNS) {
+    if (next[filenamePattern] === targetViewType) continue;
+    next[filenamePattern] = targetViewType;
+    changed = true;
+  }
+  if (changed) await workbench.update('editorAssociations', next, vscode.ConfigurationTarget.Global);
 }
 
 function activate(context) {
   const panelsByDocument = new Map();
   const applyingFromGrid = new Set();
+
+  const notifyDefaultEditorPreference = () => {
+    const enabled = getDefaultEditorPreference();
+    for (const panels of panelsByDocument.values()) {
+      for (const entry of panels) {
+        void entry.panel.webview.postMessage({ type: 'defaultEditorPreference', enabled });
+      }
+    }
+  };
+
+  const configuredPreference = vscode.workspace.getConfiguration('csvSimpleEditor').inspect('openByDefault');
+  if (configuredPreference?.globalValue !== undefined) {
+    void applyDefaultEditorPreference(configuredPreference.globalValue !== false).catch((error) => {
+      void vscode.window.showErrorMessage(`Could not update the default CSV editor: ${error.message}`);
+    });
+  }
 
   const broadcastDocument = (document, messageType = 'load') => {
     const key = document.uri.toString();
@@ -67,16 +124,40 @@ function activate(context) {
         panels.delete(entry);
         if (panels.size === 0) panelsByDocument.delete(key);
       };
-      panel.onDidDispose(removePanel, null, context.subscriptions);
-
-      panel.webview.onDidReceiveMessage(async (message) => {
+      const messageListener = panel.webview.onDidReceiveMessage(async (message) => {
         if (message?.type === 'ready') {
           broadcastDocument(document);
+          void panel.webview.postMessage({ type: 'defaultEditorPreference', enabled: getDefaultEditorPreference() });
+          return;
+        }
+
+        if (message?.type === 'setDefaultEditorPreference' && typeof message.enabled === 'boolean') {
+          try {
+            await vscode.workspace.getConfiguration('csvSimpleEditor').update(
+              'openByDefault',
+              message.enabled,
+              vscode.ConfigurationTarget.Global,
+            );
+            await applyDefaultEditorPreference(message.enabled);
+            notifyDefaultEditorPreference();
+          } catch (error) {
+            void vscode.window.showErrorMessage(`Could not update the default CSV editor: ${error.message}`);
+            notifyDefaultEditorPreference();
+          }
           return;
         }
 
         if (message?.type === 'openAsText') {
           await vscode.commands.executeCommand('reopenActiveEditorWith', 'default');
+          return;
+        }
+
+        if (message?.type === 'openProject') {
+          try {
+            await vscode.env.openExternal(vscode.Uri.parse(PROJECT_URL));
+          } catch (error) {
+            void vscode.window.showErrorMessage(`Could not open the project on GitHub: ${error.message}`);
+          }
           return;
         }
 
@@ -124,9 +205,14 @@ function activate(context) {
 
           void panel.webview.postMessage({ type: 'editApplied', dirty: document.isDirty });
         }).catch((error) => {
+          void panel.webview.postMessage({ type: 'editRejected', text: document.getText() });
           void vscode.window.showErrorMessage(`CSV edit failed: ${error.message}`);
         });
-      }, null, context.subscriptions);
+      });
+      panel.onDidDispose(() => {
+        removePanel();
+        messageListener.dispose();
+      });
     },
   };
 
@@ -143,6 +229,13 @@ function activate(context) {
     }),
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (isCsvDocument(document.uri)) broadcastDocument(document, 'saved');
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration(DEFAULT_EDITOR_SETTING)) return;
+      const enabled = getDefaultEditorPreference();
+      void applyDefaultEditorPreference(enabled).then(notifyDefaultEditorPreference).catch((error) => {
+        void vscode.window.showErrorMessage(`Could not update the default CSV editor: ${error.message}`);
+      });
     }),
     vscode.commands.registerCommand(`${EXTENSION_ID}.open`, async () => {
       const editor = vscode.window.activeTextEditor;

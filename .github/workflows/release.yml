@@ -15,6 +15,10 @@ jobs:
       - name: Repository checkout
         uses: actions/checkout@v4
 
+      - name: Test extension
+        shell: pwsh
+        run: npm test
+
       - name: Package extension
         shell: pwsh
         run: ./package-vsix.ps1

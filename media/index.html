@@ -10,7 +10,10 @@
 <body>
   <main class="app-shell">
     <header class="toolbar" aria-label="Table tools">
-      <span class="table-status" id="table-status" aria-live="polite"></span>
+      <div class="document-summary">
+        <span class="document-name" id="document-name">CSV Simple Editor</span>
+        <span class="table-status" id="table-status" aria-live="polite"></span>
+      </div>
       <span class="toolbar-spacer"></span>
       <div class="toolbar-actions">
       <div class="tool-group">
@@ -25,8 +28,9 @@
           <span class="selection-count" id="selection-count" hidden>0</span>
         </button>
       </div>
+      <span class="toolbar-divider" aria-hidden="true"></span>
       <button class="tool-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" aria-haspopup="true" aria-expanded="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2L6.5 12l1.4-2.4 1.7.7a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.9Z"></path></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"></path><circle cx="9" cy="7" r="3"></circle><circle cx="15" cy="17" r="3"></circle></svg>
       </button>
       <button class="tool-button" id="tools-menu-button" type="button" title="More tools" aria-label="More tools" aria-haspopup="true" aria-expanded="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
@@ -35,7 +39,7 @@
     </header>
 
     <section class="table-scroll" id="table-scroll" aria-label="CSV table">
-      <table id="csv-table">
+      <table id="csv-table" aria-label="Editable CSV data">
         <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
       </table>
@@ -54,6 +58,12 @@
       <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span>Clear filters</span></button>
       <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0-14L5 8m3-3 3 3m8 11V5m0 14 3-3m-3 3-3-3"></path></svg></span><span>Clear sorting</span></button>
       <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h8M5 19h8"></path></svg></span><span>Open as text</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <button class="menu-action project-link" type="button" data-action="open-project" title="Open CSV Simple Editor on GitHub" aria-label="Buy me a coffee — open CSV Simple Editor on GitHub">
+        <img class="project-logo" src="{{ICON_URI}}" alt="" width="24" height="24">
+        <span class="project-copy"><span>Buy me a coffee</span><span class="project-detail">CSV Simple Editor · GitHub</span></span>
+        <svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"></path></svg>
+      </button>
     </div>
 
     <div class="popover settings-popover" id="settings-popover" hidden>
@@ -66,6 +76,11 @@
         <input id="show-gridlines" type="checkbox">
         <span class="setting-copy"><span>Show table gridlines</span><span class="setting-help">Draws subtle lines between rows and columns.</span></span>
       </label>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <label class="setting-toggle" for="open-by-default">
+        <input id="open-by-default" type="checkbox">
+        <span class="setting-copy"><span>Open CSV files in the table by default</span><span class="setting-help">Applies to CSV and TSV files. You can also change this in VS Code settings.</span></span>
+      </label>
       <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.5 9a7 7 0 0 1 11.8-2L20 12M4 12l2.7 5a7 7 0 0 0 11.8-2"></path></svg></span><span>Reset column widths</span></button>
     </div>
 
@@ -75,7 +90,7 @@
       <button class="menu-action clear-column-filter" type="button" data-action="clear-column-filter">Clear filter</button>
     </div>
 
-    <div class="popover context-popover" id="context-popover" hidden role="menu">
+    <div class="popover context-popover" id="context-popover" hidden role="group" aria-label="Table actions">
       <div class="popover-caption" id="context-caption">Column</div>
       <button class="menu-action context-cell-action" type="button" data-action="copy-cell"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg></span><span>Copy cell</span></button>
       <button class="menu-action context-cell-action" type="button" data-action="copy-row"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M4 10h16m-11-5v14m6-14v14"></path></svg></span><span>Copy row</span></button>
@@ -108,6 +123,7 @@
       </form>
     </dialog>
   </main>
+  <script nonce="{{NONCE}}" src="{{CSV_SCRIPT_URI}}"></script>
   <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}"></script>
 </body>
 </html>

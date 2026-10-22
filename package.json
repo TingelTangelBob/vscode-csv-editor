@@ -2,7 +2,7 @@
   "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
   "description": "Edit and view CSV, TSV, and other delimited text files as tables in VS Code. Auto-detect delimiters, edit cells, sort and filter columns, and add or delete rows and columns.",
-  "version": "1.2.4",
+  "version": "1.2.6",
   "publisher": "tingeltangelbob",
   "repository": {
     "type": "git",
@@ -38,6 +38,7 @@
     "tab separated values"
   ],
   "scripts": {
+    "test": "node --test",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./package-vsix.ps1"
   },
   "engines": {
@@ -51,9 +52,21 @@
   "activationEvents": [
     "onCommand:tingeltangelbob.csv-simple-editor.open",
     "onCommand:tingeltangelbob.csv-simple-editor.openAsText",
-    "onCustomEditor:tingeltangelbob.csv-simple-editor.csvGrid"
+    "onCustomEditor:tingeltangelbob.csv-simple-editor.csvGrid",
+    "onStartupFinished"
   ],
   "contributes": {
+    "configuration": {
+      "title": "CSV Simple Editor",
+      "properties": {
+        "csvSimpleEditor.openByDefault": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Open CSV and TSV files in CSV Simple Editor by default. Turn this off to use the standard text editor."
+        }
+      }
+    },
     "commands": [
       {
         "command": "tingeltangelbob.csv-simple-editor.open",

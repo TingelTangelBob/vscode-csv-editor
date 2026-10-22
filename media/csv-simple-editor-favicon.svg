@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="icon-title icon-description">
+  <title id="icon-title">CSV Simple Editor</title>
+  <desc id="icon-description">A bold white table on a sage green gradient, designed to stay clear at small sizes.</desc>
+  <defs>
+    <linearGradient id="background" x1="12" y1="4" x2="112" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#689B83"/>
+      <stop offset=".5" stop-color="#528565"/>
+      <stop offset="1" stop-color="#3D6C55"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#background)"/>
+  <path fill="#FFFFFF" fill-rule="evenodd" d="M28 24h72a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8V32a8 8 0 0 1 8-8Zm0 32v16h32V56H28Zm40 0v16h32V56H68ZM28 80v16h32V80H28Zm40 0v16h32V80H68Z"/>
+</svg>

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.6
+
+- Simplified the icon to a bold table symbol on a subtle sage green gradient, with an editable SVG source and clear shapes at small sizes.
+- Moved the logo into a discreet "Buy me a coffee" row in the tools menu that opens the project on GitHub.
+- Refined the toolbar, table headers, row shading, menus, and light, dark, and high contrast styling.
+- Added arrow-key navigation between cells and a partial-selection state for the select-all checkbox.
+- Made column filter buttons accessible from the keyboard.
+- Preserved clicks on cells and headers when leaving a cell edit, and improved keyboard focus in popovers.
+- Preserved quoted empty records, empty single-column rows, and record line endings when cells contain multiline text.
+- Kept workspace editor associations out of user settings when changing the default CSV editor.
+- Added dependency-free CSV and extension regression tests.
+
+## 1.2.5
+
+- Added a setting to choose whether CSV and TSV files open in the table or the standard text editor by default.
+
 ## 1.2.4
 
 - Added an optional table gridlines setting.
