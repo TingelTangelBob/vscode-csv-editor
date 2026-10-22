@@ -3,6 +3,7 @@
 ## 1.2.6
 
 - Renamed the table editor to "CSV Table" so VS Code shows a distinct name from the extension.
+- Simplified the editor toolbar icon to a clear "CSV" label for small sizes.
 - Simplified the icon to a bold table symbol on a subtle sage green gradient, with an editable SVG source and clear shapes at small sizes.
 - Moved the logo into a discreet "Buy me a coffee" row in the tools menu that opens the project on GitHub.
 - Refined the toolbar, table headers, row shading, menus, and light, dark, and high contrast styling.
