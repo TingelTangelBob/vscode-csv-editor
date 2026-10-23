@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.10
+
+- Render the supplied value replacement symbol as a filled icon so its line weight matches the other toolbar symbols.
+- Refresh the Marketplace screenshots.
+
 ## 1.4.9
 
 - Add compact toolbar menus for inserting columns before or after the selection, appending columns, and choosing the scope for value replacement.

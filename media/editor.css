@@ -43,7 +43,7 @@ svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColo
 .tool-button:focus-visible, .header-button:focus-visible, .sort-button:focus-visible, .menu-action:focus-visible, .dialog-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .tool-button > .codicon { font-size: 16px; }
 .table-add-icon { width: 16px; height: 16px; stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; }
-.replace-values-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
+.replace-values-icon { width: 16px; height: 16px; fill: currentColor; stroke: none; stroke-width: 0; }
 .table-add-highlight { fill: var(--vscode-charts-blue, #3794ff); stroke: none; }
 .table-add-plus { stroke-width: 1.2; }
 .danger-tool:hover:not(:disabled) { color: var(--danger); }
