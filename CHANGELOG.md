@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.5
+
+- Add content-fit sizing, multi-column selection, and synchronized resizing for selected columns.
+- Keep header titles left-aligned, anchor sort and filter icons to their titles, and improve sort reset behavior.
+- Deselect columns with Escape or by clicking elsewhere; animate popover menus.
+
 ## 1.4.4
 
 - Close the add-column dialog when clicking outside it and bring the sort arrows closer to the column header edges.

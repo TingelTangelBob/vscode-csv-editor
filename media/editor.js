@@ -44,7 +44,7 @@ const TRANSLATIONS = {
     'Filter column':'Spalte filtern','Contains…':'Enthält …','Clear filter':'Filter löschen','Copy cell':'Zelle kopieren',
     'Copy row':'Zeile kopieren','Copy row as list':'Zeile als Liste kopieren','Open column filter':'Spaltenfilter öffnen',
     'Filter by this value':'Nach diesem Wert filtern','Sort ascending':'Aufsteigend sortieren','Sort descending':'Absteigend sortieren',
-    'Select column':'Spalte auswählen','Deselect column':'Spalte abwählen','Copy visible column as list (with header)':'Sichtbare Spalte samt Kopfzeile kopieren',
+    'Select column':'Spalte auswählen','Deselect column':'Spalte abwählen','Fit column to contents':'Spaltenbreite an Inhalt anpassen','Copy visible column as list (with header)':'Sichtbare Spalte samt Kopfzeile kopieren',
     'Rename column':'Spalte umbenennen','Delete column':'Spalte löschen','Add column':'Spalte hinzufügen','Column name':'Spaltenname',
     'e.g. Product ID':'z. B. Produktnummer','Apply':'Übernehmen','Cancel':'Abbrechen',
     'Confirm deletion':'Löschen bestätigen','Delete':'Löschen','No data rows yet. Add a row to get started.':'Noch keine Datenzeilen. Füge eine Zeile hinzu, um zu beginnen.',
@@ -200,6 +200,8 @@ let responsiveColumns = vscode.getState()?.responsiveColumns !== false;
 let theme = ['system', 'light', 'dark'].includes(vscode.getState()?.theme) ? vscode.getState().theme : 'system';
 let lastFilename = '';
 let selectedColumn = -1;
+const selectedColumns = new Set();
+let lastSortClick = { column: -1, time: 0 };
 let sortState = null;
 let visibleRows = [];
 let activeColumn = -1;
@@ -310,6 +312,7 @@ function setDocument(rawText, filename = lastFilename) {
       const width = columnWidthOverrides[column];
       return Number.isFinite(width) && width >= 40 ? width : null;
     });
+    for (const selected of selectedColumns) if (selected >= sheet.headers.length) selectedColumns.delete(selected);
     if (selectedColumn >= sheet.headers.length) selectedColumn = -1;
     elements.colorizeColumns.checked = colorizeColumns;
     elements.showGridlines.checked = showGridlines;
@@ -469,6 +472,7 @@ function applyImportedTable(plan, append) {
   if (!append) columnWidthOverrides = [];
   selectedRows.clear();
   selectedColumn = -1;
+  selectedColumns.clear();
   sortState = null;
   columnFilters = Array(sheet.headers.length).fill(null);
   elements.delimiter.value = sheet.delimiter === '\t' ? 'tab' : sheet.delimiter;
@@ -592,7 +596,7 @@ function renderHeader() {
   sheet.headers.forEach((header, column) => {
     const th = createElement('th', 'data-heading');
     th.dataset.column = String(column);
-    th.classList.toggle('is-column-selected', selectedColumn === column);
+    th.classList.toggle('is-column-selected', selectedColumns.has(column));
     applyColumnColor(th, column);
 
     const layout = createElement('div', 'heading-content');
@@ -615,6 +619,7 @@ function renderHeader() {
       directionButton.dataset.sort = String(column);
       directionButton.dataset.sortDirection = String(direction);
       const isActiveSortDirection = sortState?.column === column && sortState.direction === direction;
+      directionButton.hidden = isActiveSortDirection;
       const arrowIcon = createElement('span', `material-arrow-icon material-arrow-small-${direction > 0 ? 'up' : 'down'}`);
       arrowIcon.setAttribute('aria-hidden', 'true');
       directionButton.append(arrowIcon);
@@ -649,6 +654,21 @@ function renderHeader() {
     titleRow.append(th);
   });
   elements.tableHead.replaceChildren(titleRow);
+  requestAnimationFrame(positionHeaderIcons);
+}
+
+function positionHeaderIcons() {
+  elements.tableHead.querySelectorAll('th[data-column]').forEach((header) => {
+    const layout = header.querySelector('.heading-content');
+    const name = header.querySelector('.sort-button > span:first-child');
+    const indicators = header.querySelector('.sort-indicators');
+    const filter = header.querySelector('.filter-button');
+    if (!layout || !name || !indicators || !filter) return;
+    const width = Math.min(name.scrollWidth, Math.max(0, layout.clientWidth - 22));
+    indicators.style.setProperty('--sort-indicator-left', `${name.offsetLeft + width / 2}px`);
+    filter.style.left = `${Math.min(layout.clientWidth - 16, name.offsetLeft + width + 3)}px`;
+    filter.style.right = 'auto';
+  });
 }
 
 function renderBody() {
@@ -689,7 +709,7 @@ function renderBody() {
         const td = createElement('td', 'data-cell', value);
         td.dataset.rowId = String(row.id);
         td.dataset.column = String(column);
-        td.classList.toggle('is-column-selected', selectedColumn === column);
+        td.classList.toggle('is-column-selected', selectedColumns.has(column));
         applyColumnColor(td, column);
         td.tabIndex = 0;
         td.title = value ? `${value}\nDouble-click to edit` : 'Double-click to edit';
@@ -853,6 +873,7 @@ function updateTableWidth() {
     if (col) col.style.width = columnWidthCss(column);
   });
   elements.table.style.width = `calc(var(--row-number-width) + ${sheet.headers.map((_, column) => columnWidthCss(column)).join(' + ')})`;
+  positionHeaderIcons();
 }
 
 function applyColumnWidth(column, width) {
@@ -1039,6 +1060,7 @@ function openToolsPopover() {
     return;
   }
   closePopovers();
+  elements.toolsPopover.querySelector('[data-action="clear-sort"]').hidden = !sortState;
   activePopover = elements.toolsPopover;
   popoverAnchor = elements.toolsButton;
   elements.toolsButton.setAttribute('aria-expanded', 'true');
@@ -1184,9 +1206,12 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   deleteButton.disabled = sheet.headers.length <= 1;
   const selectColumnButton = elements.contextPopover.querySelector('[data-action="select-column"]');
   const selectColumnLabel = selectColumnButton.querySelector('[data-i18n]');
-  selectColumnLabel.dataset.i18n = selectedColumn === column ? 'Deselect column' : 'Select column';
+  selectColumnLabel.dataset.i18n = selectedColumns.has(column) ? 'Deselect column' : 'Select column';
   selectColumnLabel.textContent = t(selectColumnLabel.dataset.i18n);
-  selectColumnButton.setAttribute('aria-pressed', String(selectedColumn === column));
+  selectColumnButton.setAttribute('aria-pressed', String(selectedColumns.has(column)));
+  elements.contextPopover.querySelector('[data-action="clear-sort-column"]').hidden = sortState?.column !== column;
+  elements.contextPopover.querySelector('[data-action="sort-ascending"]').hidden = sortState?.column === column && sortState.direction > 0;
+  elements.contextPopover.querySelector('[data-action="sort-descending"]').hidden = sortState?.column === column && sortState.direction < 0;
   elements.contextPopover.querySelector('[data-action="copy-row-list"]').disabled = !row;
   elements.contextPopover.hidden = false;
   const rect = elements.contextPopover.getBoundingClientRect();
@@ -1259,8 +1284,10 @@ async function deleteColumn(column) {
   columnWidths.splice(column, 1);
   columnWidthOverrides.splice(column, 1);
   persistViewState();
-  if (selectedColumn === column) selectedColumn = -1;
-  else if (selectedColumn > column) selectedColumn -= 1;
+  const remappedSelection = [...selectedColumns].filter((item) => item !== column).map((item) => item > column ? item - 1 : item);
+  selectedColumns.clear();
+  remappedSelection.forEach((item) => selectedColumns.add(item));
+  selectedColumn = selectedColumns.values().next().value ?? -1;
   if (sortState) {
     if (sortState.column === column) sortState = null;
     else if (sortState.column > column) sortState.column -= 1;
@@ -1363,13 +1390,19 @@ elements.table.addEventListener('pointerdown', (event) => {
     pointerId: event.pointerId,
     startX: event.clientX,
     startWidth: header.getBoundingClientRect().width,
+    group: [...selectedColumns].filter((selected) => selected !== column).map((selected) => ({
+      column: selected,
+      startWidth: elements.tableHead.querySelector(`th[data-column="${selected}"]`)?.getBoundingClientRect().width,
+    })).filter((entry) => Number.isFinite(entry.startWidth)),
   };
   document.body.classList.add('is-resizing-column');
 });
 
 document.addEventListener('pointermove', (event) => {
   if (!resizeState || event.pointerId !== resizeState.pointerId) return;
-  resizeState.currentWidth = applyColumnWidth(resizeState.column, resizeState.startWidth + event.clientX - resizeState.startX);
+  const delta = event.clientX - resizeState.startX;
+  resizeState.currentWidth = applyColumnWidth(resizeState.column, resizeState.startWidth + delta);
+  resizeState.group.forEach((entry) => applyColumnWidth(entry.column, entry.startWidth + delta));
 });
 
 document.addEventListener('pointerup', (event) => {
@@ -1404,6 +1437,25 @@ elements.table.addEventListener('click', (event) => {
   const sortButton = event.target.closest('[data-sort]');
   if (sortButton) {
     const column = Number(sortButton.dataset.sort);
+    if (event.ctrlKey || event.metaKey) {
+      if (selectedColumns.has(column)) selectedColumns.delete(column);
+      else selectedColumns.add(column);
+      selectedColumn = selectedColumns.has(column) ? column : (selectedColumns.values().next().value ?? -1);
+      renderTable();
+      return;
+    }
+    const now = performance.now();
+    const isDoubleClick = lastSortClick.column === column && now - lastSortClick.time < 450;
+    lastSortClick = { column, time: isDoubleClick ? 0 : now };
+    if (isDoubleClick) {
+      if (sortState?.column === column) sortState = null;
+      selectedColumns.clear();
+      selectedColumn = -1;
+      renderTable();
+      return;
+    }
+    selectedColumns.clear();
+    selectedColumn = -1;
     const direction = Number(sortButton.dataset.sortDirection);
     sortState = Number.isFinite(direction) && direction !== 0
       ? { column, direction }
@@ -1435,7 +1487,20 @@ elements.table.addEventListener('click', (event) => {
   const heading = event.target.closest('th[data-column]');
   if (heading && !event.target.closest('button, [data-resize-column]')) {
     const column = Number(heading.dataset.column);
-    selectedColumn = selectedColumn === column ? -1 : column;
+    if (event.ctrlKey || event.metaKey) {
+      if (selectedColumns.has(column)) selectedColumns.delete(column);
+      else selectedColumns.add(column);
+    } else {
+      selectedColumns.clear();
+    }
+    selectedColumn = selectedColumns.has(column) ? column : (selectedColumns.values().next().value ?? -1);
+    renderTable();
+    return;
+  }
+  const cell = event.target.closest('[data-row-id][data-column]');
+  if (cell && selectedColumns.size && !event.ctrlKey && !event.metaKey) {
+    selectedColumns.clear();
+    selectedColumn = -1;
     renderTable();
   }
 });
@@ -1454,6 +1519,11 @@ elements.table.addEventListener('contextmenu', (event) => {
 });
 
 elements.table.addEventListener('dblclick', (event) => {
+  const heading = event.target.closest('th[data-column]');
+  if (heading) {
+    if (sortState?.column === Number(heading.dataset.column)) { sortState = null; renderTable(); }
+    return;
+  }
   const resizeHandle = event.target.closest('[data-resize-column]');
   if (resizeHandle) {
     const column = Number(resizeHandle.dataset.resizeColumn);
@@ -1566,7 +1636,22 @@ document.addEventListener('click', (event) => {
     closePopovers();
     vscode.postMessage({ type: 'copyToClipboard', text: values.join('\n') });
   } else if (action === 'select-column' && column >= 0) {
-    selectedColumn = selectedColumn === column ? -1 : column;
+    if (selectedColumns.has(column)) selectedColumns.delete(column);
+    else selectedColumns.add(column);
+    selectedColumn = selectedColumns.has(column) ? column : (selectedColumns.values().next().value ?? -1);
+    closePopovers();
+    renderTable();
+  } else if (action === 'clear-sort-column' && column >= 0) {
+    if (sortState?.column === column) sortState = null;
+    closePopovers();
+    renderTable();
+  } else if (action === 'clear-sort' && sortState) {
+    sortState = null;
+    closePopovers();
+    renderTable();
+  } else if (action === 'fit-column-width' && column >= 0) {
+    (selectedColumns.has(column) ? [...selectedColumns] : [column]).forEach((item) => { columnWidthOverrides[item] = null; });
+    persistViewState();
     closePopovers();
     renderTable();
   } else if (action === 'filter-column' && column >= 0) {
@@ -1606,9 +1691,17 @@ new ResizeObserver(() => {
 }).observe(elements.tableScroll);
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && activePopover) {
-    event.preventDefault();
-    closePopovers(true);
+  if (event.key === 'Escape') {
+    if (activePopover) {
+      event.preventDefault();
+      closePopovers(true);
+    }
+    if (selectedColumns.size) {
+      event.preventDefault();
+      selectedColumns.clear();
+      selectedColumn = -1;
+      renderTable();
+    }
   }
 });
 

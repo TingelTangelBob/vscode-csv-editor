@@ -61,18 +61,18 @@ thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .row-number-head { padding: 0 !important; text-align: center; }
 .row-number-head input, .row-number-cell input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
 .row-number-head input { position: absolute; top: 50%; left: 50%; opacity: .7; transform: translate(-50%, -50%); }
-.heading-content { position: relative; width: 100%; min-width: 0; height: 31px; }
-.sort-button { position: absolute; inset: 0; display: flex; align-items: center; width: 100%; min-width: 0; overflow: hidden; padding: 0 18px 0 2px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+.heading-content { position: relative; width: 100%; min-width: 0; height: 28px; }
+.sort-button { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; overflow: hidden; padding: 0 18px 0 2px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
 .sort-button:hover, .sort-button.is-sorted { color: var(--foreground); }
 .sort-button > span:first-child { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sort-indicators { position: absolute; inset: -4px 18px -4px 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; visibility: hidden; pointer-events: none; }
+.sort-indicators { position: absolute; top: -4px; bottom: -4px; left: var(--sort-indicator-left, 50%); display: flex; width: 18px; flex-direction: column; align-items: center; justify-content: space-between; visibility: hidden; pointer-events: none; transform: translateX(-50%); }
 .sort-direction { display: grid; width: 18px; height: 16px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; }
+.sort-direction[hidden] { display: none; }
 .sort-direction > .material-arrow-icon { font-family: material-product-icons; font-size: 16px; font-style: normal; line-height: 1; }
 .material-arrow-small-down::before { content: "\EA8E"; }
 .material-arrow-small-up::before { content: "\EA90"; }
 .sort-direction[aria-pressed="true"] { color: var(--accent); }
 th[data-column]:hover .sort-indicators, th[data-column]:focus-within .sort-indicators, th[data-column][aria-sort="ascending"] .sort-indicators, th[data-column][aria-sort="descending"] .sort-indicators { visibility: visible; }
-th[data-column][aria-sort="ascending"]:not(:hover):not(:focus-within) .sort-direction:not([aria-pressed="true"]), th[data-column][aria-sort="descending"]:not(:hover):not(:focus-within) .sort-direction:not([aria-pressed="true"]) { visibility: hidden; pointer-events: none; }
 .header-button { display: inline-grid; flex: none; place-items: center; width: 21px; height: 22px; padding: 0; border: 0; border-radius: 3px; outline: 0; background: transparent; color: var(--muted); }
 .header-button:hover, .header-button.is-active { color: var(--accent); background: var(--hover); }
 .header-button > .codicon { font-size: 12px; }
@@ -108,6 +108,8 @@ tbody .data-cell:focus { outline: 1px solid var(--focus); outline-offset: -1px; 
 .empty-state { padding: 40px 18px; color: var(--muted); font-size: 12px; line-height: 1.6; text-align: center; }
 
 .popover { position: fixed; z-index: 10; width: 210px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; padding: 6px; border: 1px solid var(--border); border-radius: 8px; color: var(--foreground); background: var(--widget); box-shadow: 0 8px 24px #0002, 0 2px 6px #0001; }
+.popover:not([hidden]) { animation: vscode-menu-in 100ms ease-out; transform-origin: top left; }
+@keyframes vscode-menu-in { from { opacity: 0; transform: scale(.97) translateY(-2px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .tools-popover { width: max-content; outline: 0; }
 .settings-popover { width: 240px; outline: 0; }
 .filter-popover { width: 270px; padding: 9px; }
