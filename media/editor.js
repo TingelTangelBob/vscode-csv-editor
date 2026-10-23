@@ -242,9 +242,13 @@ const elements = {
   addRow: document.getElementById('add-row'),
   addColumn: document.getElementById('add-column'),
   addColumnPopover: document.getElementById('add-column-popover'),
+  toolbarColumnName: document.getElementById('toolbar-column-name'),
   deleteSelected: document.getElementById('delete-selected'),
   replaceValues: document.getElementById('replace-values'),
   replaceValuesPopover: document.getElementById('replace-values-popover'),
+  toolbarReplaceFind: document.getElementById('toolbar-replace-find'),
+  toolbarReplaceWith: document.getElementById('toolbar-replace-with'),
+  toolbarReplaceCount: document.getElementById('toolbar-replace-count'),
   selectionCount: document.getElementById('selection-count'),
   delimiter: document.getElementById('delimiter-select'),
   settingsButton: document.getElementById('settings-button'),
@@ -615,6 +619,7 @@ function pasteTable(text, allowDirect = true) {
   elements.importSkipEmpty.checked = true;
   updateImportPreview();
   elements.importDialog.showModal();
+  window.setTimeout(() => elements.importText.focus(), 0);
 }
 
 function requestTablePaste() {
@@ -1164,6 +1169,21 @@ function updateReplacementMatchCount() {
   elements.replaceSubmit.disabled = count === 0 || isUnchanged || (selectedScope && columns.length === 0);
 }
 
+function updateToolbarReplacementMatchCount() {
+  const search = elements.toolbarReplaceFind.value;
+  const replacement = elements.toolbarReplaceWith.value;
+  const columns = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
+  const allColumns = sheet.headers.map((_, column) => column);
+  const countIn = (indices) => search === '' ? 0 : sheet.rows.reduce((total, row) => total + indices.filter((column) => String(row.cells[column] ?? '') === search).length, 0);
+  const selectedCount = countIn(columns);
+  const allCount = countIn(allColumns);
+  const locale = LOCALES[language] || LOCALES.en;
+  elements.toolbarReplaceCount.textContent = `${allCount.toLocaleString(locale)} ${t(allCount === 1 ? 'matching cell' : 'matching cells')}`;
+  const unchanged = replacement === search;
+  elements.replaceValuesPopover.querySelector('[data-replace-scope="all"]').disabled = search === '' || allCount === 0 || unchanged;
+  elements.replaceValuesPopover.querySelector('[data-replace-scope="selected"]').disabled = search === '' || selectedCount === 0 || columns.length === 0 || unchanged;
+}
+
 function openReplaceValuesDialog(scope = 'all') {
   closePopovers();
   elements.replaceFind.value = '';
@@ -1274,19 +1294,23 @@ function openToolbarPopover(popover, anchor) {
   }
   closePopovers();
   if (popover === elements.addColumnPopover) {
+    elements.toolbarColumnName.value = '';
     const selected = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
     const before = popover.querySelector('[data-column-insert="before"]');
     const after = popover.querySelector('[data-column-insert="after"]');
-    before.disabled = after.disabled = selected.length === 0;
+    before.disabled = after.disabled = selected.length === 0 || !elements.toolbarColumnName.value.trim();
+    popover.querySelector('[data-column-insert="end"]').disabled = true;
   }
   if (popover === elements.replaceValuesPopover) {
-    popover.querySelector('[data-replace-scope="selected"]').disabled = selectedColumns.size === 0;
+    elements.toolbarReplaceFind.value = '';
+    elements.toolbarReplaceWith.value = '';
+    updateToolbarReplacementMatchCount();
   }
   activePopover = popover;
   popoverAnchor = anchor;
   anchor.setAttribute('aria-expanded', 'true');
   positionToolbarPopover(popover, anchor);
-  popover.querySelector('button:not(:disabled)')?.focus({ preventScroll: true });
+  (popover === elements.addColumnPopover ? elements.toolbarColumnName : popover === elements.replaceValuesPopover ? elements.toolbarReplaceFind : popover.querySelector('button:not(:disabled)'))?.focus({ preventScroll: true });
 }
 
 function openFilterPopover(column, anchor) {
@@ -1455,8 +1479,8 @@ function addRow() {
   focusCell(row.id, 0);
 }
 
-async function addColumn(insertAt = sheet.headers.length) {
-  const name = await openColumnDialog('add');
+async function addColumn(insertAt = sheet.headers.length, requestedName = '') {
+  const name = requestedName.trim() || await openColumnDialog('add');
   if (!name) return;
   const index = Math.max(0, Math.min(insertAt, sheet.headers.length));
   sheet.headers.splice(index, 0, name);
@@ -1556,19 +1580,42 @@ elements.addColumnPopover.addEventListener('click', (event) => {
   const option = event.target.closest('[data-column-insert]');
   if (!option || option.disabled) return;
   let index = sheet.headers.length;
+  const name = elements.toolbarColumnName.value.trim();
   const selected = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
   if (option.dataset.columnInsert === 'before' && selected.length) index = Math.min(...selected);
   else if (option.dataset.columnInsert === 'after' && selected.length) index = Math.max(...selected) + 1;
   closePopovers();
-  void addColumn(index);
+  void addColumn(index, name);
+});
+elements.toolbarColumnName.addEventListener('input', () => {
+  const hasName = Boolean(elements.toolbarColumnName.value.trim());
+  const selected = selectedColumns.size > 0 || selectedColumn >= 0;
+  elements.addColumnPopover.querySelector('[data-column-insert="before"]').disabled = !hasName || !selected;
+  elements.addColumnPopover.querySelector('[data-column-insert="after"]').disabled = !hasName || !selected;
+  elements.addColumnPopover.querySelector('[data-column-insert="end"]').disabled = !hasName;
 });
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());
 elements.replaceValues.addEventListener('click', () => openToolbarPopover(elements.replaceValuesPopover, elements.replaceValues));
 elements.replaceValuesPopover.addEventListener('click', (event) => {
   const option = event.target.closest('[data-replace-scope]');
   if (!option || option.disabled) return;
-  openReplaceValuesDialog(option.dataset.replaceScope);
+  const scope = option.dataset.replaceScope;
+  const quickSelectedColumns = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
+  elements.replaceFind.value = elements.toolbarReplaceFind.value;
+  elements.replaceWith.value = elements.toolbarReplaceWith.value;
+  elements.replaceForm.querySelector('input[name="replace-scope"][value="all"]').checked = scope === 'all';
+  elements.replaceForm.querySelector('input[name="replace-scope"][value="selected"]').checked = scope === 'selected';
+  elements.replaceColumns.replaceChildren(...sheet.headers.map((_, column) => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.replaceColumn = String(column);
+    checkbox.checked = quickSelectedColumns.includes(column);
+    return checkbox;
+  }));
+  if (replaceMatchingValues()) closePopovers();
 });
+elements.toolbarReplaceFind.addEventListener('input', updateToolbarReplacementMatchCount);
+elements.toolbarReplaceWith.addEventListener('input', updateToolbarReplacementMatchCount);
 elements.settingsButton.addEventListener('click', openSettingsPopover);
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;

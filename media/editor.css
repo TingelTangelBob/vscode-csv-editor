@@ -116,7 +116,13 @@ tbody .data-cell:focus { outline: 1px solid var(--focus); outline-offset: -1px; 
 .settings-popover { width: 290px; outline: 0; }
 .filter-popover { width: 270px; padding: 9px; }
 .context-popover { width: 252px; }
-.toolbar-popover { width: 196px; }
+.toolbar-popover { width: 230px; }
+.replace-toolbar-popover { width: 250px; }
+.toolbar-menu-field { display: grid; gap: 4px; padding: 4px 6px 7px; color: var(--muted); font-size: 10px; font-weight: 600; }
+.toolbar-menu-field input { width: 100%; height: 29px; padding: 0 7px; border: 1px solid var(--vscode-input-border, var(--border)); border-radius: 4px; outline: 0; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 12px; font-weight: 400; }
+.toolbar-menu-field input:focus { border-color: var(--focus); }
+.toolbar-replace-count { min-height: 18px; padding: 0 8px 3px; color: var(--muted); font-size: 10px; }
+.action-icon > .codicon-replace-all { font-size: 16px; }
 .menu-label, .popover-caption { display: block; overflow: hidden; padding: 4px 6px; color: var(--muted); font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .popover select, .filter-popover input[type="search"] { width: 100%; height: 30px; padding: 0 8px; border: 1px solid var(--vscode-input-border, var(--border)); border-radius: 4px; outline: 0; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 12px; }
 .settings-popover select { width: auto; max-width: 100%; min-width: 0; justify-self: start; }

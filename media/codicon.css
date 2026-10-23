@@ -13,6 +13,7 @@
 .codicon-ellipsis::before { content: '\ea7c'; }
 .codicon-file-code::before { content: '\eae9'; }
 .codicon-filter::before { content: '\eaf1'; }
+.codicon-replace-all::before { content: '\eb3c'; }
 .codicon-filter-filled::before { content: '\ebce'; }
 .codicon-info::before { content: '\ea74'; }
 .codicon-github::before { content: '\ea84'; }

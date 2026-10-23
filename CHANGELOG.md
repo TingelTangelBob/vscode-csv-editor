@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.11
+
+- Add column names and exact find/replace fields directly to the toolbar menus.
+- Use the same VS Code replace-all icon as the native find widget and focus the import field without opening its warning tooltip.
+- Refresh the Marketplace screenshots.
+
 ## 1.4.10
 
 - Render the supplied value replacement symbol as a filled icon so its line weight matches the other toolbar symbols.
