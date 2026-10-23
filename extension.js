@@ -9,7 +9,20 @@ const VIEW_TYPE = 'tingeltangelbob.csv-simple-editor.csvGrid';
 const EXTENSION_ID = 'tingeltangelbob.csv-simple-editor';
 const DEFAULT_EDITOR_SETTING = 'csvSimpleEditor.openByDefault';
 const DEFAULT_EDITOR_PATTERNS = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
+const TABLE_PREFERENCES_KEY = 'tablePreferences';
 const PROJECT_URL = 'https://github.com/TingelTangelBob/vscode-csv-editor';
+
+function getTablePreferences(context) {
+  const stored = context.globalState.get(TABLE_PREFERENCES_KEY, {});
+  const saved = stored && typeof stored === 'object' ? stored : {};
+  return {
+    colorizeColumns: saved.colorizeColumns === true,
+    showGridlines: saved.showGridlines === true,
+    responsiveColumns: saved.responsiveColumns !== false,
+    theme: ['system', 'light', 'dark'].includes(saved.theme) ? saved.theme : 'system',
+    language: ['en', 'de', 'fr'].includes(saved.language) ? saved.language : null,
+  };
+}
 
 function isCsvDocument(uri) {
   return ['.csv', '.tsv'].includes(path.extname(uri.path).toLowerCase());
@@ -21,20 +34,20 @@ function createNonce() {
 
 function renderWebview(webview, extensionUri) {
   const mediaUri = vscode.Uri.joinPath(extensionUri, 'media');
+  const codiconStylesheetUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'codicon.css'));
   const stylesheetUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.css'));
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.js'));
   const csvScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv.js'));
-  const iconUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv-simple-editor-favicon.svg'));
   const nonce = createNonce();
   const template = fs.readFileSync(path.join(extensionUri.fsPath, 'media', 'index.html'), 'utf8');
 
   return template
     .replaceAll('{{CSP_SOURCE}}', webview.cspSource)
     .replaceAll('{{NONCE}}', nonce)
+    .replace('{{CODICON_STYLESHEET_URI}}', codiconStylesheetUri.toString())
     .replace('{{STYLESHEET_URI}}', stylesheetUri.toString())
     .replace('{{SCRIPT_URI}}', scriptUri.toString())
-    .replace('{{CSV_SCRIPT_URI}}', csvScriptUri.toString())
-    .replace('{{ICON_URI}}', iconUri.toString());
+    .replaceAll('{{CSV_SCRIPT_URI}}', csvScriptUri.toString());
 }
 
 function getDefaultEditorPreference() {
@@ -74,6 +87,13 @@ async function applyDefaultEditorPreference(enabled) {
 function activate(context) {
   const panelsByDocument = new Map();
   const applyingFromGrid = new Set();
+
+  const notifyTablePreferences = () => {
+    const message = { type: 'tablePreferences', preferences: getTablePreferences(context) };
+    for (const panels of panelsByDocument.values()) {
+      for (const entry of panels) void entry.panel.webview.postMessage(message);
+    }
+  };
 
   const notifyDefaultEditorPreference = () => {
     const enabled = getDefaultEditorPreference();
@@ -126,8 +146,32 @@ function activate(context) {
       };
       const messageListener = panel.webview.onDidReceiveMessage(async (message) => {
         if (message?.type === 'ready') {
-          broadcastDocument(document);
+          void panel.webview.postMessage({ type: 'tablePreferences', preferences: getTablePreferences(context) });
           void panel.webview.postMessage({ type: 'defaultEditorPreference', enabled: getDefaultEditorPreference() });
+          void panel.webview.postMessage({
+            type: 'load',
+            text: document.getText(),
+            filename: path.basename(document.uri.path),
+            dirty: document.isDirty,
+          });
+          return;
+        }
+
+        if (message?.type === 'saveTablePreferences' && message.preferences && typeof message.preferences === 'object') {
+          const preferences = {
+            colorizeColumns: message.preferences.colorizeColumns === true,
+            showGridlines: message.preferences.showGridlines === true,
+            responsiveColumns: message.preferences.responsiveColumns !== false,
+            theme: ['system', 'light', 'dark'].includes(message.preferences.theme) ? message.preferences.theme : 'system',
+            language: ['en', 'de', 'fr'].includes(message.preferences.language) ? message.preferences.language : 'en',
+          };
+          try {
+            await context.globalState.update(TABLE_PREFERENCES_KEY, preferences);
+            notifyTablePreferences();
+          } catch (error) {
+            void vscode.window.showErrorMessage(`Could not save CSV table preferences: ${error.message}`);
+            void panel.webview.postMessage({ type: 'tablePreferences', preferences: getTablePreferences(context) });
+          }
           return;
         }
 
@@ -170,6 +214,17 @@ function activate(context) {
             await vscode.env.openExternal(vscode.Uri.parse(PROJECT_URL));
           } catch (error) {
             void vscode.window.showErrorMessage(`Could not open the project on GitHub: ${error.message}`);
+          }
+          return;
+        }
+
+        if (message?.type === 'readClipboard') {
+          try {
+            const text = await vscode.env.clipboard.readText();
+            void panel.webview.postMessage({ type: 'clipboardText', text, requestId: message.requestId });
+          } catch (error) {
+            void panel.webview.postMessage({ type: 'clipboardText', text: '', requestId: message.requestId });
+            void vscode.window.showErrorMessage(`Paste failed: ${error.message}`);
           }
           return;
         }

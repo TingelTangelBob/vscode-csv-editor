@@ -110,6 +110,7 @@ $changelogAsset
   <Default Extension="vsixmanifest" ContentType="text/xml" />
   <Default Extension="html" ContentType="text/html" />
   <Default Extension="css" ContentType="text/css" />
+  <Default Extension="ttf" ContentType="font/ttf" />
   <Default Extension="svg" ContentType="image/svg+xml" />
   <Default Extension="png" ContentType="image/png" />
 </Types>

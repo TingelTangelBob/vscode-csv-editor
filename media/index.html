@@ -3,45 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP_SOURCE}} data:; style-src {{CSP_SOURCE}}; script-src {{CSP_SOURCE}} 'nonce-{{NONCE}}';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP_SOURCE}} data:; font-src {{CSP_SOURCE}}; style-src {{CSP_SOURCE}}; script-src {{CSP_SOURCE}} 'nonce-{{NONCE}}'; connect-src {{CSP_SOURCE}}; worker-src blob:;">
   <title>CSV Table</title>
+  <link rel="stylesheet" href="{{CODICON_STYLESHEET_URI}}">
   <link rel="stylesheet" href="{{STYLESHEET_URI}}">
 </head>
 <body>
   <main class="app-shell">
     <header class="toolbar" aria-label="Table tools">
+      <span class="table-status" id="table-status" aria-live="polite"></span>
       <div class="toolbar-actions">
         <div class="tool-group">
+          <button class="tool-button" id="paste-table" type="button" title="Paste table" aria-label="Paste table" data-i18n-title="Paste table"><span class="codicon codicon-clippy" aria-hidden="true"></span></button>
           <button class="tool-button" id="add-row" type="button" title="Add row" aria-label="Add row" data-i18n-title="Add row">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h9v10h-9zM2.5 6h9M6 2.5v10M12.5 9h2.5m-1.25-1.25v2.5"></path></svg>
+            <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M2 10h7v3H2Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
           <button class="tool-button" id="add-column" type="button" title="Add column" aria-label="Add column" data-i18n-title="Add column">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h10v10h-10zM6 2.5v10M9 2.5v10M12.5 8h2.5m-1.25-1.25v2.5"></path></svg>
+            <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M10 2h3v7h-3Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
           <button class="tool-button danger-tool" id="delete-selected" type="button" title="Delete selected rows" aria-label="Delete selected rows" data-i18n-title="Delete selected rows" disabled>
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h11M5.5 4.5v-2h5v2m2 0-.7 9H5.2l-.7-9M7 6.5v5m2-5v5"></path></svg>
+            <span class="codicon codicon-trash" aria-hidden="true"></span>
             <span class="selection-count" id="selection-count" hidden>0</span>
           </button>
         </div>
         <span class="toolbar-divider" aria-hidden="true"></span>
         <button class="tool-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" data-i18n-title="Table settings" aria-haspopup="true" aria-expanded="false">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 12h12"></path><circle cx="6" cy="4" r="1.5"></circle><circle cx="10" cy="12" r="1.5"></circle></svg>
+          <span class="codicon codicon-settings" aria-hidden="true"></span>
         </button>
         <button class="tool-button" id="tools-menu-button" type="button" title="More tools" aria-label="More tools" data-i18n-title="More tools" aria-haspopup="true" aria-expanded="false">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.5" cy="8" r="1.25"></circle><circle cx="8" cy="8" r="1.25"></circle><circle cx="12.5" cy="8" r="1.25"></circle></svg>
+          <span class="codicon codicon-ellipsis" aria-hidden="true"></span>
         </button>
       </div>
     </header>
-    <span class="sr-only" id="table-status" aria-live="polite"></span>
-
     <section class="table-scroll" id="table-scroll" aria-label="CSV table">
       <table id="csv-table" aria-label="Editable CSV data">
+        <colgroup id="table-columns"></colgroup>
         <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
       </table>
     </section>
 
-    <div class="popover tools-popover" id="tools-popover" hidden aria-label="More tools" data-i18n-aria-label="More tools">
+    <div class="popover tools-popover" id="tools-popover" hidden tabindex="-1" aria-label="More tools" data-i18n-aria-label="More tools">
       <div class="popover-section">
         <label class="menu-label" for="delimiter-select" data-i18n="Delimiter">Delimiter</label>
         <select id="delimiter-select" aria-label="CSV delimiter" data-i18n-aria-label="CSV delimiter">
@@ -51,18 +53,12 @@
           <option value="|" data-i18n="Pipe |">Pipe |</option>
         </select>
       </div>
-      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span data-i18n="Clear filters">Clear filters</span></button>
-      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0-14L5 8m3-3 3 3m8 11V5m0 14 3-3m-3 3-3-3"></path></svg></span><span data-i18n="Clear sorting">Clear sorting</span></button>
-      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h8M5 19h8"></path></svg></span><span data-i18n="Open as text">Open as text</span></button>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <button class="menu-action project-link" type="button" data-action="open-project" title="Open CSV Simple Editor on GitHub" aria-label="Buy me a coffee — open CSV Simple Editor on GitHub">
-        <img class="project-logo" src="{{ICON_URI}}" alt="" width="24" height="24">
-        <span class="project-copy" data-i18n="Buy me a coffee">Buy me a coffee</span>
-        <svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"></path></svg>
-      </button>
+      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
+      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
+      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
     </div>
 
-    <div class="popover settings-popover" id="settings-popover" hidden>
+    <div class="popover settings-popover" id="settings-popover" hidden tabindex="-1">
       <div class="popover-caption" data-i18n="Table settings">Table settings</div>
       <label class="language-setting" for="language-select"><span data-i18n="Language">Language</span>
         <select id="language-select" aria-label="Language" data-i18n-aria-label="Language">
@@ -75,6 +71,21 @@
         <input id="colorize-columns" type="checkbox">
         <span class="setting-copy" data-i18n="Colorize columns">Colorize columns</span>
       </label>
+      <label class="setting-toggle" for="responsive-columns">
+        <input id="responsive-columns" type="checkbox" checked>
+        <span class="setting-copy" data-i18n="Fit columns to available width">Fit columns to available width</span>
+      </label>
+      <div class="appearance-switcher" id="appearance-switcher" role="group" aria-label="Appearance" data-i18n-aria-label="Appearance">
+        <button class="appearance-option" type="button" data-theme="system" title="VS Code theme" data-i18n-title="VS Code theme" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2.4" y="2.5" width="11.2" height="8" rx="1.5"/><path d="M6 13.5h4M8 10.8v2.7"/></svg>
+        </button>
+        <button class="appearance-option" type="button" data-theme="light" title="Light" data-i18n-title="Light" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M12.6 3.4l-1 1M4.4 11.6l-1 1"/></svg>
+        </button>
+        <button class="appearance-option" type="button" data-theme="dark" title="Dark" data-i18n-title="Dark" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M12.8 10.1A5.7 5.7 0 0 1 5.9 3.2 5.8 5.8 0 1 0 12.8 10.1Z"/></svg>
+        </button>
+      </div>
       <label class="setting-toggle" for="show-gridlines">
         <input id="show-gridlines" type="checkbox">
         <span class="setting-copy" data-i18n="Show table gridlines">Show table gridlines</span>
@@ -82,32 +93,49 @@
       <span class="menu-separator" aria-hidden="true"></span>
       <label class="setting-toggle" for="open-by-default">
         <input id="open-by-default" type="checkbox">
-        <span class="setting-copy" data-i18n="Open CSV files in the table by default">Open CSV files in the table by default</span>
+        <span class="setting-copy" data-i18n="Open CSVs as tables">Open CSVs as tables</span>
       </label>
-      <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.5 9a7 7 0 0 1 11.8-2L20 12M4 12l2.7 5a7 7 0 0 0 11.8-2"></path></svg></span><span data-i18n="Reset column widths">Reset column widths</span></button>
+      <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><span class="codicon codicon-refresh" aria-hidden="true"></span></span><span data-i18n="Reset column widths">Reset column widths</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <button class="menu-action project-link" type="button" data-action="open-project" title="Open CSV Simple Editor on GitHub" aria-label="Buy me a coffee" data-i18n-aria-label="Buy me a coffee">
+        <span class="codicon codicon-github project-logo" aria-hidden="true"></span>
+        <span class="project-copy" data-i18n="Buy me a coffee">Buy me a coffee</span>
+        <span class="codicon codicon-link-external external-link-icon" aria-hidden="true"></span>
+      </button>
     </div>
 
-    <div class="popover filter-popover" id="filter-popover" hidden>
+    <div class="popover filter-popover" id="filter-popover" hidden role="dialog" aria-labelledby="filter-label">
+      <form id="column-filter-form">
       <label class="menu-label" id="filter-label" for="column-filter-input">Filter column</label>
-      <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Contains…" data-i18n-placeholder="Contains…">
-      <button class="menu-action clear-column-filter" type="button" data-action="clear-column-filter" data-i18n="Clear filter">Clear filter</button>
+      <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search values…" data-i18n-placeholder="Search values…">
+      <label class="filter-select-all"><input id="filter-select-all" type="checkbox"><span id="filter-select-all-label" data-i18n="Select all values">Select all values</span></label>
+      <div class="filter-values" id="filter-values" role="group" aria-label="Column values" data-i18n-aria-label="Column values"></div>
+      <button class="menu-action" id="filter-more" type="button" hidden data-i18n="Show more values">Show more values</button>
+      <div class="filter-actions">
+        <div class="filter-selection-status" id="filter-selection-status" aria-live="polite"></div>
+        <button class="dialog-button clear-column-filter" type="button" data-action="clear-column-filter" title="Clear filter" aria-label="Clear filter" data-i18n-title="Clear filter"><span class="codicon codicon-clear-all" aria-hidden="true"></span></button>
+        <span class="filter-action-spacer" aria-hidden="true"></span>
+        <button class="dialog-button" type="button" id="filter-cancel" title="Cancel" aria-label="Cancel" data-i18n-title="Cancel"><span class="codicon codicon-close" aria-hidden="true"></span></button>
+        <button class="dialog-button primary-dialog-button" type="submit" title="Apply" aria-label="Apply" data-i18n-title="Apply"><span class="codicon codicon-check" aria-hidden="true"></span></button>
+      </div>
+      </form>
     </div>
 
     <div class="popover context-popover" id="context-popover" hidden role="group" aria-label="Table actions">
       <div class="popover-caption" id="context-caption" data-i18n="Column">Column</div>
-      <button class="menu-action context-cell-action" type="button" data-action="copy-cell"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg></span><span data-i18n="Copy cell">Copy cell</span></button>
-      <button class="menu-action context-cell-action" type="button" data-action="copy-row"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M4 10h16m-11-5v14m6-14v14"></path></svg></span><span data-i18n="Copy row">Copy row</span></button>
-      <button class="menu-action context-row-or-cell-action" type="button" data-action="copy-row-list"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg></span><span data-i18n="Copy row as list">Copy row as list</span></button>
+      <button class="menu-action context-cell-action" type="button" data-action="copy-cell"><span class="action-icon"><span class="codicon codicon-copy" aria-hidden="true"></span></span><span data-i18n="Copy cell">Copy cell</span></button>
+      <button class="menu-action context-cell-action" type="button" data-action="copy-row"><span class="action-icon"><span class="codicon codicon-table" aria-hidden="true"></span></span><span data-i18n="Copy row">Copy row</span></button>
+      <button class="menu-action context-row-or-cell-action" type="button" data-action="copy-row-list"><span class="action-icon"><span class="codicon codicon-list-ordered" aria-hidden="true"></span></span><span data-i18n="Copy row as list">Copy row as list</span></button>
       <span class="menu-separator context-cell-action" aria-hidden="true"></span>
-      <button class="menu-action context-column-action" type="button" data-action="filter-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path></svg></span><span data-i18n="Open column filter">Open column filter</span></button>
-      <button class="menu-action context-cell-action" type="button" data-action="filter-value"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.1v5.4l-3.6 1.8v-7.2L4 5Z"></path><path d="M8 5v2"></path></svg></span><span data-i18n="Filter by this value">Filter by this value</span></button>
-      <button class="menu-action context-column-action" type="button" data-action="sort-ascending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19V5m0 0L5 8m3-3 3 3M15 7h5m-5 5h3m-3 5h1"></path></svg></span><span data-i18n="Sort ascending">Sort ascending</span></button>
-      <button class="menu-action context-column-action" type="button" data-action="sort-descending"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0 0-3-3m3 3 3-3m4-9h5m-5 5h3m-3 5h1"></path></svg></span><span data-i18n="Sort descending">Sort descending</span></button>
-      <button class="menu-action context-column-action" type="button" data-action="select-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="1"></rect><path d="M9 4v16m6-16v16"></path></svg></span><span data-i18n="Select column">Select column</span></button>
-      <button class="menu-action context-column-action" type="button" data-action="copy-column-list"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg></span><span data-i18n="Copy visible column as list (with header)">Copy visible column as list (with header)</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="filter-column"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Open column filter">Open column filter</span></button>
+      <button class="menu-action context-cell-action" type="button" data-action="filter-value"><span class="action-icon"><span class="codicon codicon-filter-filled" aria-hidden="true"></span></span><span data-i18n="Filter by this value">Filter by this value</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="sort-ascending"><span class="action-icon"><span class="codicon codicon-arrow-up" aria-hidden="true"></span></span><span data-i18n="Sort ascending">Sort ascending</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="sort-descending"><span class="action-icon"><span class="codicon codicon-arrow-down" aria-hidden="true"></span></span><span data-i18n="Sort descending">Sort descending</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="select-column"><span class="action-icon"><span class="codicon codicon-symbol-structure" aria-hidden="true"></span></span><span data-i18n="Select column">Select column</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="copy-column-list"><span class="action-icon"><span class="codicon codicon-list-ordered" aria-hidden="true"></span></span><span data-i18n="Copy visible column as list (with header)">Copy visible column as list (with header)</span></button>
       <span class="menu-separator context-column-action" aria-hidden="true"></span>
-      <button class="menu-action context-column-action" type="button" data-action="rename-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L19 8.5 15.5 5 4 16.5Z"></path><path d="m13.8 6.7 3.5 3.5"></path></svg></span><span data-i18n="Rename column">Rename column</span></button>
-      <button class="menu-action danger-action context-column-action" type="button" data-action="delete-column"><span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7"></path></svg></span><span data-i18n="Delete column">Delete column</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="rename-column"><span class="action-icon"><span class="codicon codicon-edit" aria-hidden="true"></span></span><span data-i18n="Rename column">Rename column</span></button>
+      <button class="menu-action danger-action context-column-action" type="button" data-action="delete-column"><span class="action-icon"><span class="codicon codicon-trash" aria-hidden="true"></span></span><span data-i18n="Delete column">Delete column</span></button>
     </div>
 
     <dialog class="app-dialog" id="column-dialog" aria-labelledby="column-dialog-title">
@@ -115,6 +143,25 @@
         <h2 id="column-dialog-title" data-i18n="Add column">Add column</h2>
         <label class="dialog-field" for="column-name"><span data-i18n="Column name">Column name</span><input id="column-name" type="text" maxlength="120" placeholder="e.g. Product ID" data-i18n-placeholder="e.g. Product ID" required></label>
         <div class="dialog-actions"><button class="dialog-button" type="button" data-column-cancel data-i18n="Cancel">Cancel</button><button class="dialog-button primary-dialog-button" type="submit" value="save" data-i18n="Apply">Apply</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="app-dialog import-dialog" id="import-dialog" aria-labelledby="import-title">
+      <form id="import-form">
+        <h2 id="import-title" data-i18n="Paste table">Paste table</h2>
+        <label class="dialog-field" for="import-text"><span data-i18n="CSV or tab-separated data">CSV or tab-separated data</span><textarea id="import-text" rows="4" spellcheck="false"></textarea></label>
+        <div class="import-options">
+          <label class="dialog-field" for="import-mode"><span data-i18n="Insert mode">Insert mode</span><select id="import-mode"><option value="append" data-i18n="Append rows">Append rows</option><option value="replace" data-i18n="Replace table">Replace table</option></select></label>
+          <label class="dialog-field" for="import-delimiter"><span data-i18n="Delimiter">Delimiter</span><select id="import-delimiter"><option value="auto" data-i18n="Detect automatically">Detect automatically</option><option value="," data-i18n="Comma ,">Comma ,</option><option value=";" data-i18n="Semicolon ;">Semicolon ;</option><option value="tab" data-i18n="Tab">Tab</option><option value="|" data-i18n="Pipe |">Pipe |</option></select></label>
+        </div>
+        <label class="setting-toggle"><input id="import-header" type="checkbox" checked><span class="setting-copy" data-i18n="First row contains column names">First row contains column names</span></label>
+        <label class="setting-toggle"><input id="import-dedupe" type="checkbox"><span class="setting-copy" data-i18n="Remove duplicate rows from the resulting table">Remove duplicate rows from the resulting table</span></label>
+        <label class="setting-toggle"><input id="import-skip-empty" type="checkbox" checked><span class="setting-copy" data-i18n="Skip empty rows">Skip empty rows</span></label>
+        <p id="import-summary" aria-live="polite"></p>
+        <ul id="import-issues" aria-live="polite"></ul>
+        <div class="import-preview" id="import-preview" tabindex="0" role="region" aria-label="Preview: first 5 incoming rows" data-i18n-aria-label="Preview: first 5 incoming rows"></div>
+        <p class="import-replace-note" id="import-replace-note" data-i18n="All existing rows and column names will be replaced.">All existing rows and column names will be replaced.</p>
+        <div class="dialog-actions"><button class="dialog-button" id="import-cancel" type="button" data-i18n="Cancel">Cancel</button><button class="dialog-button primary-dialog-button" id="import-apply" type="submit" data-i18n="Apply">Apply</button></div>
       </form>
     </dialog>
 
@@ -127,6 +174,6 @@
     </dialog>
   </main>
   <script nonce="{{NONCE}}" src="{{CSV_SCRIPT_URI}}"></script>
-  <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}"></script>
+  <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}" data-csv-worker-src="{{CSV_SCRIPT_URI}}"></script>
 </body>
-</html>
+</html>\n
