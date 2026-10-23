@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.7
+
+- Apply column filters immediately and simplify the filter popover controls.
+- Organize table settings, add a feature request link and show the extension version.
+- Add exact cell value replacement for the whole table or selected columns.
+
 ## 1.4.6
 
 - Keep the remaining sort arrow anchored at its top or bottom edge when the active direction is hidden.

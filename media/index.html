@@ -30,9 +30,6 @@
         <button class="tool-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" data-i18n-title="Table settings" aria-haspopup="true" aria-expanded="false">
           <span class="codicon codicon-settings" aria-hidden="true"></span>
         </button>
-        <button class="tool-button" id="tools-menu-button" type="button" title="More tools" aria-label="More tools" data-i18n-title="More tools" aria-haspopup="true" aria-expanded="false">
-          <span class="codicon codicon-ellipsis" aria-hidden="true"></span>
-        </button>
       </div>
     </header>
     <section class="table-scroll" id="table-scroll" aria-label="CSV table">
@@ -43,36 +40,24 @@
       </table>
     </section>
 
-    <div class="popover tools-popover" id="tools-popover" hidden tabindex="-1" aria-label="More tools" data-i18n-aria-label="More tools">
-      <div class="popover-section">
-        <label class="menu-label" for="delimiter-select" data-i18n="Delimiter">Delimiter</label>
-        <select id="delimiter-select" aria-label="CSV delimiter" data-i18n-aria-label="CSV delimiter">
-          <option value="," data-i18n="Comma ,">Comma ,</option>
-          <option value=";" data-i18n="Semicolon ;">Semicolon ;</option>
-          <option value="tab" data-i18n="Tab">Tab</option>
-          <option value="|" data-i18n="Pipe |">Pipe |</option>
-        </select>
-      </div>
-      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
-      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
-      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
-    </div>
-
     <div class="popover settings-popover" id="settings-popover" hidden tabindex="-1">
       <div class="popover-caption" data-i18n="Table settings">Table settings</div>
-      <label class="language-setting" for="language-select"><span data-i18n="Language">Language</span>
+      <div class="settings-section-label" data-i18n="General">General</div>
+      <label class="language-setting" for="language-select"><span class="settings-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="6.2"/><path d="M1.9 8h12.2M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2s-.9 4.5-2.7 6.2C6.2 12.5 5.3 10.4 5.3 8s.9-4.5 2.7-6.2Z"/></svg></span><span data-i18n="Language">Language</span>
         <select id="language-select" aria-label="Language" data-i18n-aria-label="Language">
           <option value="en">English</option>
           <option value="de">Deutsch</option>
           <option value="fr">Français</option>
         </select>
       </label>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="Display">Display</div>
       <label class="setting-toggle" for="colorize-columns">
-        <input id="colorize-columns" type="checkbox">
+        <span class="setting-control"><input id="colorize-columns" type="checkbox"></span>
         <span class="setting-copy" data-i18n="Colorize columns">Colorize columns</span>
       </label>
       <label class="setting-toggle" for="responsive-columns">
-        <input id="responsive-columns" type="checkbox" checked>
+        <span class="setting-control"><input id="responsive-columns" type="checkbox" checked></span>
         <span class="setting-copy" data-i18n="Fit columns to available width">Fit columns to available width</span>
       </label>
       <div class="appearance-switcher" id="appearance-switcher" role="group" aria-label="Appearance" data-i18n-aria-label="Appearance">
@@ -87,38 +72,56 @@
         </button>
       </div>
       <label class="setting-toggle" for="show-gridlines">
-        <input id="show-gridlines" type="checkbox">
+        <span class="setting-control"><input id="show-gridlines" type="checkbox"></span>
         <span class="setting-copy" data-i18n="Show table gridlines">Show table gridlines</span>
-      </label>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <label class="setting-toggle" for="open-by-default">
-        <input id="open-by-default" type="checkbox">
-        <span class="setting-copy" data-i18n="Open CSVs as tables">Open CSVs as tables</span>
       </label>
       <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><span class="codicon codicon-refresh" aria-hidden="true"></span></span><span data-i18n="Reset column widths">Reset column widths</span></button>
       <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="File handling">File handling</div>
+      <label class="setting-toggle" for="open-by-default">
+        <span class="setting-control"><input id="open-by-default" type="checkbox"></span>
+        <span class="setting-copy" data-i18n="Open CSVs as tables">Open CSVs as tables</span>
+      </label>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="Tools">Tools</div>
+      <label class="delimiter-setting" for="delimiter-select">
+        <span class="action-icon"><span class="codicon codicon-symbol-structure" aria-hidden="true"></span></span>
+        <span class="setting-copy" data-i18n="Delimiter">Delimiter</span>
+        <select id="delimiter-select" aria-label="CSV delimiter" data-i18n-aria-label="CSV delimiter">
+          <option value="," data-i18n="Comma ,">Comma ,</option>
+          <option value=";" data-i18n="Semicolon ;">Semicolon ;</option>
+          <option value="tab" data-i18n="Tab">Tab</option>
+          <option value="|" data-i18n="Pipe |">Pipe |</option>
+        </select>
+      </label>
+      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
+      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
+      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
+      <button class="menu-action" type="button" data-action="replace-values"><span class="action-icon"><span class="codicon codicon-edit" aria-hidden="true"></span></span><span data-i18n="Replace values">Replace values</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="Project">Project</div>
+      <button class="menu-action project-link project-request" type="button" data-action="open-feature-request" title="Suggest a change" aria-label="Suggest a change" data-i18n-title="Suggest a change" data-i18n-aria-label="Suggest a change">
+        <span class="action-icon"><span class="codicon codicon-edit" aria-hidden="true"></span></span>
+        <span class="project-copy" data-i18n="Suggest a change">Suggest a change</span>
+        <span class="codicon codicon-link-external external-link-icon" aria-hidden="true"></span>
+      </button>
       <button class="menu-action project-link" type="button" data-action="open-project" title="Open CSV Simple Editor on GitHub" aria-label="Buy me a coffee" data-i18n-aria-label="Buy me a coffee">
         <span class="codicon codicon-github project-logo" aria-hidden="true"></span>
         <span class="project-copy" data-i18n="Buy me a coffee">Buy me a coffee</span>
+        <span class="project-version">v{{VERSION}}</span>
         <span class="codicon codicon-link-external external-link-icon" aria-hidden="true"></span>
       </button>
     </div>
 
     <div class="popover filter-popover" id="filter-popover" hidden role="dialog" aria-labelledby="filter-label">
-      <form id="column-filter-form">
       <label class="menu-label" id="filter-label" for="column-filter-input">Filter column</label>
       <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search values…" data-i18n-placeholder="Search values…">
-      <label class="filter-select-all"><input id="filter-select-all" type="checkbox"><span id="filter-select-all-label" data-i18n="Select all values">Select all values</span></label>
+      <div class="filter-select-row">
+        <label class="filter-select-all"><input id="filter-select-all" type="checkbox"><span class="filter-select-all-label" id="filter-select-all-label" data-i18n="Select all values">Select all values</span><span class="filter-selection-status" id="filter-selection-status" aria-live="polite"></span></label>
+        <button class="dialog-button clear-column-filter" type="button" data-action="clear-column-filter" title="Clear filter" aria-label="Clear filter" data-i18n-title="Clear filter"><span class="codicon codicon-clear-all" aria-hidden="true"></span></button>
+      </div>
       <div class="filter-values" id="filter-values" role="group" aria-label="Column values" data-i18n-aria-label="Column values"></div>
       <button class="menu-action" id="filter-more" type="button" hidden data-i18n="Show more values">Show more values</button>
-      <div class="filter-actions">
-        <div class="filter-selection-status" id="filter-selection-status" aria-live="polite"></div>
-        <button class="dialog-button clear-column-filter" type="button" data-action="clear-column-filter" title="Clear filter" aria-label="Clear filter" data-i18n-title="Clear filter"><span class="codicon codicon-clear-all" aria-hidden="true"></span></button>
-        <span class="filter-action-spacer" aria-hidden="true"></span>
-        <button class="dialog-button" type="button" id="filter-cancel" title="Cancel" aria-label="Cancel" data-i18n-title="Cancel"><span class="codicon codicon-close" aria-hidden="true"></span></button>
-        <button class="dialog-button primary-dialog-button" type="submit" title="Apply" aria-label="Apply" data-i18n-title="Apply"><span class="codicon codicon-check" aria-hidden="true"></span></button>
-      </div>
-      </form>
     </div>
 
     <div class="popover context-popover" id="context-popover" hidden role="group" aria-label="Table actions">
@@ -177,6 +180,23 @@
         <h2 id="confirm-title" data-i18n="Confirm deletion">Confirm deletion</h2>
         <p id="confirm-message"></p>
         <div class="dialog-actions"><button class="dialog-button" type="submit" value="cancel" data-i18n="Cancel">Cancel</button><button class="dialog-button danger-dialog-button" id="confirm-action" type="submit" value="confirm" data-i18n="Delete">Delete</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="app-dialog replace-dialog" id="replace-dialog" aria-labelledby="replace-title">
+      <form id="replace-form">
+        <h2 id="replace-title" data-i18n="Replace values">Replace values</h2>
+        <label class="dialog-field" for="replace-find"><span data-i18n="Find exact value">Find exact value</span><textarea id="replace-find" rows="2" required></textarea></label>
+        <label class="dialog-field" for="replace-with"><span data-i18n="Replace with">Replace with</span><textarea id="replace-with" rows="2"></textarea></label>
+        <fieldset class="replace-scope">
+          <legend data-i18n="Scope">Scope</legend>
+          <label><input type="radio" name="replace-scope" value="all" checked><span data-i18n="Whole table">Whole table</span></label>
+          <label><input type="radio" name="replace-scope" value="selected"><span data-i18n="Selected columns">Selected columns</span></label>
+          <div class="replace-columns" id="replace-columns" aria-label="Select columns" data-i18n-aria-label="Select columns"></div>
+        </fieldset>
+        <p class="replace-help" data-i18n="Cell values are matched exactly, including letter case. Column headers are not changed.">Cell values are matched exactly, including letter case. Column headers are not changed.</p>
+        <p class="replace-count" id="replace-count" aria-live="polite"></p>
+        <div class="dialog-actions"><button class="dialog-button" id="replace-cancel" type="button" data-i18n="Cancel">Cancel</button><button class="dialog-button primary-dialog-button" id="replace-submit" type="submit" data-i18n="Replace">Replace</button></div>
       </form>
     </dialog>
   </main>

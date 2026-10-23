@@ -11,6 +11,7 @@ const DEFAULT_EDITOR_SETTING = 'csvSimpleEditor.openByDefault';
 const DEFAULT_EDITOR_PATTERNS = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
 const TABLE_PREFERENCES_KEY = 'tablePreferences';
 const PROJECT_URL = 'https://github.com/TingelTangelBob/vscode-csv-editor';
+const FEATURE_REQUEST_URL = `${PROJECT_URL}/issues/new`;
 
 function getTablePreferences(context) {
   const stored = context.globalState.get(TABLE_PREFERENCES_KEY, {});
@@ -39,6 +40,7 @@ function renderWebview(webview, extensionUri) {
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.js'));
   const csvScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv.js'));
   const nonce = createNonce();
+  const version = JSON.parse(fs.readFileSync(path.join(extensionUri.fsPath, 'package.json'), 'utf8')).version;
   const template = fs.readFileSync(path.join(extensionUri.fsPath, 'media', 'index.html'), 'utf8');
 
   return template
@@ -47,6 +49,7 @@ function renderWebview(webview, extensionUri) {
     .replace('{{CODICON_STYLESHEET_URI}}', codiconStylesheetUri.toString())
     .replace('{{STYLESHEET_URI}}', stylesheetUri.toString())
     .replace('{{SCRIPT_URI}}', scriptUri.toString())
+    .replace('{{VERSION}}', version)
     .replaceAll('{{CSV_SCRIPT_URI}}', csvScriptUri.toString());
 }
 
@@ -214,6 +217,15 @@ function activate(context) {
             await vscode.env.openExternal(vscode.Uri.parse(PROJECT_URL));
           } catch (error) {
             void vscode.window.showErrorMessage(`Could not open the project on GitHub: ${error.message}`);
+          }
+          return;
+        }
+
+        if (message?.type === 'openFeatureRequest') {
+          try {
+            await vscode.env.openExternal(vscode.Uri.parse(FEATURE_REQUEST_URL));
+          } catch (error) {
+            void vscode.window.showErrorMessage(`Could not open the feature request page: ${error.message}`);
           }
           return;
         }

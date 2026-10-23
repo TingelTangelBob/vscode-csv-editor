@@ -16,6 +16,8 @@ const TRANSLATIONS = {
     'Import information':'Importinformationen',
     'Fit columns to available width':'Spalten an Fensterbreite anpassen',
     'Appearance':'Darstellung','VS Code theme':'VS-Code-Design','Light':'Hell','Dark':'Dunkel',
+    'General':'Allgemein','Display':'Darstellung','File handling':'Dateiverhalten','Tools':'Werkzeuge','Project':'Projekt',
+    'Suggest a change':'Änderungswunsch vorschlagen',
     'Search values…':'Werte suchen …','Select all matches':'Alle Suchtreffer auswählen',
     'Select all values':'Alle Werte auswählen','(Blanks)':'(Leere)',
     'No matching values':'Keine passenden Werte','Show more values':'Weitere Werte anzeigen',
@@ -58,6 +60,8 @@ const TRANSLATIONS = {
     'Import information':'Informations sur l’importation',
     'Fit columns to available width':'Adapter les colonnes à la largeur disponible',
     'Appearance':'Apparence','VS Code theme':'Thème VS Code','Light':'Clair','Dark':'Sombre',
+    'General':'Général','Display':'Affichage','File handling':'Gestion des fichiers','Tools':'Outils','Project':'Projet',
+    'Suggest a change':'Suggérer une modification',
     'Search values…':'Rechercher des valeurs…','Select all matches':'Sélectionner tous les résultats',
     'Select all values':'Sélectionner toutes les valeurs','(Blanks)':'(Vides)',
     'No matching values':'Aucune valeur correspondante','Show more values':'Afficher plus de valeurs',
@@ -97,6 +101,24 @@ const TRANSLATIONS = {
     'Column':'Colonne','Select row':'Sélectionner la ligne','Original row number':'Numéro de ligne d’origine',
   },
 };
+Object.assign(TRANSLATIONS.de, {
+  'General': 'Allgemein', 'Display': 'Darstellung', 'File handling': 'Dateiverhalten', 'Tools': 'Werkzeuge', 'Project': 'Projekt',
+  'Suggest a change': '\u00c4nderungswunsch vorschlagen', 'Replace values': 'Werte ersetzen',
+  'Find exact value': 'Exakten Wert suchen', 'Replace with': 'Ersetzen durch', 'Scope': 'Bereich',
+  'Whole table': 'Ganze Tabelle', 'Selected columns': 'Ausgew\u00e4hlte Spalten', 'Select columns': 'Spalten ausw\u00e4hlen',
+  'Cell values are matched exactly, including letter case. Column headers are not changed.': 'Zellwerte werden exakt inklusive Gro\u00df-/Kleinschreibung verglichen. Spaltennamen bleiben unver\u00e4ndert.',
+  'Replacement is the same as the search value.': 'Der Ersatzwert entspricht dem Suchwert.',
+  'matching cells': 'passende Zellen', 'matching cell': 'passende Zelle', 'Replace': 'Ersetzen',
+});
+Object.assign(TRANSLATIONS.fr, {
+  'General': 'G\u00e9n\u00e9ral', 'Display': 'Affichage', 'File handling': 'Gestion des fichiers', 'Tools': 'Outils', 'Project': 'Projet',
+  'Suggest a change': 'Sugg\u00e9rer une modification', 'Replace values': 'Remplacer les valeurs',
+  'Find exact value': 'Valeur exacte \u00e0 rechercher', 'Replace with': 'Remplacer par', 'Scope': 'Port\u00e9e',
+  'Whole table': 'Tout le tableau', 'Selected columns': 'Colonnes s\u00e9lectionn\u00e9es', 'Select columns': 'S\u00e9lectionner les colonnes',
+  'Cell values are matched exactly, including letter case. Column headers are not changed.': 'Les valeurs des cellules sont compar\u00e9es exactement, en respectant la casse. Les en-t\u00eates ne sont pas modifi\u00e9s.',
+  'Replacement is the same as the search value.': 'La valeur de remplacement est identique \u00e0 la valeur recherch\u00e9e.',
+  'matching cells': 'cellules correspondantes', 'matching cell': 'cellule correspondante', 'Replace': 'Remplacer',
+});
 const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR' };
 const savedState = vscode.getState() ?? {};
 const systemLanguage = navigator.language.slice(0, 2).toLowerCase();
@@ -138,8 +160,6 @@ const elements = {
   deleteSelected: document.getElementById('delete-selected'),
   selectionCount: document.getElementById('selection-count'),
   delimiter: document.getElementById('delimiter-select'),
-  toolsButton: document.getElementById('tools-menu-button'),
-  toolsPopover: document.getElementById('tools-popover'),
   settingsButton: document.getElementById('settings-button'),
   settingsPopover: document.getElementById('settings-popover'),
   colorizeColumns: document.getElementById('colorize-columns'),
@@ -165,6 +185,13 @@ const elements = {
   confirmDialog: document.getElementById('confirm-dialog'),
   confirmMessage: document.getElementById('confirm-message'),
   confirmAction: document.getElementById('confirm-action'),
+  replaceDialog: document.getElementById('replace-dialog'),
+  replaceForm: document.getElementById('replace-form'),
+  replaceFind: document.getElementById('replace-find'),
+  replaceWith: document.getElementById('replace-with'),
+  replaceColumns: document.getElementById('replace-columns'),
+  replaceCount: document.getElementById('replace-count'),
+  replaceSubmit: document.getElementById('replace-submit'),
   pasteTable: document.getElementById('paste-table'),
   importDialog: document.getElementById('import-dialog'),
   importForm: document.getElementById('import-form'),
@@ -1023,6 +1050,79 @@ function confirmAction(message) {
   });
 }
 
+function selectedReplacementColumns() {
+  const scope = elements.replaceForm.querySelector('input[name="replace-scope"]:checked')?.value;
+  if (scope === 'all') return sheet.headers.map((_, column) => column);
+  return [...elements.replaceColumns.querySelectorAll('input:checked')]
+    .map(input => Number(input.dataset.replaceColumn));
+}
+
+function updateReplacementMatchCount() {
+  const search = elements.replaceFind.value;
+  const columns = selectedReplacementColumns();
+  let count = 0;
+  if (search !== '' && columns.length) {
+    for (const row of sheet.rows) {
+      for (const column of columns) {
+        if (String(row.cells[column] ?? '') === search) count += 1;
+      }
+    }
+  }
+  const locale = LOCALES[language] || LOCALES.en;
+  const isUnchanged = count > 0 && elements.replaceWith.value === search;
+  elements.replaceCount.textContent = isUnchanged
+    ? t('Replacement is the same as the search value.')
+    : `${count.toLocaleString(locale)} ${t(count === 1 ? 'matching cell' : 'matching cells')}`;
+  const selectedScope = elements.replaceForm.querySelector('input[name="replace-scope"][value="selected"]')?.checked;
+  elements.replaceSubmit.disabled = count === 0 || isUnchanged || (selectedScope && columns.length === 0);
+}
+
+function openReplaceValuesDialog() {
+  closePopovers();
+  elements.replaceFind.value = '';
+  elements.replaceWith.value = '';
+  elements.replaceForm.querySelector('input[name="replace-scope"][value="all"]').checked = true;
+  elements.replaceForm.querySelector('input[name="replace-scope"][value="selected"]').disabled = sheet.headers.length === 0;
+  elements.replaceColumns.replaceChildren(...sheet.headers.map((name, column) => {
+    const label = createElement('label', 'replace-column-option');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.replaceColumn = String(column);
+    const text = createElement('span', '', name.trim() || `${t('Column')} ${column + 1}`);
+    text.title = text.textContent;
+    label.append(checkbox, text);
+    return label;
+  }));
+  elements.replaceColumns.hidden = true;
+  updateReplacementMatchCount();
+  elements.replaceDialog.showModal();
+  window.setTimeout(() => elements.replaceFind.focus(), 0);
+}
+
+function replaceMatchingValues() {
+  const search = elements.replaceFind.value;
+  if (search === '') return 0;
+  const replacement = elements.replaceWith.value;
+  if (replacement === search) return 0;
+  const columns = selectedReplacementColumns();
+  let count = 0;
+  const changedColumns = new Set();
+  for (const row of sheet.rows) {
+    for (const column of columns) {
+      if (String(row.cells[column] ?? '') !== search) continue;
+      row.cells[column] = replacement;
+      count += 1;
+      changedColumns.add(column);
+    }
+  }
+  if (count) {
+    for (const column of changedColumns) columnFilters[column] = null;
+    renderTable();
+    sendEdit();
+  }
+  return count;
+}
+
 function positionPopover(popover, anchor) {
   popover.hidden = false;
   const anchorRect = anchor.getBoundingClientRect();
@@ -1036,7 +1136,7 @@ function positionPopover(popover, anchor) {
 
 function closePopovers(restoreFocus = false) {
   const anchor = popoverAnchor;
-  for (const popover of [elements.toolsPopover, elements.settingsPopover, elements.filterPopover, elements.contextPopover]) popover.hidden = true;
+  for (const popover of [elements.settingsPopover, elements.filterPopover, elements.contextPopover]) popover.hidden = true;
   document.querySelectorAll('[aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
   activePopover = null;
   activeColumn = -1;
@@ -1054,26 +1154,13 @@ function closePopovers(restoreFocus = false) {
   }
 }
 
-function openToolsPopover() {
-  if (activePopover === elements.toolsPopover) {
-    closePopovers();
-    return;
-  }
-  closePopovers();
-  elements.toolsPopover.querySelector('[data-action="clear-sort"]').hidden = !sortState;
-  activePopover = elements.toolsPopover;
-  popoverAnchor = elements.toolsButton;
-  elements.toolsButton.setAttribute('aria-expanded', 'true');
-  positionPopover(elements.toolsPopover, elements.toolsButton);
-  elements.toolsPopover.focus({ preventScroll: true });
-}
-
 function openSettingsPopover() {
   if (activePopover === elements.settingsPopover) {
     closePopovers();
     return;
   }
   closePopovers();
+  elements.settingsPopover.querySelector('[data-action="clear-sort"]').hidden = !sortState;
   activePopover = elements.settingsPopover;
   popoverAnchor = elements.settingsButton;
   elements.settingsButton.setAttribute('aria-expanded', 'true');
@@ -1114,6 +1201,16 @@ function updateFilterSelection() {
   elements.filterSelectionStatus.textContent = `${selected}/${filterMatches.length}`;
 }
 
+function applyFilterSelection() {
+  if (!filterDraft || activeColumn < 0) return;
+  const query = elements.filterInput.value.trim();
+  const allSelected = [...filterGlobalValues].every(value => filterDraft.has(value));
+  const filter = { query, values: allSelected ? null : new Set(filterDraft) };
+  columnFilters[activeColumn] = isColumnFilterActive(filter) ? filter : null;
+  elements.filterPopover.querySelector('[data-action="clear-column-filter"]').disabled = !isColumnFilterActive(filter);
+  renderTable();
+}
+
 function appendFilterValues() {
   const fragment = document.createDocumentFragment();
   const end = Math.min(filterShownCount + FILTER_VALUES_PAGE_SIZE, filterMatches.length);
@@ -1152,6 +1249,7 @@ elements.filterValues.addEventListener('change', event => {
   if (event.target.checked) filterDraft.add(value);
   else filterDraft.delete(value);
   updateFilterSelection();
+  applyFilterSelection();
 });
 elements.filterSelectAll.addEventListener('change', () => {
   if (!filterDraft) return;
@@ -1163,21 +1261,9 @@ elements.filterSelectAll.addEventListener('change', () => {
     input.checked = filterDraft.has(filterMatches[Number(input.dataset.filterValueIndex)].value);
   });
   updateFilterSelection();
+  applyFilterSelection();
 });
 elements.filterMore.addEventListener('click', appendFilterValues);
-document.getElementById('filter-cancel').addEventListener('click', () => closePopovers(true));
-document.getElementById('column-filter-form').addEventListener('submit', event => {
-  event.preventDefault();
-  if (!filterDraft || activeColumn < 0) return;
-  const query = elements.filterInput.value.trim();
-  const allSelected = [...filterGlobalValues].every(value => filterDraft.has(value));
-  const filter = { query, values: allSelected ? null : new Set(filterDraft) };
-  const column = activeColumn;
-  columnFilters[column] = isColumnFilterActive(filter) ? filter : null;
-  closePopovers();
-  renderTable();
-  elements.tableHead.querySelector(`[data-filter-toggle="${column}"]`)?.focus();
-});
 
 function openContextPopover(column, rowId, kind, clientX, clientY) {
   closePopovers();
@@ -1322,10 +1408,25 @@ document.querySelector('[data-column-cancel]').addEventListener('click', () => e
 elements.columnDialog.addEventListener('click', (event) => {
   if (event.target === elements.columnDialog) elements.columnDialog.close('cancel');
 });
+elements.replaceFind.addEventListener('input', updateReplacementMatchCount);
+elements.replaceWith.addEventListener('input', updateReplacementMatchCount);
+elements.replaceForm.querySelectorAll('input[name="replace-scope"]').forEach((input) => {
+  input.addEventListener('change', () => {
+    elements.replaceColumns.hidden = input.value !== 'selected' || !input.checked;
+    updateReplacementMatchCount();
+  });
+});
+elements.replaceColumns.addEventListener('change', updateReplacementMatchCount);
+elements.replaceForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!replaceMatchingValues()) return;
+  elements.replaceDialog.close('replace');
+});
+document.getElementById('replace-cancel').addEventListener('click', () => elements.replaceDialog.close('cancel'));
+elements.replaceDialog.addEventListener('close', () => elements.settingsButton.focus());
 document.getElementById('add-row').addEventListener('click', addRow);
 document.getElementById('add-column').addEventListener('click', () => void addColumn());
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());
-elements.toolsButton.addEventListener('click', openToolsPopover);
 elements.settingsButton.addEventListener('click', openSettingsPopover);
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;
@@ -1583,7 +1684,10 @@ elements.table.addEventListener('keydown', (event) => {
 });
 
 elements.filterInput.addEventListener('input', () => {
-  if (filterDraft) renderFilterValues();
+  if (filterDraft) {
+    renderFilterValues();
+    applyFilterSelection();
+  }
 });
 
 elements.delimiter.addEventListener('change', () => {
@@ -1593,7 +1697,7 @@ elements.delimiter.addEventListener('change', () => {
 });
 
 document.addEventListener('click', (event) => {
-  if (event.target.closest('.popover, #tools-menu-button, #settings-button, [data-filter-toggle]')) return;
+  if (event.target.closest('.popover, #settings-button, [data-filter-toggle]')) return;
   if (activePopover) closePopovers();
 });
 
@@ -1610,12 +1714,20 @@ document.addEventListener('click', (event) => {
   else if (action === 'open-text') {
     closePopovers();
     vscode.postMessage({ type: 'openAsText' });
+  } else if (action === 'replace-values') {
+    openReplaceValuesDialog();
   } else if (action === 'open-project') {
     closePopovers(true);
     vscode.postMessage({ type: 'openProject' });
+  } else if (action === 'open-feature-request') {
+    closePopovers(true);
+    vscode.postMessage({ type: 'openFeatureRequest' });
   } else if (action === 'clear-column-filter' && column >= 0) {
     columnFilters[column] = null;
-    closePopovers();
+    elements.filterInput.value = '';
+    filterDraft = new Set(filterGlobalValues);
+    renderFilterValues();
+    elements.filterPopover.querySelector('[data-action="clear-column-filter"]').disabled = true;
     renderTable();
   } else if ((action === 'copy-cell' || action === 'copy-row') && target?.kind === 'cell') {
     const row = sheet.rows.find((item) => item.id === target.rowId);

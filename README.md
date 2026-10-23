@@ -30,7 +30,9 @@ Responsive columns are enabled by default. Automatically sized columns use avail
 
 Automatic column widths fit the header, filter control, and the widest cell value using the actual display font. Drag a column's right header edge to resize it independently, down to 40px. Headers and values that no longer fit end in an ellipsis; their full contents remain intact. Manual widths persist across edits and view reloads. Double-click the header edge to restore automatic sizing for that column, or use Reset column widths in settings to reset them all.
 
-Column filters list the distinct values with checkboxes and occurrence counts, including blank cells. Search narrows the list and applies a case-insensitive contains condition; the checked values further restrict the result by exact value. Select or deselect all listed values, then choose Apply; Cancel or Escape discards pending changes. Other active column filters determine the available values. Long lists load in batches via Show more values, and search covers the entire list. Use Clear filter to reset a column, or Clear filters in the tools menu to reset every column.
+Column filters list the distinct values with checkboxes and occurrence counts, including blank cells. Search narrows the list and applies a case-insensitive contains condition; the checked values further restrict the result by exact value. Search and selection changes apply immediately, and Escape or clicking outside closes the filter without undoing them. Other active column filters determine the available values. Long lists load in batches via Show more values, and search covers the entire list. Use Clear filter to reset a column, or Clear filters in Table settings to reset every column.
+
+Use Replace values in Table settings to replace an exact cell value throughout the table or in one or more selected columns. Matching is case-sensitive, and column headers are left unchanged. The operation updates the CSV document as one edit, which can be undone with VS Code's Undo command.
 
 Paste CSV or tab-separated data into an empty file with `Ctrl+V` / `Cmd+V` to create a table immediately (the first row becomes the column names). The clipboard toolbar button also reads the clipboard. With an existing table, a preview lets you append rows or replace the table, select a delimiter, import with or without column names, skip empty rows, and remove exact duplicate rows across the resulting table.
 
@@ -38,7 +40,7 @@ When appending with column names, columns are matched by name, ignoring surround
 
 Open a `.csv` or `.tsv` file to start in table view. Click a column heading to sort; click its filter icon to filter. Right-click a cell or heading for more actions. Use the editor title action to switch back to the text view.
 
-The table follows the active VS Code color theme and keeps the toolbar compact. Open the settings button beside the tools menu to toggle column colors and gridlines, choose the default editor for CSV and TSV files, or restore automatic column widths.
+The table follows the active VS Code color theme and keeps the toolbar compact. Table settings groups display options, file handling, and tools such as delimiter selection, value replacement, filter and sort reset, and switching back to text view. The project section links to change requests and shows the installed extension version.
 
 ## Development
 
