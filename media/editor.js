@@ -1292,6 +1292,9 @@ elements.columnForm.addEventListener('submit', (event) => {
 });
 
 document.querySelector('[data-column-cancel]').addEventListener('click', () => elements.columnDialog.close('cancel'));
+elements.columnDialog.addEventListener('click', (event) => {
+  if (event.target === elements.columnDialog) elements.columnDialog.close('cancel');
+});
 document.getElementById('add-row').addEventListener('click', addRow);
 document.getElementById('add-column').addEventListener('click', () => void addColumn());
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());

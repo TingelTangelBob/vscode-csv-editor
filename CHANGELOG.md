@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4
+
+- Close the add-column dialog when clicking outside it and bring the sort arrows closer to the column header edges.
+
 ## 1.4.3
 
 - Hide import validation messages until data is pasted. Show import errors and warnings in a hoverable information icon with neutral, warning, and error states.
