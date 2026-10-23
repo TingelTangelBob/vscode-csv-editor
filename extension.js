@@ -10,6 +10,7 @@ const EXTENSION_ID = 'tingeltangelbob.csv-simple-editor';
 const DEFAULT_EDITOR_SETTING = 'csvSimpleEditor.openByDefault';
 const DEFAULT_EDITOR_PATTERNS = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
 const TABLE_PREFERENCES_KEY = 'tablePreferences';
+const SUPPORTED_LANGUAGES = ['en', 'de', 'fr', 'es', 'ja', 'zh-cn', 'pt-br', 'ru', 'ko', 'it'];
 const PROJECT_URL = 'https://github.com/TingelTangelBob/vscode-csv-editor';
 const FEATURE_REQUEST_URL = `${PROJECT_URL}/issues/new`;
 
@@ -21,7 +22,7 @@ function getTablePreferences(context) {
     showGridlines: saved.showGridlines === true,
     responsiveColumns: saved.responsiveColumns !== false,
     theme: ['system', 'light', 'dark'].includes(saved.theme) ? saved.theme : 'system',
-    language: ['en', 'de', 'fr'].includes(saved.language) ? saved.language : null,
+    language: SUPPORTED_LANGUAGES.includes(saved.language) ? saved.language : null,
   };
 }
 
@@ -166,7 +167,7 @@ function activate(context) {
             showGridlines: message.preferences.showGridlines === true,
             responsiveColumns: message.preferences.responsiveColumns !== false,
             theme: ['system', 'light', 'dark'].includes(message.preferences.theme) ? message.preferences.theme : 'system',
-            language: ['en', 'de', 'fr'].includes(message.preferences.language) ? message.preferences.language : 'en',
+            language: SUPPORTED_LANGUAGES.includes(message.preferences.language) ? message.preferences.language : 'en',
           };
           try {
             await context.globalState.update(TABLE_PREFERENCES_KEY, preferences);

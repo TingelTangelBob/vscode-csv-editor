@@ -119,9 +119,29 @@ Object.assign(TRANSLATIONS.fr, {
   'Replacement is the same as the search value.': 'La valeur de remplacement est identique \u00e0 la valeur recherch\u00e9e.',
   'matching cells': 'cellules correspondantes', 'matching cell': 'cellule correspondante', 'Replace': 'Remplacer',
 });
-const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR' };
+Object.assign(TRANSLATIONS.de, { Interface: 'Oberfl\u00e4che', 'CSV settings': 'CSV-Einstellungen', Appearance: 'Oberfl\u00e4che' });
+Object.assign(TRANSLATIONS.fr, { Interface: 'Interface', 'CSV settings': 'Param\u00e8tres CSV' });
+const COMMON_UI_TRANSLATIONS = {
+  es: { 'General':'General', 'Display':'Visualización', 'File handling':'Archivos', 'Tools':'Herramientas', 'Project':'Proyecto', 'Language':'Idioma', 'Colorize columns':'Colorear columnas', 'Fit columns to available width':'Ajustar columnas al ancho disponible', 'VS Code theme':'Tema de VS Code', 'Light':'Claro', 'Dark':'Oscuro', 'Show table gridlines':'Mostrar líneas de cuadrícula', 'Open CSVs as tables':'Abrir CSV como tablas', 'Delimiter':'Delimitador', 'Clear filters':'Borrar filtros', 'Clear sorting':'Borrar ordenación', 'Open as text':'Abrir como texto', 'Replace values':'Reemplazar valores', 'Suggest a change':'Sugerir un cambio', 'Buy me a coffee':'Apoya el proyecto', 'Add row':'Añadir fila', 'Add column':'Añadir columna', 'Delete selected rows':'Eliminar filas seleccionadas', 'Paste table':'Pegar tabla', 'Reset column widths':'Restablecer anchos de columna' },
+  ja: { 'General':'一般', 'Display':'表示', 'File handling':'ファイル処理', 'Tools':'ツール', 'Project':'プロジェクト', 'Language':'言語', 'Colorize columns':'列に色を付ける', 'Fit columns to available width':'列を表示幅に合わせる', 'VS Code theme':'VS Code テーマ', 'Light':'ライト', 'Dark':'ダーク', 'Show table gridlines':'表のグリッド線を表示', 'Open CSVs as tables':'CSV を表として開く', 'Delimiter':'区切り文字', 'Clear filters':'フィルターをクリア', 'Clear sorting':'並べ替えをクリア', 'Open as text':'テキストとして開く', 'Replace values':'値を置換', 'Suggest a change':'変更を提案', 'Buy me a coffee':'プロジェクトを支援', 'Add row':'行を追加', 'Add column':'列を追加', 'Delete selected rows':'選択した行を削除', 'Paste table':'表を貼り付け', 'Reset column widths':'列幅をリセット' },
+  'zh-cn': { 'General':'常规', 'Display':'显示', 'File handling':'文件处理', 'Tools':'工具', 'Project':'项目', 'Language':'语言', 'Colorize columns':'为列着色', 'Fit columns to available width':'列适应可用宽度', 'VS Code theme':'VS Code 主题', 'Light':'浅色', 'Dark':'深色', 'Show table gridlines':'显示表格网格线', 'Open CSVs as tables':'将 CSV 作为表格打开', 'Delimiter':'分隔符', 'Clear filters':'清除筛选', 'Clear sorting':'清除排序', 'Open as text':'作为文本打开', 'Replace values':'替换值', 'Suggest a change':'提出更改建议', 'Buy me a coffee':'支持此项目', 'Add row':'添加行', 'Add column':'添加列', 'Delete selected rows':'删除所选行', 'Paste table':'粘贴表格', 'Reset column widths':'重置列宽' },
+  'pt-br': { 'General':'Geral', 'Display':'Exibição', 'File handling':'Arquivos', 'Tools':'Ferramentas', 'Project':'Projeto', 'Language':'Idioma', 'Colorize columns':'Colorir colunas', 'Fit columns to available width':'Ajustar colunas à largura disponível', 'VS Code theme':'Tema do VS Code', 'Light':'Claro', 'Dark':'Escuro', 'Show table gridlines':'Mostrar linhas da tabela', 'Open CSVs as tables':'Abrir CSVs como tabelas', 'Delimiter':'Delimitador', 'Clear filters':'Limpar filtros', 'Clear sorting':'Limpar ordenação', 'Open as text':'Abrir como texto', 'Replace values':'Substituir valores', 'Suggest a change':'Sugerir uma alteração', 'Buy me a coffee':'Apoie o projeto', 'Add row':'Adicionar linha', 'Add column':'Adicionar coluna', 'Delete selected rows':'Excluir linhas selecionadas', 'Paste table':'Colar tabela', 'Reset column widths':'Redefinir larguras das colunas' },
+  ru: { 'General':'Общие', 'Display':'Отображение', 'File handling':'Файлы', 'Tools':'Инструменты', 'Project':'Проект', 'Language':'Язык', 'Colorize columns':'Раскрасить столбцы', 'Fit columns to available width':'Вписать столбцы по ширине', 'VS Code theme':'Тема VS Code', 'Light':'Светлая', 'Dark':'Тёмная', 'Show table gridlines':'Показать сетку таблицы', 'Open CSVs as tables':'Открывать CSV как таблицы', 'Delimiter':'Разделитель', 'Clear filters':'Сбросить фильтры', 'Clear sorting':'Сбросить сортировку', 'Open as text':'Открыть как текст', 'Replace values':'Заменить значения', 'Suggest a change':'Предложить изменение', 'Buy me a coffee':'Поддержать проект', 'Add row':'Добавить строку', 'Add column':'Добавить столбец', 'Delete selected rows':'Удалить выбранные строки', 'Paste table':'Вставить таблицу', 'Reset column widths':'Сбросить ширину столбцов' },
+  ko: { 'General':'일반', 'Display':'표시', 'File handling':'파일 처리', 'Tools':'도구', 'Project':'프로젝트', 'Language':'언어', 'Colorize columns':'열 색상 표시', 'Fit columns to available width':'열 너비를 화면에 맞춤', 'VS Code theme':'VS Code 테마', 'Light':'라이트', 'Dark':'다크', 'Show table gridlines':'표 격자선 표시', 'Open CSVs as tables':'CSV를 표로 열기', 'Delimiter':'구분 기호', 'Clear filters':'필터 지우기', 'Clear sorting':'정렬 지우기', 'Open as text':'텍스트로 열기', 'Replace values':'값 바꾸기', 'Suggest a change':'변경 제안', 'Buy me a coffee':'프로젝트 후원', 'Add row':'행 추가', 'Add column':'열 추가', 'Delete selected rows':'선택한 행 삭제', 'Paste table':'표 붙여넣기', 'Reset column widths':'열 너비 초기화' },
+  it: { 'General':'Generale', 'Display':'Visualizzazione', 'File handling':'Gestione file', 'Tools':'Strumenti', 'Project':'Progetto', 'Language':'Lingua', 'Colorize columns':'Colora colonne', 'Fit columns to available width':'Adatta colonne alla larghezza disponibile', 'VS Code theme':'Tema di VS Code', 'Light':'Chiaro', 'Dark':'Scuro', 'Show table gridlines':'Mostra griglia', 'Open CSVs as tables':'Apri CSV come tabelle', 'Delimiter':'Delimitatore', 'Clear filters':'Cancella filtri', 'Clear sorting':'Cancella ordinamento', 'Open as text':'Apri come testo', 'Replace values':'Sostituisci valori', 'Suggest a change':'Suggerisci una modifica', 'Buy me a coffee':'Sostieni il progetto', 'Add row':'Aggiungi riga', 'Add column':'Aggiungi colonna', 'Delete selected rows':'Elimina righe selezionate', 'Paste table':'Incolla tabella', 'Reset column widths':'Reimposta larghezza colonne' },
+};
+Object.assign(TRANSLATIONS, COMMON_UI_TRANSLATIONS);
+Object.assign(TRANSLATIONS.es, { Interface: 'Interfaz', 'CSV settings': 'Ajustes CSV' });
+Object.assign(TRANSLATIONS.ja, { Interface: '\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9', 'CSV settings': 'CSV \u8a2d\u5b9a' });
+Object.assign(TRANSLATIONS['zh-cn'], { Interface: '\u754c\u9762', 'CSV settings': 'CSV \u8bbe\u7f6e' });
+Object.assign(TRANSLATIONS['pt-br'], { Interface: 'Interface', 'CSV settings': 'Configura\u00e7\u00f5es de CSV' });
+Object.assign(TRANSLATIONS.ru, { Interface: '\u0418\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441', 'CSV settings': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 CSV' });
+Object.assign(TRANSLATIONS.ko, { Interface: '\uc778\ud130\ud398\uc774\uc2a4', 'CSV settings': 'CSV \uc124\uc815' });
+Object.assign(TRANSLATIONS.it, { Interface: 'Interfaccia', 'CSV settings': 'Impostazioni CSV' });
+const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', ja: 'ja-JP', 'zh-cn': 'zh-CN', 'pt-br': 'pt-BR', ru: 'ru-RU', ko: 'ko-KR', it: 'it-IT' };
 const savedState = vscode.getState() ?? {};
-const systemLanguage = navigator.language.slice(0, 2).toLowerCase();
+const browserLanguage = navigator.language.toLowerCase();
+const systemLanguage = browserLanguage.startsWith('zh') ? 'zh-cn' : browserLanguage.startsWith('pt') ? 'pt-br' : browserLanguage.slice(0, 2);
 let language = savedState.language in TRANSLATIONS ? savedState.language : (systemLanguage in TRANSLATIONS ? systemLanguage : 'en');
 
 function t(key) {
@@ -158,6 +178,7 @@ const elements = {
   addRow: document.getElementById('add-row'),
   addColumn: document.getElementById('add-column'),
   deleteSelected: document.getElementById('delete-selected'),
+  replaceValues: document.getElementById('replace-values'),
   selectionCount: document.getElementById('selection-count'),
   delimiter: document.getElementById('delimiter-select'),
   settingsButton: document.getElementById('settings-button'),
@@ -1423,10 +1444,11 @@ elements.replaceForm.addEventListener('submit', (event) => {
   elements.replaceDialog.close('replace');
 });
 document.getElementById('replace-cancel').addEventListener('click', () => elements.replaceDialog.close('cancel'));
-elements.replaceDialog.addEventListener('close', () => elements.settingsButton.focus());
+elements.replaceDialog.addEventListener('close', () => elements.replaceValues.focus());
 document.getElementById('add-row').addEventListener('click', addRow);
 document.getElementById('add-column').addEventListener('click', () => void addColumn());
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());
+elements.replaceValues.addEventListener('click', openReplaceValuesDialog);
 elements.settingsButton.addEventListener('click', openSettingsPopover);
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;

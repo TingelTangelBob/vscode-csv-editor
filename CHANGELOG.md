@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.8
+
+- Reorganize settings into Tools, CSV settings, File handling, and Interface; move the theme and language controls into Interface.
+- Add seven interface languages, move exact value replacement to the toolbar, and compact menu items.
+- Refresh the Marketplace screenshots.
+
 ## 1.4.7
 
 - Apply column filters immediately and simplify the filter popover controls.

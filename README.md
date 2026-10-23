@@ -2,7 +2,9 @@
 
 View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Editor detects delimiters, keeps your data in the same editor tab, and makes sorting, filtering, editing, and importing rows quick.
 
-![CSV Simple Editor showing a table in the light theme](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
+![CSV Simple Editor showing a table and toolbar](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
+
+![CSV Simple Editor settings with CSV options, tools, language, and appearance controls](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/settings-screenshot.png)
 
 ## Features
 
@@ -20,8 +22,10 @@ View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Edit
 - Optionally shows subtle gridlines between table rows and columns.
 - Lets you choose whether CSV and TSV files open in the table by default from the table settings or VS Code's extension settings.
 - Adds rows and columns; deletes selected rows or individual columns.
+- Replaces exact cell values across the table or selected columns from the toolbar.
+- Offers ten interface languages and System, Light, or Dark appearance settings.
 - Syncs edits with the regular VS Code document. Save with `Ctrl+S` / `Cmd+S`.
-- Changes the delimiter and clears filters or sorting from the compact tools menu.
+- Changes the delimiter and clears filters or sorting from the Tools menu. CSV options, language, and appearance are grouped in settings.
 - Shows import validation details on demand, with distinct subtle colors for warnings and errors.
 
 ## Usage
@@ -32,7 +36,7 @@ Automatic column widths fit the header, filter control, and the widest cell valu
 
 Column filters list the distinct values with checkboxes and occurrence counts, including blank cells. Search narrows the list and applies a case-insensitive contains condition; the checked values further restrict the result by exact value. Search and selection changes apply immediately, and Escape or clicking outside closes the filter without undoing them. Other active column filters determine the available values. Long lists load in batches via Show more values, and search covers the entire list. Use Clear filter to reset a column, or Clear filters in Table settings to reset every column.
 
-Use Replace values in Table settings to replace an exact cell value throughout the table or in one or more selected columns. Matching is case-sensitive, and column headers are left unchanged. The operation updates the CSV document as one edit, which can be undone with VS Code's Undo command.
+Use the Replace values toolbar button to replace an exact cell value throughout the table or in one or more selected columns. Matching is case-sensitive, and column headers are left unchanged. The operation updates the CSV document as one edit, which can be undone with VS Code's Undo command.
 
 Paste CSV or tab-separated data into an empty file with `Ctrl+V` / `Cmd+V` to create a table immediately (the first row becomes the column names). The clipboard toolbar button also reads the clipboard. With an existing table, a preview lets you append rows or replace the table, select a delimiter, import with or without column names, skip empty rows, and remove exact duplicate rows across the resulting table.
 
@@ -40,7 +44,7 @@ When appending with column names, columns are matched by name, ignoring surround
 
 Open a `.csv` or `.tsv` file to start in table view. Click a column heading to sort; click its filter icon to filter. Right-click a cell or heading for more actions. Use the editor title action to switch back to the text view.
 
-The table follows the active VS Code color theme and keeps the toolbar compact. Table settings groups display options, file handling, and tools such as delimiter selection, value replacement, filter and sort reset, and switching back to text view. The project section links to change requests and shows the installed extension version.
+The table follows the active VS Code color theme and keeps the toolbar compact. Settings group tools, CSV options, file handling, and interface preferences. The toolbar provides quick access to value replacement. The project section links to change requests and shows the installed extension version.
 
 ## Development
 

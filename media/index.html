@@ -21,6 +21,9 @@
           <button class="tool-button" id="add-column" type="button" title="Add column" aria-label="Add column" data-i18n-title="Add column">
             <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M10 2h3v7h-3Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
+          <button class="tool-button" id="replace-values" type="button" title="Replace values" aria-label="Replace values" data-i18n-title="Replace values">
+            <svg class="replace-values-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 3.5h8.5M8.5 1.5l2 2-2 2M14 12.5H5.5M7.5 10.5l-2 2 2 2"/><path class="replace-values-cell" d="M3 7h4v2H3zM9 7h4v2H9z"/></svg>
+          </button>
           <button class="tool-button danger-tool" id="delete-selected" type="button" title="Delete selected rows" aria-label="Delete selected rows" data-i18n-title="Delete selected rows" disabled>
             <span class="codicon codicon-trash" aria-hidden="true"></span>
             <span class="selection-count" id="selection-count" hidden>0</span>
@@ -41,48 +44,6 @@
     </section>
 
     <div class="popover settings-popover" id="settings-popover" hidden tabindex="-1">
-      <div class="popover-caption" data-i18n="Table settings">Table settings</div>
-      <div class="settings-section-label" data-i18n="General">General</div>
-      <label class="language-setting" for="language-select"><span class="settings-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="6.2"/><path d="M1.9 8h12.2M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2s-.9 4.5-2.7 6.2C6.2 12.5 5.3 10.4 5.3 8s.9-4.5 2.7-6.2Z"/></svg></span><span data-i18n="Language">Language</span>
-        <select id="language-select" aria-label="Language" data-i18n-aria-label="Language">
-          <option value="en">English</option>
-          <option value="de">Deutsch</option>
-          <option value="fr">Français</option>
-        </select>
-      </label>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <div class="settings-section-label" data-i18n="Display">Display</div>
-      <label class="setting-toggle" for="colorize-columns">
-        <span class="setting-control"><input id="colorize-columns" type="checkbox"></span>
-        <span class="setting-copy" data-i18n="Colorize columns">Colorize columns</span>
-      </label>
-      <label class="setting-toggle" for="responsive-columns">
-        <span class="setting-control"><input id="responsive-columns" type="checkbox" checked></span>
-        <span class="setting-copy" data-i18n="Fit columns to available width">Fit columns to available width</span>
-      </label>
-      <div class="appearance-switcher" id="appearance-switcher" role="group" aria-label="Appearance" data-i18n-aria-label="Appearance">
-        <button class="appearance-option" type="button" data-theme="system" title="VS Code theme" data-i18n-title="VS Code theme" aria-pressed="false">
-          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2.4" y="2.5" width="11.2" height="8" rx="1.5"/><path d="M6 13.5h4M8 10.8v2.7"/></svg>
-        </button>
-        <button class="appearance-option" type="button" data-theme="light" title="Light" data-i18n-title="Light" aria-pressed="false">
-          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M12.6 3.4l-1 1M4.4 11.6l-1 1"/></svg>
-        </button>
-        <button class="appearance-option" type="button" data-theme="dark" title="Dark" data-i18n-title="Dark" aria-pressed="false">
-          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M12.8 10.1A5.7 5.7 0 0 1 5.9 3.2 5.8 5.8 0 1 0 12.8 10.1Z"/></svg>
-        </button>
-      </div>
-      <label class="setting-toggle" for="show-gridlines">
-        <span class="setting-control"><input id="show-gridlines" type="checkbox"></span>
-        <span class="setting-copy" data-i18n="Show table gridlines">Show table gridlines</span>
-      </label>
-      <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><span class="codicon codicon-refresh" aria-hidden="true"></span></span><span data-i18n="Reset column widths">Reset column widths</span></button>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <div class="settings-section-label" data-i18n="File handling">File handling</div>
-      <label class="setting-toggle" for="open-by-default">
-        <span class="setting-control"><input id="open-by-default" type="checkbox"></span>
-        <span class="setting-copy" data-i18n="Open CSVs as tables">Open CSVs as tables</span>
-      </label>
-      <span class="menu-separator" aria-hidden="true"></span>
       <div class="settings-section-label" data-i18n="Tools">Tools</div>
       <label class="delimiter-setting" for="delimiter-select">
         <span class="action-icon"><span class="codicon codicon-symbol-structure" aria-hidden="true"></span></span>
@@ -97,7 +58,55 @@
       <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
       <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
       <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
-      <button class="menu-action" type="button" data-action="replace-values"><span class="action-icon"><span class="codicon codicon-edit" aria-hidden="true"></span></span><span data-i18n="Replace values">Replace values</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="CSV settings">CSV settings</div>
+      <label class="setting-toggle" for="colorize-columns">
+        <span class="setting-control"><input id="colorize-columns" type="checkbox"></span>
+        <span class="setting-copy" data-i18n="Colorize columns">Colorize columns</span>
+      </label>
+      <label class="setting-toggle" for="responsive-columns">
+        <span class="setting-control"><input id="responsive-columns" type="checkbox" checked></span>
+        <span class="setting-copy" data-i18n="Fit columns to available width">Fit columns to available width</span>
+      </label>
+
+      <label class="setting-toggle" for="show-gridlines">
+        <span class="setting-control"><input id="show-gridlines" type="checkbox"></span>
+        <span class="setting-copy" data-i18n="Show table gridlines">Show table gridlines</span>
+      </label>
+      <button class="menu-action" type="button" data-action="reset-column-widths"><span class="action-icon"><span class="codicon codicon-refresh" aria-hidden="true"></span></span><span data-i18n="Reset column widths">Reset column widths</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="File handling">File handling</div>
+      <label class="setting-toggle" for="open-by-default">
+        <span class="setting-control"><input id="open-by-default" type="checkbox"></span>
+        <span class="setting-copy" data-i18n="Open CSVs as tables">Open CSVs as tables</span>
+      </label>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="Interface">Interface</div>
+      <label class="language-setting" for="language-select"><span class="settings-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><circle cx="8" cy="8" r="6.2"/><path d="M1.9 8h12.2M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2s-.9 4.5-2.7 6.2C6.2 12.5 5.3 10.4 5.3 8s.9-4.5 2.7-6.2Z"/></svg></span><span data-i18n="Language">Language</span>
+        <select id="language-select" aria-label="Language" data-i18n-aria-label="Language">
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="ja">日本語</option>
+          <option value="zh-cn">简体中文</option>
+          <option value="pt-br">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="ko">한국어</option>
+          <option value="it">Italiano</option>
+        </select>
+      </label>
+      <div class="appearance-switcher" id="appearance-switcher" role="group" aria-label="Appearance" data-i18n-aria-label="Appearance">
+        <button class="appearance-option" type="button" data-theme="system" title="VS Code theme" data-i18n-title="VS Code theme" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2.4" y="2.5" width="11.2" height="8" rx="1.5"/><path d="M6 13.5h4M8 10.8v2.7"/></svg>
+        </button>
+        <button class="appearance-option" type="button" data-theme="light" title="Light" data-i18n-title="Light" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M12.6 3.4l-1 1M4.4 11.6l-1 1"/></svg>
+        </button>
+        <button class="appearance-option" type="button" data-theme="dark" title="Dark" data-i18n-title="Dark" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M12.8 10.1A5.7 5.7 0 0 1 5.9 3.2 5.8 5.8 0 1 0 12.8 10.1Z"/></svg>
+        </button>
+      </div>
       <span class="menu-separator" aria-hidden="true"></span>
       <div class="settings-section-label" data-i18n="Project">Project</div>
       <button class="menu-action project-link project-request" type="button" data-action="open-feature-request" title="Suggest a change" aria-label="Suggest a change" data-i18n-title="Suggest a change" data-i18n-aria-label="Suggest a change">
