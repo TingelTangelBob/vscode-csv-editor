@@ -86,6 +86,7 @@ th[data-column]:hover .filter-button, th[data-column]:focus-within .filter-butto
 thead th[data-column] { position: relative; }
 tbody .data-cell { overflow: hidden; padding: 0 9px; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
 .column-resize-handle { position: absolute; top: 0; right: -3px; z-index: 2; width: 7px; height: 100%; cursor: col-resize; touch-action: none; }
+thead th[data-column]:last-child .column-resize-handle { right: 0; }
 .column-resize-handle::after { position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; content: ""; background: var(--gridline); opacity: 0; }
 th[data-column]:hover .column-resize-handle::after, .column-resize-handle:focus-visible::after, .column-resize-handle.is-dragging::after { opacity: 1; }
 body.is-resizing-column { cursor: col-resize; user-select: none; }
@@ -269,9 +270,9 @@ body[data-theme="dark"], body[data-theme="light"] {
   --stripe: color-mix(in srgb, var(--foreground) 1.6%, var(--background));
   --gridline: color-mix(in srgb, var(--foreground) 13%, transparent);
 }
-body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switcher, .appearance-option, tbody td, thead th {
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switcher, .appearance-option {
+  transition: color 110ms ease, background-color 110ms ease, border-color 110ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switcher, .appearance-option, tbody td, thead th { transition-duration: 0ms; }
+  body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switcher, .appearance-option { transition-duration: 0ms; }
 }

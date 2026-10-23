@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.13
+
+- Prevent a small horizontal overflow when fitting columns to the available width.
+- Make dark mode switching feel more responsive by limiting animated transitions to interface controls.
+
 ## 1.4.12
 
 - Find and replace literal text inside cell values, including when the search term is only part of a cell.

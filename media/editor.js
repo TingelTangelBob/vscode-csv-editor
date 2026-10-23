@@ -977,26 +977,36 @@ function recalculateColumnWidths(columns = null) {
 }
 
 function updateTableWidth() {
-  const widths = sheet.headers.map((_, column) => columnWidthOverrides[column] ?? columnWidths[column] ?? 80);
+  const widths = sheet.headers.map((_, column) => Math.ceil(columnWidthOverrides[column] ?? columnWidths[column] ?? 80));
   const flexible = sheet.headers.map((_, column) => column).filter(column => !Number.isFinite(columnWidthOverrides[column]));
-  const numberWidth = parseFloat(getComputedStyle(elements.table).getPropertyValue('--row-number-width')) || 43;
+  const numberWidth = Math.ceil(parseFloat(getComputedStyle(elements.table).getPropertyValue('--row-number-width')) || 43);
   const minimumWidth = widths.reduce((sum, width) => sum + width, numberWidth);
   const spare = responsiveColumns ? Math.max(0, elements.tableScroll.clientWidth - minimumWidth) : 0;
   const flexibleWidth = flexible.reduce((sum, column) => sum + widths[column], 0);
   if (spare > 0 && flexibleWidth > 0) {
-    for (const column of flexible) widths[column] += spare * widths[column] / flexibleWidth;
+    const additions = flexible.map((column) => {
+      const exact = spare * widths[column] / flexibleWidth;
+      return { column, pixels: Math.floor(exact), remainder: exact % 1 };
+    });
+    let remaining = spare;
+    for (const addition of additions) {
+      widths[addition.column] += addition.pixels;
+      remaining -= addition.pixels;
+    }
+    additions.sort((left, right) => right.remainder - left.remainder);
+    for (let index = 0; index < remaining; index += 1) widths[additions[index % additions.length].column] += 1;
   }
   displayColumnWidths = widths;
   sheet.headers.forEach((_, column) => {
     const col = elements.tableColumns.children[column + 1];
     if (col) col.style.width = columnWidthCss(column);
   });
-  elements.table.style.width = `calc(var(--row-number-width) + ${sheet.headers.map((_, column) => columnWidthCss(column)).join(' + ')})`;
+  elements.table.style.width = `${widths.reduce((sum, width) => sum + width, numberWidth)}px`;
   positionHeaderIcons();
 }
 
 function applyColumnWidth(column, width) {
-  const value = Math.max(40, width);
+  const value = Math.max(40, Math.round(width));
   columnWidthOverrides[column] = value;
   elements.tableColumns.children[column + 1].style.width = `${value}px`;
   updateTableWidth();
