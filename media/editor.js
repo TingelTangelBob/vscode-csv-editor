@@ -71,6 +71,8 @@ function applyTranslations() {
 }
 
 const elements = {
+  toolbar: document.querySelector('.toolbar'),
+  toolbarActions: document.querySelector('.toolbar-actions'),
   table: document.getElementById('csv-table'),
   tableHead: document.getElementById('table-head'),
   tableBody: document.getElementById('table-body'),
@@ -262,10 +264,13 @@ function renderHeader() {
     sortButton.append(name);
     const indicators = createElement('span', 'sort-indicators');
     for (const direction of [1, -1]) {
-      const directionButton = createElement('button', 'sort-direction', direction > 0 ? '↑' : '↓');
+      const directionButton = createElement('button', 'sort-direction');
       directionButton.type = 'button';
       directionButton.dataset.sort = String(column);
       directionButton.dataset.sortDirection = String(direction);
+      directionButton.innerHTML = direction > 0
+        ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12V4m-3 3 3-3 3 3"></path></svg>'
+        : '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4v8m-3-3 3 3 3-3"></path></svg>';
       directionButton.title = t(direction > 0 ? 'Sort ascending' : 'Sort descending');
       directionButton.setAttribute('aria-label', directionButton.title);
       directionButton.setAttribute('aria-pressed', String(sortState?.column === column && sortState.direction === direction));
@@ -369,6 +374,14 @@ function updateSelectAll(checkbox = document.getElementById('select-visible-rows
   checkbox.indeterminate = count > 0 && count < visibleRows.length;
 }
 
+function alignToolbarActions() {
+  const tableWidth = elements.table.getBoundingClientRect().width;
+  const toolbarWidth = elements.toolbar.getBoundingClientRect().width;
+  const actionsWidth = elements.toolbarActions.getBoundingClientRect().width;
+  const rightEdge = Math.min(tableWidth, toolbarWidth);
+  elements.toolbarActions.style.marginLeft = `${Math.max(0, rightEdge - actionsWidth)}px`;
+}
+
 function renderTable() {
   pendingCellRender = false;
   if (filterRenderTimer !== null) {
@@ -380,6 +393,7 @@ function renderTable() {
   renderHeader();
   renderBody();
   updateToolbar();
+  alignToolbarActions();
 }
 
 function recalculateColumnWidths(columns = null) {
@@ -798,6 +812,7 @@ document.addEventListener('pointerup', (event) => {
   resizeState = null;
   document.body.classList.remove('is-resizing-column');
   applyColumnWidth(resizedColumn, columnWidthOverrides[resizedColumn]);
+  alignToolbarActions();
   persistViewState();
 });
 
@@ -807,6 +822,7 @@ document.addEventListener('pointercancel', (event) => {
   resizeState = null;
   document.body.classList.remove('is-resizing-column');
   applyColumnWidth(resizedColumn, columnWidthOverrides[resizedColumn]);
+  alignToolbarActions();
   persistViewState();
 });
 
@@ -820,7 +836,6 @@ elements.table.addEventListener('click', (event) => {
   const sortButton = event.target.closest('[data-sort]');
   if (sortButton) {
     const column = Number(sortButton.dataset.sort);
-    selectedColumn = column;
     const direction = Number(sortButton.dataset.sortDirection);
     sortState = Number.isFinite(direction) && direction !== 0
       ? { column, direction }
@@ -891,6 +906,7 @@ elements.table.addEventListener('keydown', (event) => {
     const header = elements.tableHead.querySelector('th[data-column="' + column + '"]');
     const currentWidth = header?.getBoundingClientRect().width || 120;
     applyColumnWidth(column, currentWidth + (event.key === 'ArrowRight' ? 12 : -12));
+    alignToolbarActions();
     persistViewState();
     return;
   }
@@ -1005,7 +1021,6 @@ document.addEventListener('click', (event) => {
     renderTable();
   } else if ((action === 'sort-ascending' || action === 'sort-descending') && target) {
     sortState = { column: target.column, direction: action === 'sort-ascending' ? 1 : -1 };
-    selectedColumn = target.column;
     closePopovers();
     renderTable();
   } else if (action === 'rename-column' && column >= 0) {
@@ -1020,6 +1035,7 @@ elements.tableScroll.addEventListener('scroll', () => {
 }, { passive: true });
 
 window.addEventListener('resize', () => {
+  alignToolbarActions();
   if (activePopover) closePopovers();
 });
 

@@ -2,7 +2,7 @@
 
 View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Editor detects the delimiter, keeps your data in the same editor tab, and makes common table edits quick.
 
-![CSV Simple Editor displaying 15 sales orders in eight columns, sorted by date](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
+![CSV Simple Editor displaying 15 sales orders in eight columns](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
 
 ## Features
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.8
+
+- Aligned the toolbar actions with the table edge when the table is narrower than the editor.
+- Repositioned the ascending and descending controls as clear, stacked SVG arrows in each column header.
+- Kept sorting separate from column selection so sorting no longer highlights the entire column.
+- Refreshed the Marketplace screenshot without a preselected column.
+
 ## 1.2.7
 
 - Removed the filename header and side padding, and made the toolbar and column headings more compact.
