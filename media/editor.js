@@ -131,6 +131,70 @@ const COMMON_UI_TRANSLATIONS = {
   it: { 'General':'Generale', 'Display':'Visualizzazione', 'File handling':'Gestione file', 'Tools':'Strumenti', 'Project':'Progetto', 'Language':'Lingua', 'Colorize columns':'Colora colonne', 'Fit columns to available width':'Adatta colonne alla larghezza disponibile', 'VS Code theme':'Tema di VS Code', 'Light':'Chiaro', 'Dark':'Scuro', 'Show table gridlines':'Mostra griglia', 'Open CSVs as tables':'Apri CSV come tabelle', 'Delimiter':'Delimitatore', 'Clear filters':'Cancella filtri', 'Clear sorting':'Cancella ordinamento', 'Open as text':'Apri come testo', 'Replace values':'Sostituisci valori', 'Suggest a change':'Suggerisci una modifica', 'Buy me a coffee':'Sostieni il progetto', 'Add row':'Aggiungi riga', 'Add column':'Aggiungi colonna', 'Delete selected rows':'Elimina righe selezionate', 'Paste table':'Incolla tabella', 'Reset column widths':'Reimposta larghezza colonne' },
 };
 Object.assign(TRANSLATIONS, COMMON_UI_TRANSLATIONS);
+Object.assign(TRANSLATIONS.de, {
+  'Insert column before selection': 'Spalte vor Auswahl einf\u00fcgen',
+  'Insert column after selection': 'Spalte nach Auswahl einf\u00fcgen',
+  'Add column at end': 'Spalte am Ende hinzuf\u00fcgen',
+  'Replace in whole table': 'In der ganzen Tabelle ersetzen',
+  'Replace in selected columns': 'In ausgew\u00e4hlten Spalten ersetzen',
+});
+Object.assign(TRANSLATIONS.fr, {
+  'Insert column before selection': 'Ins\u00e9rer une colonne avant la s\u00e9lection',
+  'Insert column after selection': 'Ins\u00e9rer une colonne apr\u00e8s la s\u00e9lection',
+  'Add column at end': 'Ajouter une colonne \u00e0 la fin',
+  'Replace in whole table': 'Remplacer dans tout le tableau',
+  'Replace in selected columns': 'Remplacer dans les colonnes s\u00e9lectionn\u00e9es',
+});
+Object.assign(TRANSLATIONS.es, {
+  'Insert column before selection': 'Insertar columna antes de la selecci\u00f3n',
+  'Insert column after selection': 'Insertar columna despu\u00e9s de la selecci\u00f3n',
+  'Add column at end': 'A\u00f1adir columna al final',
+  'Replace in whole table': 'Reemplazar en toda la tabla',
+  'Replace in selected columns': 'Reemplazar en columnas seleccionadas',
+});
+Object.assign(TRANSLATIONS.it, {
+  'Insert column before selection': 'Inserisci colonna prima della selezione',
+  'Insert column after selection': 'Inserisci colonna dopo la selezione',
+  'Add column at end': 'Aggiungi colonna alla fine',
+  'Replace in whole table': 'Sostituisci nell’intera tabella',
+  'Replace in selected columns': 'Sostituisci nelle colonne selezionate',
+});
+Object.assign(TRANSLATIONS['pt-br'], {
+  'Insert column before selection': 'Inserir coluna antes da seleção',
+  'Insert column after selection': 'Inserir coluna após a seleção',
+  'Add column at end': 'Adicionar coluna ao final',
+  'Replace in whole table': 'Substituir na tabela inteira',
+  'Replace in selected columns': 'Substituir nas colunas selecionadas',
+});
+Object.assign(TRANSLATIONS.ru, {
+  'Insert column before selection': 'Вставить столбец перед выбранными',
+  'Insert column after selection': 'Вставить столбец после выбранных',
+  'Add column at end': 'Добавить столбец в конец',
+  'Replace in whole table': 'Заменить во всей таблице',
+  'Replace in selected columns': 'Заменить в выбранных столбцах',
+});
+Object.assign(TRANSLATIONS.ko, {
+  'Insert column before selection': '선택 항목 앞에 열 삽입',
+  'Insert column after selection': '선택 항목 뒤에 열 삽입',
+  'Add column at end': '끝에 열 추가',
+  'Replace in whole table': '전체 표에서 바꾸기',
+  'Replace in selected columns': '선택한 열에서 바꾸기',
+});
+Object.assign(TRANSLATIONS.ja, {
+  'Insert column before selection': '選択範囲の前に列を挿入',
+  'Insert column after selection': '選択範囲の後に列を挿入',
+  'Add column at end': '末尾に列を追加',
+  'Replace in whole table': '表全体で置換',
+  'Replace in selected columns': '選択した列で置換',
+});
+Object.assign(TRANSLATIONS['zh-cn'], {
+  'Insert column before selection': '在所选内容前插入列',
+  'Insert column after selection': '在所选内容后插入列',
+  'Add column at end': '在末尾添加列',
+  'Replace in whole table': '替换整个表格中的内容',
+  'Replace in selected columns': '替换所选列中的内容',
+});
+
 Object.assign(TRANSLATIONS.es, { Interface: 'Interfaz', 'CSV settings': 'Ajustes CSV' });
 Object.assign(TRANSLATIONS.ja, { Interface: '\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9', 'CSV settings': 'CSV \u8a2d\u5b9a' });
 Object.assign(TRANSLATIONS['zh-cn'], { Interface: '\u754c\u9762', 'CSV settings': 'CSV \u8bbe\u7f6e' });
@@ -177,8 +241,10 @@ const elements = {
   tableStatus: document.getElementById('table-status'),
   addRow: document.getElementById('add-row'),
   addColumn: document.getElementById('add-column'),
+  addColumnPopover: document.getElementById('add-column-popover'),
   deleteSelected: document.getElementById('delete-selected'),
   replaceValues: document.getElementById('replace-values'),
+  replaceValuesPopover: document.getElementById('replace-values-popover'),
   selectionCount: document.getElementById('selection-count'),
   delimiter: document.getElementById('delimiter-select'),
   settingsButton: document.getElementById('settings-button'),
@@ -1098,17 +1164,18 @@ function updateReplacementMatchCount() {
   elements.replaceSubmit.disabled = count === 0 || isUnchanged || (selectedScope && columns.length === 0);
 }
 
-function openReplaceValuesDialog() {
+function openReplaceValuesDialog(scope = 'all') {
   closePopovers();
   elements.replaceFind.value = '';
   elements.replaceWith.value = '';
-  elements.replaceForm.querySelector('input[name="replace-scope"][value="all"]').checked = true;
+  elements.replaceForm.querySelector(`input[name="replace-scope"][value="${scope}"]`).checked = true;
   elements.replaceForm.querySelector('input[name="replace-scope"][value="selected"]').disabled = sheet.headers.length === 0;
   elements.replaceColumns.replaceChildren(...sheet.headers.map((name, column) => {
     const label = createElement('label', 'replace-column-option');
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.dataset.replaceColumn = String(column);
+    checkbox.checked = scope === 'selected' && selectedColumns.has(column);
     const text = createElement('span', '', name.trim() || `${t('Column')} ${column + 1}`);
     text.title = text.textContent;
     label.append(checkbox, text);
@@ -1155,9 +1222,20 @@ function positionPopover(popover, anchor) {
   popover.style.top = `${top}px`;
 }
 
+function positionToolbarPopover(popover, anchor) {
+  popover.hidden = false;
+  const anchorRect = anchor.getBoundingClientRect();
+  const rect = popover.getBoundingClientRect();
+  const left = Math.max(8, Math.min(anchorRect.left, window.innerWidth - rect.width - 8));
+  let top = anchorRect.top - rect.height - 5;
+  if (top < 8) top = Math.min(window.innerHeight - rect.height - 8, anchorRect.bottom + 5);
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+}
+
 function closePopovers(restoreFocus = false) {
   const anchor = popoverAnchor;
-  for (const popover of [elements.settingsPopover, elements.filterPopover, elements.contextPopover]) popover.hidden = true;
+  for (const popover of [elements.settingsPopover, elements.filterPopover, elements.contextPopover, elements.addColumnPopover, elements.replaceValuesPopover]) popover.hidden = true;
   document.querySelectorAll('[aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
   activePopover = null;
   activeColumn = -1;
@@ -1187,6 +1265,28 @@ function openSettingsPopover() {
   elements.settingsButton.setAttribute('aria-expanded', 'true');
   positionPopover(elements.settingsPopover, elements.settingsButton);
   elements.settingsPopover.focus({ preventScroll: true });
+}
+
+function openToolbarPopover(popover, anchor) {
+  if (activePopover === popover) {
+    closePopovers();
+    return;
+  }
+  closePopovers();
+  if (popover === elements.addColumnPopover) {
+    const selected = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
+    const before = popover.querySelector('[data-column-insert="before"]');
+    const after = popover.querySelector('[data-column-insert="after"]');
+    before.disabled = after.disabled = selected.length === 0;
+  }
+  if (popover === elements.replaceValuesPopover) {
+    popover.querySelector('[data-replace-scope="selected"]').disabled = selectedColumns.size === 0;
+  }
+  activePopover = popover;
+  popoverAnchor = anchor;
+  anchor.setAttribute('aria-expanded', 'true');
+  positionToolbarPopover(popover, anchor);
+  popover.querySelector('button:not(:disabled)')?.focus({ preventScroll: true });
 }
 
 function openFilterPopover(column, anchor) {
@@ -1355,15 +1455,20 @@ function addRow() {
   focusCell(row.id, 0);
 }
 
-async function addColumn() {
+async function addColumn(insertAt = sheet.headers.length) {
   const name = await openColumnDialog('add');
   if (!name) return;
-  sheet.headers.push(name);
-  sheet.rows.forEach((row) => row.cells.push(''));
-  columnFilters.push(null);
-  columnWidthOverrides.push(null);
+  const index = Math.max(0, Math.min(insertAt, sheet.headers.length));
+  sheet.headers.splice(index, 0, name);
+  sheet.rows.forEach((row) => row.cells.splice(index, 0, ''));
+  columnFilters.splice(index, 0, null);
+  columnWidthOverrides.splice(index, 0, null);
+  if (selectedColumn >= index) selectedColumn += 1;
+  const shiftedSelection = [...selectedColumns].map((column) => column >= index ? column + 1 : column);
+  selectedColumns.clear();
+  shiftedSelection.forEach((column) => selectedColumns.add(column));
   persistViewState();
-  recalculateColumnWidths([sheet.headers.length - 1]);
+  recalculateColumnWidths([index]);
   renderTable();
   sendEdit();
 }
@@ -1446,9 +1551,24 @@ elements.replaceForm.addEventListener('submit', (event) => {
 document.getElementById('replace-cancel').addEventListener('click', () => elements.replaceDialog.close('cancel'));
 elements.replaceDialog.addEventListener('close', () => elements.replaceValues.focus());
 document.getElementById('add-row').addEventListener('click', addRow);
-document.getElementById('add-column').addEventListener('click', () => void addColumn());
+elements.addColumn.addEventListener('click', () => openToolbarPopover(elements.addColumnPopover, elements.addColumn));
+elements.addColumnPopover.addEventListener('click', (event) => {
+  const option = event.target.closest('[data-column-insert]');
+  if (!option || option.disabled) return;
+  let index = sheet.headers.length;
+  const selected = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
+  if (option.dataset.columnInsert === 'before' && selected.length) index = Math.min(...selected);
+  else if (option.dataset.columnInsert === 'after' && selected.length) index = Math.max(...selected) + 1;
+  closePopovers();
+  void addColumn(index);
+});
 elements.deleteSelected.addEventListener('click', () => void deleteSelectedRows());
-elements.replaceValues.addEventListener('click', openReplaceValuesDialog);
+elements.replaceValues.addEventListener('click', () => openToolbarPopover(elements.replaceValuesPopover, elements.replaceValues));
+elements.replaceValuesPopover.addEventListener('click', (event) => {
+  const option = event.target.closest('[data-replace-scope]');
+  if (!option || option.disabled) return;
+  openReplaceValuesDialog(option.dataset.replaceScope);
+});
 elements.settingsButton.addEventListener('click', openSettingsPopover);
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;
@@ -1719,7 +1839,7 @@ elements.delimiter.addEventListener('change', () => {
 });
 
 document.addEventListener('click', (event) => {
-  if (event.target.closest('.popover, #settings-button, [data-filter-toggle]')) return;
+  if (event.target.closest('.popover, #settings-button, #add-column, #replace-values, [data-filter-toggle]')) return;
   if (activePopover) closePopovers();
 });
 
@@ -1810,7 +1930,7 @@ document.addEventListener('click', (event) => {
 });
 
 elements.tableScroll.addEventListener('scroll', () => {
-  if (activePopover === elements.filterPopover || activePopover === elements.contextPopover || activePopover === elements.settingsPopover) closePopovers();
+  if (activePopover) closePopovers();
   scheduleVirtualRowRender();
 }, { passive: true });
 

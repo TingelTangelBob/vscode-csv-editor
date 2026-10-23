@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.9
+
+- Add compact toolbar menus for inserting columns before or after the selection, appending columns, and choosing the scope for value replacement.
+- Match the value replacement icon's line weight to the table toolbar icons and refresh the Marketplace screenshots.
+- Move the delimiter selector into CSV settings and refine the settings menu grouping.
+
 ## 1.4.8
 
 - Reorganize settings into Tools, CSV settings, File handling, and Interface; move the theme and language controls into Interface.

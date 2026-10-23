@@ -18,11 +18,11 @@
           <button class="tool-button" id="add-row" type="button" title="Add row" aria-label="Add row" data-i18n-title="Add row">
             <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M2 10h7v3H2Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
-          <button class="tool-button" id="add-column" type="button" title="Add column" aria-label="Add column" data-i18n-title="Add column">
+          <button class="tool-button" id="add-column" type="button" title="Add column" aria-label="Add column" data-i18n-title="Add column" aria-haspopup="menu" aria-expanded="false">
             <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M10 2h3v7h-3Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
-          <button class="tool-button" id="replace-values" type="button" title="Replace values" aria-label="Replace values" data-i18n-title="Replace values">
-            <svg class="replace-values-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 3.5h8.5M8.5 1.5l2 2-2 2M14 12.5H5.5M7.5 10.5l-2 2 2 2"/><path class="replace-values-cell" d="M3 7h4v2H3zM9 7h4v2H9z"/></svg>
+          <button class="tool-button" id="replace-values" type="button" title="Replace values" aria-label="Replace values" data-i18n-title="Replace values" aria-haspopup="menu" aria-expanded="false">
+            <svg class="replace-values-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M3.221 3.739l2.261 2.269L7.7 3.784l-.7-.7-1.012 1.007-.008-1.6a.523.523 0 0 1 .5-.526H8V1H6.48A1.482 1.482 0 0 0 5 2.489V4.1L3.927 3.033l-.706.706zm6.67 1.794h.01c.183.311.451.467.806.467.393 0 .706-.168.94-.503.236-.335.353-.78.353-1.333 0-.511-.1-.913-.301-1.207-.201-.295-.488-.442-.86-.442-.405 0-.718.194-.938.581h-.01V1H9v4.919h.89v-.386zm-.015-1.061v-.34c0-.248.058-.448.175-.601a.54.54 0 0 1 .445-.23.49.49 0 0 1 .436.233c.104.154.155.368.155.643 0 .33-.056.587-.169.768a.524.524 0 0 1-.47.27.495.495 0 0 1-.411-.211.853.853 0 0 1-.16-.532zM9 12.769c-.256.154-.625.231-1.108.231-.563 0-1.02-.178-1.369-.533-.349-.355-.523-.813-.523-1.374 0-.648.186-1.158.56-1.53.374-.376.875-.563 1.5-.563.433 0 .746.06.94.179v.998a1.26 1.26 0 0 0-.792-.276c-.325 0-.583.1-.774.298-.19.196-.283.468-.283.816 0 .338.09.603.272.797.182.191.431.287.749.287.282 0 .558-.092.828-.276v.946zM4 7L3 8v6l1 1h7l1-1V8l-1-1H4zm0 1h7v6H4V8z"/></svg>
           </button>
           <button class="tool-button danger-tool" id="delete-selected" type="button" title="Delete selected rows" aria-label="Delete selected rows" data-i18n-title="Delete selected rows" disabled>
             <span class="codicon codicon-trash" aria-hidden="true"></span>
@@ -35,6 +35,16 @@
         </button>
       </div>
     </header>
+    <div class="popover toolbar-popover" id="add-column-popover" role="menu" aria-label="Add column" data-i18n-aria-label="Add column" hidden>
+      <button class="menu-action" type="button" data-column-insert="before"><span class="action-icon"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 3-3m-3 3 3 3"/></svg></span><span data-i18n="Insert column before selection">Insert column before selection</span></button>
+      <button class="menu-action" type="button" data-column-insert="after"><span class="action-icon"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10m0 0-3-3m3 3-3 3"/></svg></span><span data-i18n="Insert column after selection">Insert column after selection</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <button class="menu-action" type="button" data-column-insert="end"><span class="action-icon"><span class="codicon codicon-add" aria-hidden="true"></span></span><span data-i18n="Add column at end">Add column at end</span></button>
+    </div>
+    <div class="popover toolbar-popover" id="replace-values-popover" role="menu" aria-label="Replace values" data-i18n-aria-label="Replace values" hidden>
+      <button class="menu-action" type="button" data-replace-scope="all"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Replace in whole table">Replace in whole table</span></button>
+      <button class="menu-action" type="button" data-replace-scope="selected"><span class="action-icon"><span class="codicon codicon-table" aria-hidden="true"></span></span><span data-i18n="Replace in selected columns">Replace in selected columns</span></button>
+    </div>
     <section class="table-scroll" id="table-scroll" aria-label="CSV table">
       <table id="csv-table" aria-label="Editable CSV data">
         <colgroup id="table-columns"></colgroup>
@@ -45,6 +55,11 @@
 
     <div class="popover settings-popover" id="settings-popover" hidden tabindex="-1">
       <div class="settings-section-label" data-i18n="Tools">Tools</div>
+      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
+      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
+      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <div class="settings-section-label" data-i18n="CSV settings">CSV settings</div>
       <label class="delimiter-setting" for="delimiter-select">
         <span class="action-icon"><span class="codicon codicon-symbol-structure" aria-hidden="true"></span></span>
         <span class="setting-copy" data-i18n="Delimiter">Delimiter</span>
@@ -55,11 +70,6 @@
           <option value="|" data-i18n="Pipe |">Pipe |</option>
         </select>
       </label>
-      <button class="menu-action" type="button" data-action="clear-filters"><span class="action-icon"><span class="codicon codicon-filter" aria-hidden="true"></span></span><span data-i18n="Clear filters">Clear filters</span></button>
-      <button class="menu-action" type="button" data-action="clear-sort"><span class="action-icon"><span class="codicon codicon-arrow-swap" aria-hidden="true"></span></span><span data-i18n="Clear sorting">Clear sorting</span></button>
-      <button class="menu-action" type="button" data-action="open-text"><span class="action-icon"><span class="codicon codicon-file-code" aria-hidden="true"></span></span><span data-i18n="Open as text">Open as text</span></button>
-      <span class="menu-separator" aria-hidden="true"></span>
-      <div class="settings-section-label" data-i18n="CSV settings">CSV settings</div>
       <label class="setting-toggle" for="colorize-columns">
         <span class="setting-control"><input id="colorize-columns" type="checkbox"></span>
         <span class="setting-copy" data-i18n="Colorize columns">Colorize columns</span>

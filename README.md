@@ -21,8 +21,8 @@ View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Edit
 - Optionally colorizes columns with colors from the active VS Code theme. CSV files do not store cell colors.
 - Optionally shows subtle gridlines between table rows and columns.
 - Lets you choose whether CSV and TSV files open in the table by default from the table settings or VS Code's extension settings.
-- Adds rows and columns; deletes selected rows or individual columns.
-- Replaces exact cell values across the table or selected columns from the toolbar.
+- Adds rows and columns; the column menu can insert before or after selected columns or append at the end. Deletes selected rows or individual columns.
+- Replaces exact cell values across the table or selected columns from the toolbar menu.
 - Offers ten interface languages and System, Light, or Dark appearance settings.
 - Syncs edits with the regular VS Code document. Save with `Ctrl+S` / `Cmd+S`.
 - Changes the delimiter and clears filters or sorting from the Tools menu. CSV options, language, and appearance are grouped in settings.
@@ -36,7 +36,7 @@ Automatic column widths fit the header, filter control, and the widest cell valu
 
 Column filters list the distinct values with checkboxes and occurrence counts, including blank cells. Search narrows the list and applies a case-insensitive contains condition; the checked values further restrict the result by exact value. Search and selection changes apply immediately, and Escape or clicking outside closes the filter without undoing them. Other active column filters determine the available values. Long lists load in batches via Show more values, and search covers the entire list. Use Clear filter to reset a column, or Clear filters in Table settings to reset every column.
 
-Use the Replace values toolbar button to replace an exact cell value throughout the table or in one or more selected columns. Matching is case-sensitive, and column headers are left unchanged. The operation updates the CSV document as one edit, which can be undone with VS Code's Undo command.
+Use the Replace values toolbar menu to choose the whole table or selected columns, then replace an exact cell value. Matching is case-sensitive, and column headers are left unchanged. The operation updates the CSV document as one edit, which can be undone with VS Code's Undo command.
 
 Paste CSV or tab-separated data into an empty file with `Ctrl+V` / `Cmd+V` to create a table immediately (the first row becomes the column names). The clipboard toolbar button also reads the clipboard. With an existing table, a preview lets you append rows or replace the table, select a delimiter, import with or without column names, skip empty rows, and remove exact duplicate rows across the resulting table.
 
