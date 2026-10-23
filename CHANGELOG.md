@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.6
+
+- Keep the remaining sort arrow anchored at its top or bottom edge when the active direction is hidden.
+
 ## 1.4.5
 
 - Add content-fit sizing, multi-column selection, and synchronized resizing for selected columns.

@@ -65,8 +65,10 @@ thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .sort-button { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; overflow: hidden; padding: 0 18px 0 2px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
 .sort-button:hover, .sort-button.is-sorted { color: var(--foreground); }
 .sort-button > span:first-child { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sort-indicators { position: absolute; top: -4px; bottom: -4px; left: var(--sort-indicator-left, 50%); display: flex; width: 18px; flex-direction: column; align-items: center; justify-content: space-between; visibility: hidden; pointer-events: none; transform: translateX(-50%); }
-.sort-direction { display: grid; width: 18px; height: 16px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; }
+.sort-indicators { position: absolute; top: -4px; bottom: -4px; left: var(--sort-indicator-left, 50%); width: 18px; visibility: hidden; pointer-events: none; transform: translateX(-50%); }
+.sort-direction { position: absolute; left: 0; display: grid; width: 18px; height: 16px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; }
+.sort-direction[data-sort-direction="1"] { top: 0; }
+.sort-direction[data-sort-direction="-1"] { bottom: 0; }
 .sort-direction[hidden] { display: none; }
 .sort-direction > .material-arrow-icon { font-family: material-product-icons; font-size: 16px; font-style: normal; line-height: 1; }
 .material-arrow-small-down::before { content: "\EA8E"; }
