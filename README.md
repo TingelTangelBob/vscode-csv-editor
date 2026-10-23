@@ -1,8 +1,8 @@
 # CSV Simple Editor
 
-View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Editor detects the delimiter, keeps your data in the same editor tab, and makes common table edits quick.
+View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Editor detects delimiters, keeps your data in the same editor tab, and makes sorting, filtering, editing, and importing rows quick.
 
-![CSV Simple Editor displaying 15 sales orders in eight columns](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
+![CSV Simple Editor showing a table in the light theme](https://raw.githubusercontent.com/TingelTangelBob/vscode-csv-editor/main/media/marketplace-screenshot.png)
 
 ## Features
 
@@ -22,6 +22,7 @@ View and edit CSV and TSV files as tables in Visual Studio Code. CSV Simple Edit
 - Adds rows and columns; deletes selected rows or individual columns.
 - Syncs edits with the regular VS Code document. Save with `Ctrl+S` / `Cmd+S`.
 - Changes the delimiter and clears filters or sorting from the compact tools menu.
+- Shows import validation details on demand, with distinct subtle colors for warnings and errors.
 
 ## Usage
 
@@ -33,7 +34,7 @@ Column filters list the distinct values with checkboxes and occurrence counts, i
 
 Paste CSV or tab-separated data into an empty file with `Ctrl+V` / `Cmd+V` to create a table immediately (the first row becomes the column names). The clipboard toolbar button also reads the clipboard. With an existing table, a preview lets you append rows or replace the table, select a delimiter, import with or without column names, skip empty rows, and remove exact duplicate rows across the resulting table.
 
-When appending with column names, columns are matched by name, ignoring surrounding whitespace and letter case, so reordered columns are placed correctly. Missing, unknown, empty or duplicate column names, inconsistent record widths, and malformed quoted fields block the import until corrected. Without column names, columns match by position and their count must agree. The preview shows the first five incoming rows and the resulting row count. Imports include all rows, regardless of active filters; importing clears sorting and filters. Undo the import with VS Code's normal Undo command.
+When appending with column names, columns are matched by name, ignoring surrounding whitespace and letter case, so reordered columns are placed correctly. Missing, unknown, empty or duplicate column names, inconsistent record widths, and malformed quoted fields block the import until corrected. Validation details appear on the information icon when you hover or focus it; warnings use a subtle yellow state and errors a subtle red state. The preview shows the first five incoming rows and the resulting row count. Imports include all rows, regardless of active filters; importing clears sorting and filters. Undo the import with VS Code's normal Undo command.
 
 Open a `.csv` or `.tsv` file to start in table view. Click a column heading to sort; click its filter icon to filter. Right-click a cell or heading for more actions. Use the editor title action to switch back to the text view.
 

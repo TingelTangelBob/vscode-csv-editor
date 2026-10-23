@@ -148,7 +148,13 @@
 
     <dialog class="app-dialog import-dialog" id="import-dialog" aria-labelledby="import-title">
       <form id="import-form">
-        <h2 id="import-title" data-i18n="Paste table">Paste table</h2>
+        <div class="import-dialog-heading">
+          <h2 id="import-title" data-i18n="Paste table">Paste table</h2>
+          <div class="import-feedback" id="import-feedback" data-state="neutral">
+            <button class="import-feedback-button" type="button" aria-describedby="import-feedback-tooltip" data-i18n-aria-label="Import information" aria-label="Import information"><span class="codicon codicon-info" aria-hidden="true"></span></button>
+            <div class="import-feedback-tooltip" id="import-feedback-tooltip" role="tooltip"><ul id="import-issues" aria-live="polite" hidden></ul></div>
+          </div>
+        </div>
         <label class="dialog-field" for="import-text"><span data-i18n="CSV or tab-separated data">CSV or tab-separated data</span><textarea id="import-text" rows="4" spellcheck="false"></textarea></label>
         <div class="import-options">
           <label class="dialog-field" for="import-mode"><span data-i18n="Insert mode">Insert mode</span><select id="import-mode"><option value="append" data-i18n="Append rows">Append rows</option><option value="replace" data-i18n="Replace table">Replace table</option></select></label>
@@ -158,7 +164,6 @@
         <label class="setting-toggle"><input id="import-dedupe" type="checkbox"><span class="setting-copy" data-i18n="Remove duplicate rows from the resulting table">Remove duplicate rows from the resulting table</span></label>
         <label class="setting-toggle"><input id="import-skip-empty" type="checkbox" checked><span class="setting-copy" data-i18n="Skip empty rows">Skip empty rows</span></label>
         <p id="import-summary" aria-live="polite"></p>
-        <ul id="import-issues" aria-live="polite"></ul>
         <div class="import-preview" id="import-preview" tabindex="0" role="region" aria-label="Preview: first 5 incoming rows" data-i18n-aria-label="Preview: first 5 incoming rows"></div>
         <p class="import-replace-note" id="import-replace-note" data-i18n="All existing rows and column names will be replaced.">All existing rows and column names will be replaced.</p>
         <div class="dialog-actions"><button class="dialog-button" id="import-cancel" type="button" data-i18n="Cancel">Cancel</button><button class="dialog-button primary-dialog-button" id="import-apply" type="submit" data-i18n="Apply">Apply</button></div>

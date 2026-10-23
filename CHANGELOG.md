@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.3
+
+- Hide import validation messages until data is pasted. Show import errors and warnings in a hoverable information icon with neutral, warning, and error states.
+- Hide scrollbar arrow buttons and place sort indicators at the top and bottom edge of each column header.
+- Refresh the Marketplace description and import documentation.
+
 ## 1.4.2
 
 - Refine selected and hover colors, add an icon-based appearance switch, inset the row and column count, and use Codicon small up/down arrows for sorting.

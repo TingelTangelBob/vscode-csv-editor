@@ -14,6 +14,7 @@
 .codicon-file-code::before { content: '\eae9'; }
 .codicon-filter::before { content: '\eaf1'; }
 .codicon-filter-filled::before { content: '\ebce'; }
+.codicon-info::before { content: '\ea74'; }
 .codicon-github::before { content: '\ea84'; }
 .codicon-link-external::before { content: '\eb14'; }
 .codicon-list-ordered::before { content: '\eb16'; }

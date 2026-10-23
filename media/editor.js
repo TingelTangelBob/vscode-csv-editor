@@ -13,6 +13,7 @@ let collator = new Intl.Collator(navigator.language, { numeric: true, sensitivit
 const TRANSLATIONS = {
   en: {},
   de: {
+    'Import information':'Importinformationen',
     'Fit columns to available width':'Spalten an Fensterbreite anpassen',
     'Appearance':'Darstellung','VS Code theme':'VS-Code-Design','Light':'Hell','Dark':'Dunkel',
     'Search values…':'Werte suchen …','Select all matches':'Alle Suchtreffer auswählen',
@@ -54,6 +55,7 @@ const TRANSLATIONS = {
     'Column':'Spalte','Select row':'Zeile auswählen','Original row number':'Ursprüngliche Zeilennummer',
   },
   fr: {
+    'Import information':'Informations sur l’importation',
     'Fit columns to available width':'Adapter les colonnes à la largeur disponible',
     'Appearance':'Apparence','VS Code theme':'Thème VS Code','Light':'Clair','Dark':'Sombre',
     'Search values…':'Rechercher des valeurs…','Select all matches':'Sélectionner tous les résultats',
@@ -173,6 +175,7 @@ const elements = {
   importDedupe: document.getElementById('import-dedupe'),
   importSkipEmpty: document.getElementById('import-skip-empty'),
   importSummary: document.getElementById('import-summary'),
+  importFeedback: document.getElementById('import-feedback'),
   importIssues: document.getElementById('import-issues'),
   importPreview: document.getElementById('import-preview'),
   importReplaceNote: document.getElementById('import-replace-note'),
@@ -420,13 +423,27 @@ function importOptions() {
 function updateImportPreview() {
   if (importPreviewTimer !== null) window.clearTimeout(importPreviewTimer);
   importPreviewTimer = null;
+  const hasInputData = Boolean(elements.importText.value.trim());
   const plan = planCsvImport(sheet, elements.importText.value, importOptions());
   const delimiterName = { ',': 'Comma ,', ';': 'Semicolon ;', '\t': 'Tab', '|': 'Pipe |' }[plan.detectedDelimiter];
-  elements.importSummary.textContent = `${t('Incoming rows')}: ${plan.importedCount} · ${t('Result rows')}: ${plan.rows.length} · ${t('Duplicate rows')}: ${plan.duplicates} · ${t('Empty rows skipped')}: ${plan.skipped} · ${t('Delimiter')}: ${t(delimiterName)}`;
-  const issues = [...plan.errors.map(issue => ({ ...issue, error: true })), ...plan.warnings];
-  elements.importIssues.replaceChildren(...issues.slice(0, 30).map(issue => createElement('li', issue.error ? 'import-error' : '',
+  elements.importSummary.hidden = !hasInputData;
+  elements.importSummary.textContent = hasInputData
+    ? `${t('Incoming rows')}: ${plan.importedCount} · ${t('Result rows')}: ${plan.rows.length} · ${t('Duplicate rows')}: ${plan.duplicates} · ${t('Empty rows skipped')}: ${plan.skipped} · ${t('Delimiter')}: ${t(delimiterName)}`
+    : '';
+  const issues = hasInputData ? [...plan.errors.map(issue => ({ ...issue, error: true })), ...plan.warnings] : [];
+  elements.importFeedback.dataset.state = hasInputData && plan.errors.length ? 'error'
+    : hasInputData && plan.warnings.length ? 'warning' : 'neutral';
+  elements.importFeedback.dataset.hasIssues = String(issues.length > 0);
+  elements.importIssues.hidden = issues.length === 0;
+  elements.importIssues.replaceChildren(...issues.slice(0, 30).map(issue => createElement('li', issue.error ? 'import-error' : 'import-warning',
     `${t(issue.code)}${issue.record ? ` (${t('Record')} ${issue.record})` : ''}${issue.detail ? `: ${issue.detail}` : ''}`)));
   if (issues.length > 30) elements.importIssues.append(createElement('li', '', `${t('Further issues')}: ${issues.length - 30}`));
+  if (!hasInputData) {
+    elements.importPreview.replaceChildren();
+    elements.importApply.disabled = true;
+    elements.importReplaceNote.hidden = elements.importMode.value !== 'replace' || isEmptyDocument();
+    return plan;
+  }
   const preview = document.createElement('table');
   const head = document.createElement('thead');
   const heading = document.createElement('tr');
