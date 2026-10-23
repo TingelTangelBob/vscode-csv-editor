@@ -43,7 +43,7 @@
       <button class="menu-action" type="button" data-column-insert="end"><span class="action-icon"><span class="codicon codicon-add" aria-hidden="true"></span></span><span data-i18n="Add column at end">Add column at end</span></button>
     </div>
     <div class="popover toolbar-popover replace-toolbar-popover" id="replace-values-popover" role="dialog" aria-label="Replace values" data-i18n-aria-label="Replace values" hidden>
-      <label class="toolbar-menu-field"><span data-i18n="Find exact value">Find exact value</span><input id="toolbar-replace-find" type="text" autocomplete="off"></label>
+      <label class="toolbar-menu-field"><span data-i18n="Find text">Find text</span><input id="toolbar-replace-find" type="text" autocomplete="off"></label>
       <label class="toolbar-menu-field"><span data-i18n="Replace with">Replace with</span><input id="toolbar-replace-with" type="text" autocomplete="off"></label>
       <div class="toolbar-replace-count" id="toolbar-replace-count" aria-live="polite"></div>
       <button class="menu-action" type="button" data-replace-scope="all"><span class="action-icon"><span class="codicon codicon-replace-all" aria-hidden="true"></span></span><span data-i18n="Replace in whole table">Replace in whole table</span></button>
@@ -209,7 +209,7 @@
     <dialog class="app-dialog replace-dialog" id="replace-dialog" aria-labelledby="replace-title">
       <form id="replace-form">
         <h2 id="replace-title" data-i18n="Replace values">Replace values</h2>
-        <label class="dialog-field" for="replace-find"><span data-i18n="Find exact value">Find exact value</span><textarea id="replace-find" rows="2" required></textarea></label>
+        <label class="dialog-field" for="replace-find"><span data-i18n="Find text">Find text</span><textarea id="replace-find" rows="2" required></textarea></label>
         <label class="dialog-field" for="replace-with"><span data-i18n="Replace with">Replace with</span><textarea id="replace-with" rows="2"></textarea></label>
         <fieldset class="replace-scope">
           <legend data-i18n="Scope">Scope</legend>
@@ -217,7 +217,7 @@
           <label><input type="radio" name="replace-scope" value="selected"><span data-i18n="Selected columns">Selected columns</span></label>
           <div class="replace-columns" id="replace-columns" aria-label="Select columns" data-i18n-aria-label="Select columns"></div>
         </fieldset>
-        <p class="replace-help" data-i18n="Cell values are matched exactly, including letter case. Column headers are not changed.">Cell values are matched exactly, including letter case. Column headers are not changed.</p>
+        <p class="replace-help" data-i18n="Find text inside cell values, including letter case. Column headers are not changed.">Find text inside cell values, including letter case. Column headers are not changed.</p>
         <p class="replace-count" id="replace-count" aria-live="polite"></p>
         <div class="dialog-actions"><button class="dialog-button" id="replace-cancel" type="button" data-i18n="Cancel">Cancel</button><button class="dialog-button primary-dialog-button" id="replace-submit" type="submit" data-i18n="Replace">Replace</button></div>
       </form>

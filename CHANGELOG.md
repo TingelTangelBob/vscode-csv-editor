@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.12
+
+- Find and replace literal text inside cell values, including when the search term is only part of a cell.
+
 ## 1.4.11
 
 - Add column names and exact find/replace fields directly to the toolbar menus.

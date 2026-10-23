@@ -104,18 +104,18 @@ const TRANSLATIONS = {
 Object.assign(TRANSLATIONS.de, {
   'General': 'Allgemein', 'Display': 'Darstellung', 'File handling': 'Dateiverhalten', 'Tools': 'Werkzeuge', 'Project': 'Projekt',
   'Suggest a change': '\u00c4nderungswunsch vorschlagen', 'Replace values': 'Werte ersetzen',
-  'Find exact value': 'Exakten Wert suchen', 'Replace with': 'Ersetzen durch', 'Scope': 'Bereich',
+  'Find text': 'Text suchen', 'Replace with': 'Ersetzen durch', 'Scope': 'Bereich',
   'Whole table': 'Ganze Tabelle', 'Selected columns': 'Ausgew\u00e4hlte Spalten', 'Select columns': 'Spalten ausw\u00e4hlen',
-  'Cell values are matched exactly, including letter case. Column headers are not changed.': 'Zellwerte werden exakt inklusive Gro\u00df-/Kleinschreibung verglichen. Spaltennamen bleiben unver\u00e4ndert.',
+  'Find text inside cell values, including letter case. Column headers are not changed.': 'Der Suchtext wird innerhalb des Zellinhalts gesucht. Gro\u00df-/Kleinschreibung wird beachtet; Spaltennamen bleiben unver\u00e4ndert.',
   'Replacement is the same as the search value.': 'Der Ersatzwert entspricht dem Suchwert.',
   'matching cells': 'passende Zellen', 'matching cell': 'passende Zelle', 'Replace': 'Ersetzen',
 });
 Object.assign(TRANSLATIONS.fr, {
   'General': 'G\u00e9n\u00e9ral', 'Display': 'Affichage', 'File handling': 'Gestion des fichiers', 'Tools': 'Outils', 'Project': 'Projet',
   'Suggest a change': 'Sugg\u00e9rer une modification', 'Replace values': 'Remplacer les valeurs',
-  'Find exact value': 'Valeur exacte \u00e0 rechercher', 'Replace with': 'Remplacer par', 'Scope': 'Port\u00e9e',
+  'Find text': 'Rechercher du texte', 'Replace with': 'Remplacer par', 'Scope': 'Port\u00e9e',
   'Whole table': 'Tout le tableau', 'Selected columns': 'Colonnes s\u00e9lectionn\u00e9es', 'Select columns': 'S\u00e9lectionner les colonnes',
-  'Cell values are matched exactly, including letter case. Column headers are not changed.': 'Les valeurs des cellules sont compar\u00e9es exactement, en respectant la casse. Les en-t\u00eates ne sont pas modifi\u00e9s.',
+  'Find text inside cell values, including letter case. Column headers are not changed.': 'Le texte est recherch\u00e9 dans le contenu des cellules, en respectant la casse. Les en-t\u00eates ne sont pas modifi\u00e9s.',
   'Replacement is the same as the search value.': 'La valeur de remplacement est identique \u00e0 la valeur recherch\u00e9e.',
   'matching cells': 'cellules correspondantes', 'matching cell': 'cellule correspondante', 'Replace': 'Remplacer',
 });
@@ -1156,7 +1156,7 @@ function updateReplacementMatchCount() {
   if (search !== '' && columns.length) {
     for (const row of sheet.rows) {
       for (const column of columns) {
-        if (String(row.cells[column] ?? '') === search) count += 1;
+        if (String(row.cells[column] ?? '').includes(search)) count += 1;
       }
     }
   }
@@ -1174,7 +1174,7 @@ function updateToolbarReplacementMatchCount() {
   const replacement = elements.toolbarReplaceWith.value;
   const columns = selectedColumns.size ? [...selectedColumns] : (selectedColumn >= 0 ? [selectedColumn] : []);
   const allColumns = sheet.headers.map((_, column) => column);
-  const countIn = (indices) => search === '' ? 0 : sheet.rows.reduce((total, row) => total + indices.filter((column) => String(row.cells[column] ?? '') === search).length, 0);
+  const countIn = (indices) => search === '' ? 0 : sheet.rows.reduce((total, row) => total + indices.filter((column) => String(row.cells[column] ?? '').includes(search)).length, 0);
   const selectedCount = countIn(columns);
   const allCount = countIn(allColumns);
   const locale = LOCALES[language] || LOCALES.en;
@@ -1217,8 +1217,9 @@ function replaceMatchingValues() {
   const changedColumns = new Set();
   for (const row of sheet.rows) {
     for (const column of columns) {
-      if (String(row.cells[column] ?? '') !== search) continue;
-      row.cells[column] = replacement;
+      const value = String(row.cells[column] ?? '');
+      if (!value.includes(search)) continue;
+      row.cells[column] = value.replaceAll(search, replacement);
       count += 1;
       changedColumns.add(column);
     }
