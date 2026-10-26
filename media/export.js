@@ -22,10 +22,14 @@
   }
 
   async function loadFont(filename) {
-    if (typeof document === 'undefined') return require('node:fs').promises.readFile(require('node:path').join(__dirname, 'pdf', filename));
-    const response = await fetch(new URL(filename, resourceBase));
+    if (typeof document === 'undefined') {
+      const bytes = await require('node:fs').promises.readFile(require('node:path').join(__dirname, 'pdf', `${filename}.gz`));
+      return require('node:zlib').gunzipSync(bytes);
+    }
+    const response = await fetch(new URL(`${filename}.gz`, resourceBase));
     if (!response.ok) throw new Error(`Could not load bundled PDF font: ${filename}`);
-    return new Uint8Array(await response.arrayBuffer());
+    const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
   }
 
   function loadResources() {

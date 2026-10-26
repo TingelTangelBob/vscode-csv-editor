@@ -3,7 +3,7 @@ const { chromium } = require(process.argv[2] || 'playwright');
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const { PDFDocument } = require('../media/pdf/pdf-lib.min.js');
-const root = require('node:path').resolve(__dirname, '..');
+const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirname, '..');
 (async () => {
   const browser = await chromium.launch({headless:true});
   try {

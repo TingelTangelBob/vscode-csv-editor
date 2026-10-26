@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.2
+
+- Store PDF fonts with lossless gzip compression and decompress them only when needed; preserve the complete character coverage and offline exports.
+- Package only runtime media assets and keep README screenshots embedded once, avoiding duplicate images and unused artwork in the installed extension.
+
 ## 1.6.1
 
 - Reference the light and dark screenshots from the local media folder and embed them in the packaged README so installed VSIX details work offline.

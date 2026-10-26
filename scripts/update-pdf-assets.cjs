@@ -2,6 +2,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { gzipSync } = require('node:zlib');
 const directory = path.resolve(__dirname, '../media/pdf');
 const assets = {
   'pdf-lib.min.js': 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js',
@@ -20,7 +21,8 @@ const assets = {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`${url}: ${response.status}`);
     const bytes = Buffer.from(await response.arrayBuffer());
-    await fs.writeFile(path.join(directory, filename), bytes);
+    const font = filename.endsWith('.ttf');
+    await fs.writeFile(path.join(directory, font ? `${filename}.gz` : filename), font ? gzipSync(bytes, { level: 9 }) : bytes);
     manifest[filename] = { url, bytes: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex') };
     console.log(filename, bytes.length);
   }

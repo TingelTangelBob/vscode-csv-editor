@@ -59,7 +59,7 @@ The table follows the active VS Code color theme and keeps the toolbar compact. 
 
 ## Development
 
-The extension needs no runtime npm installation. The PDF engine (pdf-lib/fontkit) and fonts are bundled in `media/pdf` with their licenses and source checksums, and load only when PDF export is used. Exports work offline. Run `npm test` for the CSV, PDF, and extension regression tests, and `npm run package` on Windows to build the VSIX. The editable logo is in `media/csv-simple-editor-favicon.svg`; `media/extension-icon.png` is the raster version used by the Marketplace.
+The extension needs no runtime npm installation. The PDF engine (pdf-lib/fontkit) and fonts are bundled in `media/pdf` with their licenses and source checksums, and load only when PDF export is used. Fonts use lossless gzip compression and are decompressed on demand with built-in APIs; their original character coverage is preserved. Exports work offline. Run `npm test` for the CSV, PDF, and extension regression tests, and `npm run package` on Windows to build the VSIX. Packaging includes runtime assets and licenses, and embeds README screenshots once; source artwork and separate screenshots stay in the repository. The editable logo is in `media/csv-simple-editor-favicon.svg`; `media/extension-icon.png` is the raster version used by the Marketplace.
 
 Optional browser checks use Playwright with its Chromium browser installed: run `npm run test:ui`. If Playwright is installed in another workspace, pass its module path with `npm run test:ui -- D:/path/to/node_modules/playwright`. In environments that restrict child processes, run the dependency-free suite with `node --test --test-isolation=none`.
 

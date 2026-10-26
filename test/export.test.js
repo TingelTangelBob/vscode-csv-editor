@@ -12,7 +12,9 @@ test('bundled PDF resource checksums match the downloaded source manifest', () =
   const directory = path.join(__dirname, '../media/pdf');
   const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'sources.json'), 'utf8'));
   for (const [filename, source] of Object.entries(manifest)) {
-    const bytes = fs.readFileSync(path.join(directory, filename));
+    const font = filename.endsWith('.ttf');
+    const stored = fs.readFileSync(path.join(directory, font ? `${filename}.gz` : filename));
+    const bytes = font ? require('node:zlib').gunzipSync(stored) : stored;
     assert.equal(bytes.length, source.bytes, filename);
     assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), source.sha256, filename);
   }

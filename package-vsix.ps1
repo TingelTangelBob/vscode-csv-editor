@@ -31,7 +31,20 @@ try {
   if (Test-Path -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination (Join-Path $extensionRoot 'changelog.md')
   }
-  Copy-Item -LiteralPath (Join-Path $projectRoot 'media') -Destination $extensionRoot -Recurse
+  # Only runtime assets belong in the installed extension. README screenshots
+  # are already embedded above; source artwork and other captures stay in Git.
+  $mediaRoot = Join-Path $extensionRoot 'media'
+  New-Item -ItemType Directory -Path $mediaRoot -Force | Out-Null
+  $runtimeAssets = @(
+    'index.html', 'editor.css', 'editor.js', 'csv.js', 'export.js',
+    'codicon.css', 'codicon.ttf', 'material-icons.woff',
+    'MATERIAL-PRODUCT-ICONS-LICENSE.txt', 'extension-icon.png',
+    'csv-table-light.svg', 'csv-table-dark.svg'
+  )
+  foreach ($asset in $runtimeAssets) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "media/$asset") -Destination $mediaRoot
+  }
+  Copy-Item -LiteralPath (Join-Path $projectRoot 'media/pdf') -Destination $mediaRoot -Recurse
 
   $publisher = [System.Security.SecurityElement]::Escape([string]$package.publisher)
   $name = [System.Security.SecurityElement]::Escape([string]$package.name)
@@ -122,6 +135,8 @@ $changelogAsset
   <Default Extension="ttf" ContentType="font/ttf" />
   <Default Extension="svg" ContentType="image/svg+xml" />
   <Default Extension="png" ContentType="image/png" />
+  <Default Extension="woff" ContentType="font/woff" />
+  <Default Extension="gz" ContentType="application/gzip" />
 </Types>
 '@
 
