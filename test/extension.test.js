@@ -11,10 +11,12 @@ const viewType = 'tingeltangelbob.csv-simple-editor.csvGrid';
 const patterns = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
-function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled = true, applyEdit, tablePreferences = {} } = {}) {
+function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled = true, applyEdit, tablePreferences = {}, saveDestination = null, writeError = null } = {}) {
   const updates = [];
   const errors = [];
   const openedUrls = [];
+  const exports = [];
+  const saveDialogs = [];
   const storedState = new Map([['tablePreferences', tablePreferences]]);
   let provider;
   const disposable = { dispose() {} };
@@ -33,10 +35,15 @@ function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled
     WorkspaceEdit: class { replace() {} },
     commands: { registerCommand: () => disposable },
     window: {
+      showSaveDialog: async (options) => { saveDialogs.push(options); return saveDestination; },
       registerCustomEditorProvider(type, value) { provider = value; return disposable; },
       showErrorMessage: (message) => errors.push(message),
     },
     workspace: {
+      fs: { writeFile: async (destination, bytes) => {
+        if (writeError) throw writeError;
+        exports.push({ destination, bytes });
+      } },
       getConfiguration: (section) => section === 'workbench' ? {
         get: () => ({ ...globalAssociations, ...workspaceAssociations }),
         inspect: () => ({ globalValue: globalAssociations, workspaceValue: workspaceAssociations }),
@@ -52,6 +59,7 @@ function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled
     },
   };
   const context = {
+    Buffer,
     module: { exports: {} },
     require: (name) => name === 'vscode' ? vscode : require(name),
     globalState: {
@@ -61,7 +69,7 @@ function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled
   };
   vm.runInNewContext(fs.readFileSync(path.join(projectRoot, 'extension.js'), 'utf8'), context);
   context.module.exports.activate({ extensionUri: uri(projectRoot), subscriptions: [], globalState: context.globalState });
-  return { updates, errors, openedUrls, provider, uri, storedState };
+  return { updates, errors, openedUrls, provider, uri, storedState, exports, saveDialogs };
 }
 
 test('changes global CSV associations without copying workspace settings', async () => {
@@ -121,8 +129,9 @@ test('handles webview assets and actions, recovers rejected edits and disposes p
   assert.doesNotMatch(panel.webview.html, /\{\{[^}]+\}\}/);
   assert.ok(fs.statSync(path.join(projectRoot, 'media', 'codicon.ttf')).size > 0);
   const nonces = [...panel.webview.html.matchAll(/nonce="([^"]+)"/g)].map((match) => match[1]);
-  assert.equal(nonces.length, 2);
+  assert.equal(nonces.length, 3);
   assert.equal(nonces[0], nonces[1]);
+  assert.equal(nonces[0], nonces[2]);
   assert.ok(panel.webview.html.includes(`'nonce-${nonces[0]}'`));
   assert.match(panel.webview.html, /codicon-github/);
   assert.match(panel.webview.html, /codicon-link-external/);
@@ -169,4 +178,53 @@ test('handles webview assets and actions, recovers rejected edits and disposes p
   assert.match(fixture.errors.at(-1), /read-only/);
   dispose();
   assert.equal(listenerDisposed, true);
+});
+
+async function exportFixture(options = {}) {
+  const fixture = activate(options);
+  const messages = [];
+  let receive;
+  const panel = { webview: {
+    cspSource: 'https://webview.example', asWebviewUri: (uri) => uri,
+    postMessage: async (message) => messages.push(message),
+    onDidReceiveMessage: (handler) => { receive = handler; return { dispose() {} }; },
+  }, onDidDispose() {} };
+  await fixture.provider.resolveCustomTextEditor({ uri: fixture.uri('example.csv') }, panel);
+  return { ...fixture, receive, messages };
+}
+
+test('exports CSV bytes to the selected destination without applying a document edit', async () => {
+  const fixture = await exportFixture({ saveDestination: 'filtered.csv' });
+  const text = '\ufeffName;City\r\nÄnne;Köln\r\n';
+  await fixture.receive({ type: 'exportTable', format: 'csv', text });
+  assert.equal(fixture.exports.length, 1);
+  assert.equal(fixture.exports[0].destination, 'filtered.csv');
+  assert.equal(fixture.exports[0].bytes.toString('utf8'), text);
+  assert.match(fixture.saveDialogs[0].defaultUri.path, /example-filtered\.csv$/);
+  assert.equal(fixture.messages.at(-1).type, 'exportFinished');
+  assert.deepEqual(fixture.errors, []);
+});
+
+test('exports PDF binary data and rejects malformed PDF payloads', async () => {
+  const fixture = await exportFixture({ saveDestination: 'filtered.pdf' });
+  const data = Buffer.from('%PDF-1.4\n\x00\xff\n%%EOF', 'latin1');
+  await fixture.receive({ type: 'exportTable', format: 'pdf', base64: data.toString('base64') });
+  assert.deepEqual(fixture.exports[0].bytes, data);
+  assert.match(fixture.saveDialogs[0].defaultUri.path, /example-filtered\.pdf$/);
+  await fixture.receive({ type: 'exportTable', format: 'pdf', base64: 'invalid' });
+  assert.equal(fixture.exports.length, 1);
+  assert.match(fixture.errors.at(-1), /Invalid PDF/);
+  assert.equal(fixture.messages.at(-1).type, 'exportFinished');
+});
+
+test('cancelling export writes nothing and write failures release the export controls', async () => {
+  const cancelled = await exportFixture();
+  await cancelled.receive({ type: 'exportTable', format: 'csv', text: 'Name\nA' });
+  assert.deepEqual(cancelled.exports, []);
+  assert.deepEqual(cancelled.errors, []);
+  assert.equal(cancelled.messages.at(-1).type, 'exportFinished');
+  const failed = await exportFixture({ saveDestination: 'filtered.csv', writeError: new Error('Read-only directory') });
+  await failed.receive({ type: 'exportTable', format: 'csv', text: 'Name\nA' });
+  assert.match(failed.errors[0], /Read-only directory/);
+  assert.equal(failed.messages.at(-1).type, 'exportFinished');
 });

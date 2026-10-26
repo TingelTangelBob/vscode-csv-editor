@@ -18,7 +18,16 @@ try {
   New-Item -ItemType Directory -Path $extensionRoot -Force | Out-Null
   Copy-Item -LiteralPath (Join-Path $projectRoot 'package.json') -Destination $extensionRoot
   Copy-Item -LiteralPath (Join-Path $projectRoot 'extension.js') -Destination $extensionRoot
-  Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination (Join-Path $extensionRoot 'readme.md')
+  # Extension details allow HTTPS and data images, but cannot resolve local media paths.
+  # Embed the screenshots so a locally installed VSIX also displays them offline.
+  $readme = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'README.md')
+  $readme = [regex]::Replace($readme, '!\[([^\]]*)\]\((media/[\w.-]+\.png)\)', {
+    param($match)
+    $imageFile = Join-Path $projectRoot $match.Groups[2].Value
+    $imageData = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($imageFile))
+    return '![' + $match.Groups[1].Value + '](data:image/png;base64,' + $imageData + ')'
+  })
+  [System.IO.File]::WriteAllText((Join-Path $extensionRoot 'readme.md'), $readme, [System.Text.UTF8Encoding]::new($false))
   if (Test-Path -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination (Join-Path $extensionRoot 'changelog.md')
   }

@@ -40,6 +40,7 @@ function renderWebview(webview, extensionUri) {
   const stylesheetUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.css'));
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'editor.js'));
   const csvScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'csv.js'));
+  const exportScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'export.js'));
   const nonce = createNonce();
   const version = JSON.parse(fs.readFileSync(path.join(extensionUri.fsPath, 'package.json'), 'utf8')).version;
   const template = fs.readFileSync(path.join(extensionUri.fsPath, 'media', 'index.html'), 'utf8');
@@ -50,6 +51,7 @@ function renderWebview(webview, extensionUri) {
     .replace('{{CODICON_STYLESHEET_URI}}', codiconStylesheetUri.toString())
     .replace('{{STYLESHEET_URI}}', stylesheetUri.toString())
     .replace('{{SCRIPT_URI}}', scriptUri.toString())
+    .replace('{{EXPORT_SCRIPT_URI}}', exportScriptUri.toString())
     .replace('{{VERSION}}', version)
     .replaceAll('{{CSV_SCRIPT_URI}}', csvScriptUri.toString());
 }
@@ -248,6 +250,35 @@ function activate(context) {
             void panel.webview.postMessage({ type: 'clipboardCopied' });
           } catch (error) {
             void vscode.window.showErrorMessage(`Copy failed: ${error.message}`);
+          }
+          return;
+        }
+
+        if (message?.type === 'showExportError' && typeof message.message === 'string') {
+          void vscode.window.showErrorMessage(`Export failed: ${message.message}`);
+          return;
+        }
+
+        if (message?.type === 'exportTable' && ['csv', 'pdf'].includes(message.format)) {
+          try {
+            let bytes;
+            if (message.format === 'csv' && typeof message.text === 'string') bytes = Buffer.from(message.text, 'utf8');
+            else if (message.format === 'pdf' && typeof message.base64 === 'string') {
+              bytes = Buffer.from(message.base64, 'base64');
+              if (bytes.subarray(0, 5).toString() !== '%PDF-') throw new Error('Invalid PDF data.');
+            } else throw new Error('Invalid export data.');
+            const filename = path.basename(document.uri.path, path.extname(document.uri.path));
+            const destination = await vscode.window.showSaveDialog({
+              defaultUri: document.uri.scheme === 'untitled' ? undefined
+                : vscode.Uri.joinPath(document.uri, '..', `${filename}-filtered.${message.format}`),
+              filters: message.format === 'pdf' ? { PDF: ['pdf'] } : { CSV: ['csv', 'tsv'] },
+              saveLabel: message.format === 'pdf' ? 'Export PDF' : 'Export CSV',
+            });
+            if (destination) await vscode.workspace.fs.writeFile(destination, bytes);
+          } catch (error) {
+            void vscode.window.showErrorMessage(`Export failed: ${error.message}`);
+          } finally {
+            void panel.webview.postMessage({ type: 'exportFinished' });
           }
           return;
         }

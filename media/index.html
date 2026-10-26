@@ -15,12 +15,18 @@
       <div class="toolbar-actions">
         <div class="tool-group">
           <button class="tool-button" id="paste-table" type="button" title="Paste table" aria-label="Paste table" data-i18n-title="Paste table"><span class="codicon codicon-clippy" aria-hidden="true"></span></button>
+        </div>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <div class="tool-group">
           <button class="tool-button" id="add-row" type="button" title="Add row" aria-label="Add row" data-i18n-title="Add row">
             <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M2 10h7v3H2Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
           <button class="tool-button" id="add-column" type="button" title="Add column" aria-label="Add column" data-i18n-title="Add column" aria-haspopup="dialog" aria-expanded="false">
             <svg class="table-add-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="table-add-highlight" d="M10 2h3v7h-3Z"/><path d="M9 13.5H1.5v-12h12V9M1.5 5.5h12M1.5 9.5H9M5.5 1.5v12M9.5 1.5V9"/><path class="table-add-plus" d="M10.5 13h5M13 10.5v5"/></svg>
           </button>
+        </div>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <div class="tool-group">
           <button class="tool-button" id="replace-values" type="button" title="Replace values" aria-label="Replace values" data-i18n-title="Replace values" aria-haspopup="dialog" aria-expanded="false">
             <svg class="replace-values-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M3.221 3.739l2.261 2.269L7.7 3.784l-.7-.7-1.012 1.007-.008-1.6a.523.523 0 0 1 .5-.526H8V1H6.48A1.482 1.482 0 0 0 5 2.489V4.1L3.927 3.033l-.706.706zm6.67 1.794h.01c.183.311.451.467.806.467.393 0 .706-.168.94-.503.236-.335.353-.78.353-1.333 0-.511-.1-.913-.301-1.207-.201-.295-.488-.442-.86-.442-.405 0-.718.194-.938.581h-.01V1H9v4.919h.89v-.386zm-.015-1.061v-.34c0-.248.058-.448.175-.601a.54.54 0 0 1 .445-.23.49.49 0 0 1 .436.233c.104.154.155.368.155.643 0 .33-.056.587-.169.768a.524.524 0 0 1-.47.27.495.495 0 0 1-.411-.211.853.853 0 0 1-.16-.532zM9 12.769c-.256.154-.625.231-1.108.231-.563 0-1.02-.178-1.369-.533-.349-.355-.523-.813-.523-1.374 0-.648.186-1.158.56-1.53.374-.376.875-.563 1.5-.563.433 0 .746.06.94.179v.998a1.26 1.26 0 0 0-.792-.276c-.325 0-.583.1-.774.298-.19.196-.283.468-.283.816 0 .338.09.603.272.797.182.191.431.287.749.287.282 0 .558-.092.828-.276v.946zM4 7L3 8v6l1 1h7l1-1V8l-1-1H4zm0 1h7v6H4V8z"/></svg>
           </button>
@@ -30,11 +36,19 @@
           </button>
         </div>
         <span class="toolbar-divider" aria-hidden="true"></span>
+        <button class="tool-button" id="export-button" type="button" title="Export visible rows" aria-label="Export visible rows" data-i18n-title="Export visible rows" aria-haspopup="dialog" aria-controls="export-popover" aria-expanded="false">
+          <span class="codicon codicon-export" aria-hidden="true"></span>
+        </button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
         <button class="tool-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" data-i18n-title="Table settings" aria-haspopup="true" aria-expanded="false">
           <span class="codicon codicon-settings" aria-hidden="true"></span>
         </button>
       </div>
     </header>
+    <div class="popover toolbar-popover export-popover" id="export-popover" role="dialog" aria-label="Export visible rows" data-i18n-aria-label="Export visible rows" hidden>
+      <button class="menu-action" type="button" data-action="export-csv" title="Export visible rows as CSV" data-i18n-title="Export visible rows as CSV"><span class="action-icon"><span class="codicon codicon-table" aria-hidden="true"></span></span><span>CSV</span></button>
+      <button class="menu-action" type="button" data-action="export-pdf" title="Export visible rows as PDF" data-i18n-title="Export visible rows as PDF"><span class="action-icon"><span class="codicon codicon-file-pdf" aria-hidden="true"></span></span><span>PDF</span></button>
+    </div>
     <div class="popover toolbar-popover" id="add-column-popover" role="dialog" aria-label="Add column" data-i18n-aria-label="Add column" hidden>
       <label class="toolbar-menu-field"><span data-i18n="Column name">Column name</span><input id="toolbar-column-name" type="text" data-i18n-placeholder="e.g. Product ID" placeholder="e.g. Product ID" maxlength="256"></label>
       <button class="menu-action" type="button" data-column-insert="before"><span class="action-icon"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 3-3m-3 3 3 3"/></svg></span><span data-i18n="Insert column before selection">Insert column before selection</span></button>
@@ -162,6 +176,8 @@
       <button class="menu-action context-column-action" type="button" data-action="select-column"><span class="action-icon"><span class="codicon codicon-symbol-structure" aria-hidden="true"></span></span><span data-i18n="Select column">Select column</span></button>
       <button class="menu-action context-column-action" type="button" data-action="copy-column-list"><span class="action-icon"><span class="codicon codicon-list-ordered" aria-hidden="true"></span></span><span data-i18n="Copy visible column as list (with header)">Copy visible column as list (with header)</span></button>
       <span class="menu-separator context-column-action" aria-hidden="true"></span>
+      <button class="menu-action context-column-action" type="button" data-action="move-column-left"><span class="action-icon"><span class="codicon codicon-arrow-left" aria-hidden="true"></span></span><span data-i18n="Move column left">Move column left</span></button>
+      <button class="menu-action context-column-action" type="button" data-action="move-column-right"><span class="action-icon"><span class="codicon codicon-arrow-right" aria-hidden="true"></span></span><span data-i18n="Move column right">Move column right</span></button>
       <button class="menu-action context-column-action" type="button" data-action="rename-column"><span class="action-icon"><span class="codicon codicon-edit" aria-hidden="true"></span></span><span data-i18n="Rename column">Rename column</span></button>
       <button class="menu-action danger-action context-column-action" type="button" data-action="delete-column"><span class="action-icon"><span class="codicon codicon-trash" aria-hidden="true"></span></span><span data-i18n="Delete column">Delete column</span></button>
     </div>
@@ -224,6 +240,7 @@
     </dialog>
   </main>
   <script nonce="{{NONCE}}" src="{{CSV_SCRIPT_URI}}"></script>
+  <script nonce="{{NONCE}}" src="{{EXPORT_SCRIPT_URI}}"></script>
   <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}" data-csv-worker-src="{{CSV_SCRIPT_URI}}"></script>
 </body>
 </html>\n

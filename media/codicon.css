@@ -3,6 +3,8 @@
 .codicon-add::before { content: '\ea60'; }
 .codicon-arrow-up::before { content: '\eaa1'; }
 .codicon-arrow-down::before { content: '\ea9a'; }
+.codicon-arrow-left::before { content: '\ea9b'; }
+.codicon-arrow-right::before { content: '\ea9c'; }
 .codicon-arrow-swap::before { content: '\ebcb'; }
 .codicon-clear-all::before { content: '\eabf'; }
 .codicon-check::before { content: '\eab2'; }
@@ -10,13 +12,16 @@
 .codicon-copy::before { content: '\ebcc'; }
 .codicon-clippy::before { content: '\eac0'; }
 .codicon-edit::before { content: '\ea73'; }
+.codicon-export::before { content: '\ebac'; }
 .codicon-ellipsis::before { content: '\ea7c'; }
 .codicon-file-code::before { content: '\eae9'; }
+.codicon-file-pdf::before { content: '\eaeb'; }
 .codicon-filter::before { content: '\eaf1'; }
 .codicon-replace-all::before { content: '\eb3c'; }
 .codicon-filter-filled::before { content: '\ebce'; }
 .codicon-info::before { content: '\ea74'; }
 .codicon-github::before { content: '\ea84'; }
+.codicon-gripper::before { content: '\eb04'; }
 .codicon-link-external::before { content: '\eb14'; }
 .codicon-list-ordered::before { content: '\eb16'; }
 .codicon-refresh::before { content: '\eb37'; }

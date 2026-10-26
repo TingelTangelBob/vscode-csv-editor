@@ -1,0 +1,2 @@
+# Preserve upstream PDF assets byte-for-byte so their recorded checksums stay valid.
+media/pdf/** -text

@@ -1,5 +1,52 @@
 # Changelog
 
+## 1.6.1
+
+- Reference the light and dark screenshots from the local media folder and embed them in the packaged README so installed VSIX details work offline.
+- Reduce column header height from 48px to 42px (12.5%), keeping sorting, filtering, and column grips aligned.
+- Refresh both overview screenshots to show the more compact headers.
+
+## 1.6.0
+
+- Export PDF 1.7 documents with selectable, searchable, copyable text and vector table lines instead of page images.
+- Embed subsetted Noto Sans and a CJK/Korean fallback font with Unicode mappings; keep font measurements consistent with the exported layout.
+- Load the bundled PDF engine and fonts on demand, with no network connection required during export.
+- Preserve filtered/sorted rows, automatic column widths, repeated headings, column groups, and long-cell continuations.
+- Validate PDF text extraction with an independent reader, including accents, currency, Cyrillic, Greek, Chinese/Japanese and Korean.
+
+## 1.5.4
+
+- Reveal column grips on header hover or keyboard focus, matching filter icon size and aligning both controls along the right edge with equal top/bottom spacing.
+- Fit the export dropdown to its CSV/PDF actions.
+- Close the Paste table dialog when clicking its backdrop without applying the import.
+
+## 1.5.3
+
+- Align column titles with cell values and move the column grip into the upper right corner of the header.
+- Increase header height and give sorting arrows separate space above and below the title.
+- Place filters at the right edge of ordinary headers, keep them in view while scrolling, and place them near the title on very wide columns.
+
+## 1.5.2
+
+- Replace the extension overview images with light and dark screenshots using natural column widths and closed menus.
+- Bundle and reference the new screenshots in the README, and add a repeatable capture script.
+- Restore missing glyph definitions for export, PDF, column grips, and horizontal arrows in the bundled icon stylesheet.
+
+## 1.5.1
+
+- Group toolbar actions with visible separators for paste, table structure, editing, export, and settings.
+- Move CSV and PDF export to a dedicated toolbar icon with a dropdown matching the editor's menus.
+
+## 1.5.0
+
+- Move columns using a header grip, its arrow keys, or the column context menu; keep filters, sorting, widths, and selected columns attached to their data.
+- Select cells, full rows from their original-number heading, or full columns by clicking and dragging, with automatic scrolling and support for virtual tables.
+- Copy selected ranges as tab-separated data and clear selections with Escape.
+- Export all visible rows, including current filters and sorting, to CSV or PDF from Table settings. PDF automatically fits column widths, chooses portrait or landscape, wraps values, and repeats headings on subsequent pages.
+- Align the appearance switcher with the other settings controls.
+- Correct column widths and sort indices after inserting columns, restore double-click width reset, and consolidate resize completion and selection updates.
+- Add browser regression checks and export/save regression tests.
+
 ## 1.4.13
 
 - Prevent a small horizontal overflow when fitting columns to the available width.
