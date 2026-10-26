@@ -1,8 +1,8 @@
 {
   "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
-  "description": "View and edit CSV and TSV files as tables in VS Code. Detect delimiters, sort and filter columns, and import rows with validation.",
-  "version": "1.6.3",
+  "description": "CSV and TSV table editor for VS Code. View, edit, sort, filter and import data; export CSV or searchable PDF. Works offline.",
+  "version": "1.6.4",
   "publisher": "tingeltangelbob",
   "repository": {
     "type": "git",
@@ -13,6 +13,10 @@
     "url": "https://github.com/TingelTangelBob/vscode-csv-editor/issues"
   },
   "icon": "./media/extension-icon.png",
+  "galleryBanner": {
+    "color": "#426e58",
+    "theme": "dark"
+  },
   "keywords": [
     "csv",
     "csv editor",
@@ -22,12 +26,18 @@
     "csv table",
     "tsv",
     "tsv editor",
+    "tsv viewer",
     "delimited text editor",
     "table editor",
     "spreadsheet editor",
     "data editor",
     "data viewer",
     "csv preview",
+    "csv grid",
+    "csv import",
+    "csv export",
+    "csv to pdf",
+    "large csv",
     "edit csv",
     "filter csv",
     "sort csv",
@@ -40,6 +50,7 @@
   "scripts": {
     "test": "node --test",
     "test:ui": "node scripts/check-editor.cjs",
+    "test:readme": "node scripts/check-readme.cjs",
     "test:large": "node scripts/check-large-csv.cjs",
     "test:pdf": "node scripts/check-pdf.cjs",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./package-vsix.ps1"

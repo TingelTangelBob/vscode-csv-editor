@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a problem with CSV Simple Editor.
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and operating system
+      placeholder: "CSV Simple Editor 1.x, VS Code 1.x, Windows / macOS / Linux"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, what happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Small CSV sample or screenshot
+      description: A few anonymized rows are usually enough. For performance problems, also include the approximate file size and row/column counts.

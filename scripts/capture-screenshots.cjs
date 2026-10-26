@@ -28,12 +28,20 @@ const csv = [
   const browser = await chromium.launch({ headless: true });
   try {
     for (const theme of ['light', 'dark']) {
-      const page = await browser.newPage({ viewport: { width: 1080, height: 450 }, deviceScaleFactor: 2, reducedMotion: 'reduce' });
+      // Render the frame into the PNG; README viewers do not preserve CSS styles.
+      const frameCss = `
+        body { padding: 32px; background: ${theme === 'light' ? '#f0f3f1' : '#151c18'}; }
+        .app-shell { overflow: hidden; border-radius: 12px; background: var(--background);
+          border: 1px solid ${theme === 'light' ? '#d9e1dc' : '#405047'};
+          box-shadow: 0 12px 28px ${theme === 'light' ? '#183e2929' : '#00000066'}; }
+      `;
+      const page = await browser.newPage({ viewport: { width: 1144, height: 514 }, deviceScaleFactor: 2, reducedMotion: 'reduce' });
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));
       await page.route(`${origin}/**`, async (route) => {
         const filename = new URL(route.request().url()).pathname.slice(1) || 'index.html';
         if (!/^[\w.-]+$/.test(filename)) return route.abort();
+        if (filename === 'screenshot.css') return route.fulfill({ contentType: 'text/css', body: frameCss });
         const asset = path.join(media, filename);
         if (filename !== 'index.html') return route.fulfill({ path: asset });
         const html = fs.readFileSync(asset, 'utf8')
@@ -60,9 +68,12 @@ const csv = [
       await page.goto(origin);
       await page.waitForFunction(() => documentLoaded && document.querySelectorAll('.data-cell').length === 72);
       await page.evaluate(async () => { await document.fonts.ready; recalculateColumnWidths(); renderTable(); });
-      await page.mouse.move(1070, 440);
+      await page.addStyleTag({ url: `${origin}/screenshot.css` });
+      await page.mouse.move(1135, 505);
       await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert.equal(await page.locator('.popover:visible').count(), 0);
+      assert.equal(await page.evaluate(() => Array.from(document.body.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE).every(node => !node.textContent.trim())), true);
       assert.equal(await page.evaluate(() => responsiveColumns), false);
       assert.equal(await page.evaluate(() => columnWidthOverrides.some(Number.isFinite)), false);
       assert.equal(await page.locator('.is-cell-selected, .is-column-selected, tr.is-selected').count(), 0);

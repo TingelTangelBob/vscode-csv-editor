@@ -18,21 +18,15 @@ try {
   New-Item -ItemType Directory -Path $extensionRoot -Force | Out-Null
   Copy-Item -LiteralPath (Join-Path $projectRoot 'package.json') -Destination $extensionRoot
   Copy-Item -LiteralPath (Join-Path $projectRoot 'extension.js') -Destination $extensionRoot
-  # Extension details allow HTTPS and data images, but cannot resolve local media paths.
-  # Embed the screenshots so a locally installed VSIX also displays them offline.
-  $readme = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'README.md')
-  $readme = [regex]::Replace($readme, '!\[([^\]]*)\]\((media/[\w.-]+\.png)\)', {
-    param($match)
-    $imageFile = Join-Path $projectRoot $match.Groups[2].Value
-    $imageData = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($imageFile))
-    return '![' + $match.Groups[1].Value + '](data:image/png;base64,' + $imageData + ')'
-  })
-  [System.IO.File]::WriteAllText((Join-Path $extensionRoot 'readme.md'), $readme, [System.Text.UTF8Encoding]::new($false))
+  # VS Code removes data: and relative image sources from extension details.
+  # Use the same public HTTPS image/link convention as the standard vsce tool.
+  & node (Join-Path $projectRoot 'scripts/prepare-readme.cjs') (Join-Path $extensionRoot 'readme.md')
+  if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the Marketplace README.' }
   if (Test-Path -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination (Join-Path $extensionRoot 'changelog.md')
   }
   # Only runtime assets belong in the installed extension. README screenshots
-  # are already embedded above; source artwork and other captures stay in Git.
+  # are hosted on GitHub; source artwork and other captures stay in Git.
   $mediaRoot = Join-Path $extensionRoot 'media'
   New-Item -ItemType Directory -Path $mediaRoot -Force | Out-Null
   $runtimeAssets = @(
@@ -54,6 +48,9 @@ try {
   $engine = [System.Security.SecurityElement]::Escape([string]$package.engines.vscode)
   $categories = [System.Security.SecurityElement]::Escape(($package.categories -join ','))
   $tags = [System.Security.SecurityElement]::Escape(($package.keywords -join ','))
+  $bannerColor = [System.Security.SecurityElement]::Escape([string]$package.galleryBanner.color)
+  $bannerTheme = [System.Security.SecurityElement]::Escape([string]$package.galleryBanner.theme)
+  $homepage = [System.Security.SecurityElement]::Escape([string]$package.homepage)
   $extensionKind = [System.Security.SecurityElement]::Escape([string]$(if ($package.extensionKind) { $package.extensionKind -join ',' } else { 'workspace' }))
   $iconRelativePath = ([string]$package.icon -replace '^[.][/\\]', '').Replace('\', '/')
   if (-not $iconRelativePath -or -not (Test-Path -LiteralPath (Join-Path $extensionRoot ($iconRelativePath.Replace('/', '\'))))) {
@@ -105,6 +102,9 @@ try {
       <Property Id="Microsoft.VisualStudio.Code.ExecutesCode" Value="$(if ($hasCode) { 'true' } else { 'false' })" />
       <Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
       <Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free" />
+      <Property Id="Microsoft.VisualStudio.Services.Branding.Color" Value="$bannerColor" />
+      <Property Id="Microsoft.VisualStudio.Services.Branding.Theme" Value="$bannerTheme" />
+      <Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="$homepage" />
 $repositoryProperty$bugsProperty
     </Properties>
   </Metadata>

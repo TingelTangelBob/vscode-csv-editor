@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.4
+
+- Fix extension-detail screenshots by using public HTTPS URLs instead of data URLs removed by VS Code's Markdown sanitizer.
+- Replace the long README with screenshots, a concise feature overview, a quick start, and a shortcut table.
+- Present light and dark screenshots with rounded frames and soft shadows baked into the captures.
+- Move detailed usage and development notes into linked guides and add troubleshooting and issue forms.
+- Improve the Marketplace summary and relevant CSV/TSV, import/export, PDF, and large-file keywords.
+
 ## 1.6.3
 
 - Detect delimiters by consistent record widths instead of the frequency of punctuation inside cell values, ignoring blank separator lines.

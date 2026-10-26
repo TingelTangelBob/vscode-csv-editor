@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an improvement to CSV Simple Editor.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe your workflow and what is currently difficult.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Suggested improvement
+      description: Describe how you would like the editor to help.
+    validations:
+      required: true
