@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.3
+
+- Detect delimiters by consistent record widths instead of the frequency of punctuation inside cell values, ignoring blank separator lines.
+- Fix CSV worker startup so large documents are parsed off the UI thread.
+- Parse fields using string slices instead of building strings character by character, reducing temporary memory use.
+- Bound automatic width measurement to 2,048 rows distributed across large files, including their first and last rows. All rows remain available for editing, sorting, filtering, copying, and export.
+
 ## 1.6.2
 
 - Store PDF fonts with lossless gzip compression and decompress them only when needed; preserve the complete character coverage and offline exports.

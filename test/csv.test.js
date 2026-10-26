@@ -30,6 +30,24 @@ test('ignores quoted delimiters and handles multiline values', () => {
   assert.equal(serializeCsv(sheet), text);
 });
 
+test('detects consistent semicolon columns despite comma-heavy values and blank lines', () => {
+  const headers = Array.from({ length: 22 }, (_, index) => `Column ${index}`);
+  const rows = Array.from({ length: 30 }, (_, row) => {
+    const cells = headers.map((_, column) => `${row}/${column}`);
+    cells[5] = Array.from({ length: 20 + row * 17 }, (_, index) => `item${index}`).join(',');
+    cells[9] = Array.from({ length: row % 5 }, () => 'a|b').join(',');
+    return cells;
+  });
+  const text = headers.join(';') + '\r\n' + rows.map(row => row.join(';')).join('\r\n\r\n') + '\r\n';
+  const parsed = parseCsv(text);
+  assert.equal(parsed.delimiter, ';');
+  assert.deepEqual(parsed.headers, headers);
+  assert.equal(parsed.rows.length, 59);
+  assert.deepEqual(parsed.rows[0].cells, rows[0]);
+  assert.deepEqual(parsed.rows.at(-1).cells, rows.at(-1));
+  assert.ok(parsed.rows.every(row => row.cells.length === 22));
+});
+
 test('uses record line endings instead of line breaks inside quoted cells', () => {
   const text = 'Name,Note\nAlice,"first\r\nsecond"\nBob,last\n';
   const sheet = parseCsv(text);

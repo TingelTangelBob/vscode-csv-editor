@@ -371,6 +371,7 @@ const COLUMN_COLORS = [
 const VIRTUALIZE_AFTER_ROWS = 300;
 const TABLE_ROW_HEIGHT = 30;
 const VIRTUAL_ROW_OVERSCAN = 12;
+const COLUMN_WIDTH_SAMPLE_ROWS = 2048;
 
 function persistViewState() {
   vscode.setState({
@@ -507,7 +508,12 @@ function ensureCsvWorker() {
       return response.text();
     })
     .then((source) => {
-      const workerBootstrap = `${source}\nself.addEventListener('message', (event) => {\n  const { requestId, text, fallbackDelimiter } = event.data;\n  try { self.postMessage({ requestId, sheet: globalThis.CsvData.parseCsv(text, fallbackDelimiter) }); }\n  catch (error) { self.postMessage({ requestId, error: error && error.message ? error.message : String(error) }); }\n});`;
+      const workerBootstrap = `${source}
+self.addEventListener('message', (event) => {
+  const { requestId, text, fallbackDelimiter } = event.data;
+  try { self.postMessage({ requestId, sheet: globalThis.CsvData.parseCsv(text, fallbackDelimiter) }); }
+  catch (error) { self.postMessage({ requestId, error: error && error.message ? error.message : String(error) }); }
+});`;
       const blobUrl = URL.createObjectURL(new Blob([workerBootstrap], { type: 'text/javascript' }));
       try {
         csvWorker = new Worker(blobUrl);
@@ -1148,8 +1154,11 @@ function renderTable() {
 function recalculateColumnWidths(columns = null) {
   const columnsToMeasure = columns ?? sheet.headers.map((_, column) => column);
   if (columns === null) columnWidths = Array(sheet.headers.length);
-  // Measure the actual UI fonts instead of estimating character counts. Inspect
-  // every row so late values and wide glyphs also fit when automatic sizing is used.
+  // Keep initial layout bounded for large CSVs. Sample across the entire file,
+  // including both ends, rather than blocking the UI on millions of measurements.
+  const rowsToMeasure = sheet.rows.length <= COLUMN_WIDTH_SAMPLE_ROWS ? sheet.rows
+    : Array.from({ length: COLUMN_WIDTH_SAMPLE_ROWS }, (_, index) =>
+      sheet.rows[Math.floor(index * (sheet.rows.length - 1) / (COLUMN_WIDTH_SAMPLE_ROWS - 1))]);
   const probe = document.createElement('table');
   probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;top:0;left:0;';
   const th = probe.createTHead().insertRow().appendChild(document.createElement('th'));
@@ -1172,10 +1181,10 @@ function recalculateColumnWidths(columns = null) {
   const context = document.createElement('canvas').getContext('2d');
   const widths = new Map();
   const measure = value => {
-    const text = String(value ?? '').replace(/[ \t\r\n\f]+/g, ' ').trim();
+    const text = String(value ?? '');
     if (widths.has(text)) return widths.get(text);
-    const width = context.measureText(text).width;
-    if (widths.size < 4096) widths.set(text, width);
+    const width = context.measureText(text.replace(/[ \t\r\n\f]+/g, ' ').trim()).width;
+    if (widths.size < 32768) widths.set(text, width);
     return width;
   };
   context.font = headerFont;
@@ -1184,9 +1193,9 @@ function recalculateColumnWidths(columns = null) {
     columnWidths[column] = Math.max(40, Math.ceil(measure(header.trim() ? header : `${t('Column')} ${column + 1}`) + headerPadding));
   }
   context.font = cellFont;
-  widths.clear();
-  for (const row of sheet.rows) {
-    for (const column of columnsToMeasure) {
+  for (const column of columnsToMeasure) {
+    widths.clear();
+    for (const row of rowsToMeasure) {
       columnWidths[column] = Math.max(columnWidths[column], Math.ceil(measure(row.cells[column]) + cellPadding));
     }
   }

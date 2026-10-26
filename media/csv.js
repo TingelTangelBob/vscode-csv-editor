@@ -19,22 +19,25 @@
     const counts = [];
     let count = 0;
     let inQuotes = false;
+    let hasContent = false;
 
     for (let index = 0; index < text.length && counts.length < 24; index += 1) {
       const character = text[index];
+      if (character !== '\n' && character !== '\r' && (character.trim() || character === delimiter)) hasContent = true;
       if (character === '"') {
         if (inQuotes && text[index + 1] === '"') index += 1;
         else inQuotes = !inQuotes;
       } else if (!inQuotes && character === delimiter) {
         count += 1;
       } else if (!inQuotes && (character === '\n' || character === '\r')) {
-        counts.push(count);
+        if (hasContent) counts.push(count);
         count = 0;
+        hasContent = false;
         if (character === '\r' && text[index + 1] === '\n') index += 1;
       }
     }
 
-    if (counts.length < 24 && (count > 0 || counts.length === 0)) counts.push(count);
+    if (counts.length < 24 && (hasContent || counts.length === 0)) counts.push(count);
     return counts;
   }
 
@@ -49,10 +52,16 @@
 
       const frequencies = new Map();
       for (const count of counts) frequencies.set(count, (frequencies.get(count) || 0) + 1);
-      const mostCommonCount = Math.max(...frequencies.values());
-      const consistency = mostCommonCount / counts.length;
-      const average = counts.reduce((total, count) => total + count, 0) / counts.length;
-      const score = (consistency * 100) + (average * 10) + Math.min(maximumCount, 15);
+      // A consistent record shape matters more than delimiter frequency. Long
+      // free-text fields can contain hundreds of commas in a semicolon CSV.
+      // Empty separator lines must not reduce the correct delimiter's score.
+      let mode = 0;
+      let frequency = 0;
+      for (const [count, occurrences] of frequencies) {
+        if (count > 0 && occurrences > frequency) { mode = count; frequency = occurrences; }
+      }
+      const consistency = frequency / counts.length;
+      const score = consistency * 1000 + (counts[0] === mode ? 1 : 0) + Math.min(mode, 15) / 100;
       if (score > bestScore) {
         bestScore = score;
         bestDelimiter = delimiter;
@@ -65,7 +74,11 @@
   function parseRecords(text, delimiter, validate = false) {
     const records = [];
     let record = [];
-    let field = '';
+    // Slice complete segments instead of allocating a string node for every
+    // character. Only quoted fields with escapes need multiple segments.
+    let fieldStart = 0;
+    let fieldLength = 0;
+    let fieldParts = null;
     let inQuotes = false;
     let recordStarted = false;
     let lineEnding = null;
@@ -78,13 +91,20 @@
       if (last?.code !== code || last.record !== record) errors.push({ code, record });
     };
 
-    const finishField = () => {
-      record.push(field);
-      field = '';
+    const appendFieldPart = end => {
+      fieldParts ??= [];
+      fieldParts.push(text.slice(fieldStart, end));
+    };
+    const finishField = end => {
+      const tail = text.slice(fieldStart, end);
+      record.push(fieldParts ? fieldParts.join('') + tail : tail);
+      fieldStart = end + 1;
+      fieldLength = 0;
+      fieldParts = null;
       quoteClosed = false;
     };
-    const finishRecord = () => {
-      finishField();
+    const finishRecord = end => {
+      finishField(end);
       records.push(record);
       record = [];
       recordStarted = false;
@@ -95,31 +115,36 @@
       if (character === '"') {
         recordStarted = true;
         if (inQuotes && text[index + 1] === '"') {
-          field += '"';
+          appendFieldPart(index + 1);
           index += 1;
+          fieldStart = index + 1;
+          fieldLength += 1;
         } else if (inQuotes) {
+          appendFieldPart(index);
+          fieldStart = index + 1;
           inQuotes = false;
           quoteClosed = true;
-        } else if (field.length === 0) {
+        } else if (fieldLength === 0) {
           inQuotes = true;
+          fieldStart = index + 1;
         } else {
           reportError('Invalid quotes');
-          field += character;
+          fieldLength += 1;
         }
       } else if (!inQuotes && character === delimiter) {
-        finishField();
+        finishField(index);
       } else if (!inQuotes && (character === '\n' || character === '\r')) {
         lineEnding ??= character === '\r' && text[index + 1] === '\n' ? '\r\n' : character;
-        finishRecord();
-        if (character === '\r' && text[index + 1] === '\n') index += 1;
+        finishRecord(index);
+        if (character === '\r' && text[index + 1] === '\n') { index += 1; fieldStart = index + 1; }
       } else {
         if (quoteClosed && !inQuotes) reportError('Invalid quotes');
-        field += character;
+        fieldLength += 1;
       }
     }
 
     if (inQuotes) reportError('Unclosed quoted field');
-    if (recordStarted || field.length > 0 || record.length > 0) finishRecord();
+    if (recordStarted || fieldLength > 0 || record.length > 0) finishRecord(text.length);
     return { records, lineEnding: lineEnding ?? '\n', errors };
   }
 
@@ -133,7 +158,7 @@
     while (headers.length < columnCount) headers.push('');
 
     const rows = records.slice(1).map((values, rowIndex) => {
-      const cells = values.slice();
+      const cells = values;
       while (cells.length < columnCount) cells.push('');
       return { id: rowIndex + 1, cells };
     });

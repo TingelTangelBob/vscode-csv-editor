@@ -2,7 +2,7 @@
   "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
   "description": "View and edit CSV and TSV files as tables in VS Code. Detect delimiters, sort and filter columns, and import rows with validation.",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "publisher": "tingeltangelbob",
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
   "scripts": {
     "test": "node --test",
     "test:ui": "node scripts/check-editor.cjs",
+    "test:large": "node scripts/check-large-csv.cjs",
     "test:pdf": "node scripts/check-pdf.cjs",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File ./package-vsix.ps1"
   },
