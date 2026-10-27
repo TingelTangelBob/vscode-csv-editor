@@ -19,7 +19,7 @@
 - **Open CSV or TSV:** automatically detect commas, semicolons, tabs, and pipes.
 - **Edit your table:** change cells, add or delete rows and columns, and move columns.
 - **Find and clean data:** sort columns, combine value filters, search, and replace text.
-- **Select and copy:** drag across cells, row numbers, or column headings; copy to a spreadsheet.
+- **Select and copy:** drag across cells, row numbers, or column headings; subtle row and column guides show the cell selection. Copy to a spreadsheet.
 - **Import clipboard data:** preview before appending or replacing rows; validate columns and remove exact duplicates.
 - **Export CSV or PDF:** save the filtered and sorted result, including rows outside the viewport. PDF text stays selectable and searchable.
 - **Make it yours:** resize columns, toggle gridlines and column colors, and choose light, dark, or your VS Code theme. Ten interface languages are included.

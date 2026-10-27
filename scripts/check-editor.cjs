@@ -73,10 +73,27 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   await page.keyboard.press('Escape');
   await drag(cell(1,0),cell(3,1));
   assert.equal(await page.locator('.is-cell-selected').count(),6);
+  assert.equal(await page.locator('tbody tr.is-cell-guide-row').count(),3);
+  assert.equal(await page.locator('thead th.is-cell-guide-column').count(),2);
   await page.keyboard.press('Control+c');
   assert.equal(await page.evaluate(()=>messages.at(-1).text),'Zoe\t31\nAmy\t22\nJoe\t40');
   await cell(2,2).click();
   assert.equal(await page.locator('.is-cell-selected').count(),1);
+  await page.mouse.move(2,2);
+  assert.equal(await page.locator('tbody tr.is-cell-guide-row').count(),1);
+  assert.equal(await page.locator('thead th.is-cell-guide-column').count(),1);
+  assert.equal(await page.locator('thead th[data-column="2"].is-cell-guide-column').count(),1);
+  for (const locator of [cell(2,0), cell(1,2), page.locator('[data-row-header="2"]'), page.locator('th[data-column="2"]')]) {
+    assert.match(await locator.evaluate(element=>getComputedStyle(element).backgroundImage),/linear-gradient/);
+  }
+  assert.equal(await cell(1,0).evaluate(element=>getComputedStyle(element).backgroundImage),'none');
+  assert.equal(await cell(2,2).evaluate(element=>getComputedStyle(element).backgroundImage),'none');
+  if(process.env.CSV_SELECTION_PREVIEW_DIR) await page.locator('#csv-table').screenshot({path:require('node:path').join(process.env.CSV_SELECTION_PREVIEW_DIR,'csv-selection-light.png')});
+  const previousTheme=await page.evaluate(()=>document.body.dataset.theme);
+  await page.evaluate(()=>document.body.dataset.theme='dark');
+  assert.match(await cell(2,0).evaluate(element=>getComputedStyle(element).backgroundImage),/linear-gradient/);
+  if(process.env.CSV_SELECTION_PREVIEW_DIR) await page.locator('#csv-table').screenshot({path:require('node:path').join(process.env.CSV_SELECTION_PREVIEW_DIR,'csv-selection-dark.png')});
+  await page.evaluate(theme=>document.body.dataset.theme=theme,previousTheme);
   await cell(2,2).dblclick();
   assert.equal(await page.locator('.cell-editor').count(),1);
   await page.keyboard.press('Escape');
@@ -90,6 +107,7 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   await page.evaluate(()=>sheet.rows[0].cells[0]='Zoe');
   await drag(page.locator('[data-row-header="1"]'),page.locator('[data-row-header="3"]'));
   assert.deepEqual(await page.evaluate(()=>[...selectedRows]),[1,2,3]);
+  assert.equal(await page.locator('.is-cell-guide-row, .is-cell-guide-column').count(),0);
   await page.keyboard.press('Control+c');
   assert.equal(await page.evaluate(()=>messages.at(-1).text),'Zoe\t31\tBerlin\nAmy\t22\tBonn\nJoe\t40\tEssen');
   await page.keyboard.press('Escape');
@@ -166,6 +184,8 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   await page.evaluate(()=>focusCell(1200,1));
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.rowId),'1200');
   assert.equal(await page.locator('.is-cell-selected').count(),0);
+  assert.equal(await page.locator('tbody tr.is-cell-guide-row').count(),0);
+  assert.ok(await page.locator('tbody td.is-cell-guide-column').count()>0);
   // Export must include matching virtual rows that were never rendered.
   await page.evaluate(()=>{columnFilters[0]={query:'19'};sortState={column:0,direction:-1};renderTable();});
   const expectedExport=await page.evaluate(()=>serializeCsv({...sheet,rows:getVisibleRows()}));

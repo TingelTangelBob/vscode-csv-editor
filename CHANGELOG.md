@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.10
+
+- Subtly highlight the rows and columns intersecting a selected cell range, including their headings.
+
 ## 1.6.9
 
 - Publish GitHub release notes from the matching changelog sections, including versions since the preceding published release.

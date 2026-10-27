@@ -807,6 +807,7 @@ function renderHeader() {
     const th = createElement('th', 'data-heading');
     th.dataset.column = String(column);
     th.classList.toggle('is-column-selected', selectedColumns.has(column));
+    th.classList.toggle('is-cell-guide-column', isCellSelectionColumn(column));
     applyColumnColor(th, column);
 
     const layout = createElement('div', 'heading-content');
@@ -933,6 +934,7 @@ function renderBody() {
       const tr = document.createElement('tr');
       tr.classList.toggle('is-selected', selectedRows.has(row.id));
       tr.classList.toggle('is-striped', index % 2 === 1);
+      tr.classList.toggle('is-cell-guide-row', Boolean(cellSelection?.rowIds.has(row.id)));
 
       const rowHeader = createElement('td', 'row-number-cell');
       rowHeader.dataset.rowHeader = String(row.id);
@@ -952,6 +954,7 @@ function renderBody() {
         td.dataset.rowId = String(row.id);
         td.dataset.column = String(column);
         td.classList.toggle('is-column-selected', selectedColumns.has(column));
+        td.classList.toggle('is-cell-guide-column', isCellSelectionColumn(column));
         td.classList.toggle('is-cell-selected', isCellSelected(row.id, column));
         applyColumnColor(td, column);
         td.tabIndex = 0;
@@ -1046,20 +1049,28 @@ function isCellSelected(rowId, column) {
     && column >= cellSelection.firstColumn && column <= cellSelection.lastColumn);
 }
 
+function isCellSelectionColumn(column) {
+  return Boolean(cellSelection && column >= cellSelection.firstColumn && column <= cellSelection.lastColumn);
+}
+
 // Update only selection styles; replacing the table here would lose focus and
 // pointer targets and would do unnecessary work on every pointer movement.
 function refreshSelection() {
   elements.tableHead.querySelectorAll('[data-column]').forEach((cell) => {
-    cell.classList.toggle('is-column-selected', selectedColumns.has(Number(cell.dataset.column)));
+    const column = Number(cell.dataset.column);
+    cell.classList.toggle('is-column-selected', selectedColumns.has(column));
+    cell.classList.toggle('is-cell-guide-column', isCellSelectionColumn(column));
   });
   elements.tableBody.querySelectorAll('[data-row-header]').forEach((header) => {
     const selected = selectedRows.has(Number(header.dataset.rowHeader));
     header.closest('tr').classList.toggle('is-selected', selected);
+    header.closest('tr').classList.toggle('is-cell-guide-row', Boolean(cellSelection?.rowIds.has(Number(header.dataset.rowHeader))));
     header.querySelector('input').checked = selected;
   });
   elements.tableBody.querySelectorAll('.data-cell').forEach((cell) => {
     const column = Number(cell.dataset.column);
     cell.classList.toggle('is-column-selected', selectedColumns.has(column));
+    cell.classList.toggle('is-cell-guide-column', isCellSelectionColumn(column));
     cell.classList.toggle('is-cell-selected', isCellSelected(Number(cell.dataset.rowId), column));
   });
   updateSelectAll();
