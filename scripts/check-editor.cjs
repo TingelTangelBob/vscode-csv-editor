@@ -251,6 +251,66 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
     return filter.left>=numbers.right && filter.right<window.innerWidth;
   }));
   assert.deepEqual(errors,[]);
+  // Reopen a small file in a fresh webview with the state the extension saved.
+  async function openRememberedView(text, fileView = null, canRememberFileView = true) {
+    const viewPage = await browser.newPage({viewport:{width:1000,height:600}});
+    const origin = 'http://csv-view.local';
+    await viewPage.route(`${origin}/**`, route => {
+      const name = new URL(route.request().url()).pathname.slice(1) || 'index.html';
+      if (!/^[\w.-]+$/.test(name)) return route.abort();
+      if (name !== 'index.html') return route.fulfill({path:root+'/media/'+name});
+      const html = fs.readFileSync(root+'/media/index.html','utf8')
+        .replaceAll('{{CSP_SOURCE}}',origin).replaceAll('{{NONCE}}','view-test')
+        .replaceAll('{{VERSION}}','test').replaceAll('{{CODICON_STYLESHEET_URI}}',origin+'/codicon.css')
+        .replaceAll('{{STYLESHEET_URI}}',origin+'/editor.css').replaceAll('{{CSV_SCRIPT_URI}}',origin+'/csv.js')
+        .replaceAll('{{EXPORT_SCRIPT_URI}}',origin+'/export.js').replaceAll('{{SCRIPT_URI}}',origin+'/editor.js');
+      return route.fulfill({contentType:'text/html',body:html});
+    });
+    await viewPage.addInitScript(({text,fileView,canRememberFileView}) => {
+      window.viewMessages = [];
+      window.acquireVsCodeApi = () => ({getState:()=>({}),setState(){},postMessage(message){
+        viewMessages.push(message);
+        if (message.type === 'ready') setTimeout(() => window.dispatchEvent(new MessageEvent('message', {
+          data:{type:'load',filename:'sample.csv',text,fileView,canRememberFileView},
+        })),0);
+      }});
+    }, {text,fileView,canRememberFileView});
+    await viewPage.goto(origin);
+    await viewPage.waitForFunction(()=>documentLoaded && !isLoadingDocument);
+    return viewPage;
+  }
+  const sampleText = 'Name,City\nZoe,Berlin\nAmy,Bonn';
+  const viewPage = await openRememberedView(sampleText);
+  await viewPage.locator('#settings-button').click();
+  await viewPage.locator('#remember-file-view').check();
+  await viewPage.evaluate(()=>{
+    columnWidthOverrides=[150,90];
+    columnFilters=[{query:'amy',values:new Set(['Amy'])},null];
+    sortState={column:1,direction:-1};
+    renderTable();
+  });
+  const savedView = await viewPage.evaluate(()=>viewMessages.filter(message=>message.type==='saveFileView').at(-1).view);
+  assert.equal(savedView.columns[0].width,150);
+  assert.deepEqual(savedView.columns[0].filter.values,['Amy']);
+  assert.deepEqual(savedView.sort,{name:'City',direction:-1});
+  assert.ok(!await viewPage.evaluate(()=>viewMessages.some(message=>message.type==='edit')));
+  await viewPage.close();
+  const reopenedView = await openRememberedView('City,Name,New\nBerlin,Zoe,x\nBonn,Amy,y',savedView);
+  assert.equal(await reopenedView.locator('#remember-file-view').isChecked(),true);
+  assert.deepEqual(await reopenedView.evaluate(()=>columnWidthOverrides),[90,150,null]);
+  assert.deepEqual(await reopenedView.evaluate(()=>sortState),{column:0,direction:-1});
+  assert.deepEqual(await reopenedView.evaluate(()=>visibleRows.map(row=>row.cells[1])),['Amy']);
+  await reopenedView.locator('#settings-button').click();
+  await reopenedView.locator('[data-action="reset-file-view"]').click();
+  assert.equal(await reopenedView.locator('#remember-file-view').isChecked(),false);
+  assert.deepEqual(await reopenedView.evaluate(()=>columnWidthOverrides),[null,null,null]);
+  assert.equal(await reopenedView.evaluate(()=>sortState),null);
+  assert.equal(await reopenedView.evaluate(()=>visibleRows.length),2);
+  assert.equal(await reopenedView.evaluate(()=>viewMessages.filter(message=>message.type==='saveFileView').at(-1).enabled),false);
+  await reopenedView.close();
+  const untitledView = await openRememberedView(sampleText,null,false);
+  assert.equal(await untitledView.locator('#remember-file-view').isDisabled(),true);
+  await untitledView.close();
   // Exercise the real webview CSP and lazy PDF resources as a separate page.
   const cspPage=await browser.newPage({viewport:{width:1000,height:600}});
   const origin='http://csv-offline.local';

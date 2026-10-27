@@ -26,6 +26,10 @@ Drag a column's right edge to resize it. Double-click that edge to restore autom
 
 **Fit columns to available width** distributes spare editor space. Settings also offer gridlines, theme-based column colors, ten languages, and System / Light / Dark appearance. Preferences persist across files and sessions; display colors are not written into CSV data.
 
+Enable **Remember view for this file** in settings to save its manual column widths, filters (including selected values and search text), and sorting locally in VS Code. They return when you reopen the same file, including in another workspace. Settings are matched by unique column name, so renamed, missing, or duplicate names are skipped safely. Moving or renaming the file creates a separate view. Unsaved files need a path before this option is available. Column order is part of the CSV document itself and is saved with the file.
+
+Turn the option off to remove the saved view while keeping the current on-screen view. **Reset saved view** removes it, turns the option off, and clears the current widths, filters, and sorting. Neither operation changes the CSV contents.
+
 ## Import and export
 
 Paste into an empty file to create a table. For an existing table, the import preview lets you append or replace rows, select the delimiter, choose whether headings are present, skip empty rows, and remove exact duplicate rows.

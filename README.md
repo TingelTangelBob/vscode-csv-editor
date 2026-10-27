@@ -23,6 +23,7 @@
 - **Import clipboard data:** preview before appending or replacing rows; validate columns and remove exact duplicates.
 - **Export CSV or PDF:** save the filtered and sorted result, including rows outside the viewport. PDF text stays selectable and searchable.
 - **Make it yours:** resize columns, toggle gridlines and column colors, and choose light, dark, or your VS Code theme. Ten interface languages are included.
+- **Remember a file's view:** optionally restore its column widths, filters, and sorting when you reopen it.
 - **Browse large files:** background parsing and visible-row rendering keep the table responsive; automatic widths use a sample of larger tables.
 
 ## Get started

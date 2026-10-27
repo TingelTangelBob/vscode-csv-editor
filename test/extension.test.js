@@ -11,7 +11,7 @@ const viewType = 'tingeltangelbob.csv-simple-editor.csvGrid';
 const patterns = ['*.csv', '*.CSV', '*.tsv', '*.TSV'];
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
-function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled = true, applyEdit, tablePreferences = {}, saveDestination = null, writeError = null } = {}) {
+function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled = true, applyEdit, tablePreferences = {}, saveDestination = null, writeError = null, fileViewError = null, fileViewDelay = 0 } = {}) {
   const updates = [];
   const errors = [];
   const openedUrls = [];
@@ -61,10 +61,10 @@ function activate({ globalAssociations = {}, workspaceAssociations = {}, enabled
   const context = {
     Buffer,
     module: { exports: {} },
-    require: (name) => name === 'vscode' ? vscode : require(name),
+    require: (name) => name === 'vscode' ? vscode : name === './media/csv' ? require('../media/csv') : require(name),
     globalState: {
       get: (key, fallback) => storedState.has(key) ? storedState.get(key) : fallback,
-      update: async (key, value) => { storedState.set(key, value); },
+      update: async (key, value) => { if (key.startsWith('fileView:') && fileViewError) throw fileViewError; if (key.startsWith('fileView:') && fileViewDelay) await new Promise(resolve => setTimeout(resolve, fileViewDelay)); storedState.set(key, value); },
     },
   };
   vm.runInNewContext(fs.readFileSync(path.join(projectRoot, 'extension.js'), 'utf8'), context);
@@ -99,6 +99,57 @@ test('does not rewrite matching editor associations', async () => {
   const { updates } = activate({ globalAssociations: Object.fromEntries(patterns.map((pattern) => [pattern, viewType])) });
   await tick();
   assert.equal(updates.length, 0);
+});
+
+test('stores remembered views separately per file, restores them and removes them on request', async () => {
+  const fixture = activate({ fileViewDelay: 5 });
+  async function open(filename, scheme = 'file') {
+    const messages = [];
+    let receive;
+    const panel = { webview: { cspSource: 'https://webview.example', asWebviewUri: uri => uri,
+      postMessage: async message => { messages.push(message); },
+      onDidReceiveMessage: handler => { receive = handler; return { dispose() {} }; } },
+      onDidDispose: () => ({ dispose() {} }) };
+    const uri = fixture.uri(filename);
+    uri.scheme = scheme;
+    await fixture.provider.resolveCustomTextEditor({ uri, getText: () => 'Name,City\nAda,Bonn', isDirty: false }, panel);
+    await receive({ type: 'ready' });
+    return { receive, messages };
+  }
+  const first = await open('a.csv');
+  const second = await open('b.csv');
+  const view = { version: 1, columns: [{ name: 'Name', width: 140, filter: { query: 'Ada', values: ['Ada'] } }], sort: { name: 'Name', direction: 1 } };
+  await first.receive({ type: 'saveFileView', requestId: 1, enabled: true, view });
+  assert.equal(first.messages.at(-1).enabled, true);
+  assert.equal(second.messages.find(message => message.type === 'load').fileView, null);
+  const reopened = await open('a.csv');
+  assert.deepEqual(JSON.parse(JSON.stringify(reopened.messages.find(message => message.type === 'load').fileView)), view);
+  await reopened.receive({ type: 'saveFileView', requestId: 2, enabled: false });
+  assert.equal((await open('a.csv')).messages.find(message => message.type === 'load').fileView, null);
+  const saving = first.receive({ type: 'saveFileView', requestId: 4, enabled: true, view });
+  const clearing = first.receive({ type: 'saveFileView', requestId: 5, enabled: false });
+  const reopening = open('a.csv');
+  await Promise.all([saving, clearing]);
+  assert.equal((await reopening).messages.find(message => message.type === 'load').fileView, null);
+  const unsaved = await open('Untitled-1', 'untitled');
+  assert.equal(unsaved.messages.find(message => message.type === 'load').canRememberFileView, false);
+  await unsaved.receive({ type: 'saveFileView', requestId: 3, enabled: true, view });
+  assert.equal(unsaved.messages.at(-1).error, true);
+});
+
+test('reports storage failures instead of claiming the file view was saved', async () => {
+  const fixture = activate({ fileViewError: new Error('Storage unavailable') });
+  const messages = [];
+  let receive;
+  const panel = { webview: { cspSource: 'https://webview.example', asWebviewUri: uri => uri,
+    postMessage: async message => { messages.push(message); },
+    onDidReceiveMessage: handler => { receive = handler; return { dispose() {} }; } },
+    onDidDispose: () => ({ dispose() {} }) };
+  await fixture.provider.resolveCustomTextEditor({ uri: fixture.uri('a.csv'), getText: () => 'Name\nAda' }, panel);
+  await receive({ type: 'saveFileView', requestId: 1, enabled: true, view: { version: 1, columns: [], sort: null } });
+  assert.equal(messages.at(-1).error, true);
+  assert.equal(messages.at(-1).enabled, false);
+  assert.ok(fixture.errors.some(message => message.includes('Storage unavailable')));
 });
 
 test('handles webview assets and actions, recovers rejected edits and disposes panel listeners', async () => {

@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const vscode = require('vscode');
+const { normalizeFileView } = require('./media/csv');
 
 const VIEW_TYPE = 'tingeltangelbob.csv-simple-editor.csvGrid';
 const EXTENSION_ID = 'tingeltangelbob.csv-simple-editor';
@@ -93,6 +94,7 @@ async function applyDefaultEditorPreference(enabled) {
 function activate(context) {
   const panelsByDocument = new Map();
   const applyingFromGrid = new Set();
+  const fileViewWrites = new Map();
 
   const notifyTablePreferences = () => {
     const message = { type: 'tablePreferences', preferences: getTablePreferences(context) };
@@ -141,6 +143,8 @@ function activate(context) {
       panel.webview.html = renderWebview(panel.webview, context.extensionUri);
 
       const key = document.uri.toString();
+      const fileViewKey = `fileView:${crypto.createHash('sha256').update(key).digest('hex')}`;
+      const canRememberFileView = document.uri.scheme !== 'untitled';
       const entry = { panel, uri: document.uri, editQueue: Promise.resolve() };
       const panels = panelsByDocument.get(key) ?? new Set();
       panels.add(entry);
@@ -152,6 +156,7 @@ function activate(context) {
       };
       const messageListener = panel.webview.onDidReceiveMessage(async (message) => {
         if (message?.type === 'ready') {
+          await fileViewWrites.get(fileViewKey);
           void panel.webview.postMessage({ type: 'tablePreferences', preferences: getTablePreferences(context) });
           void panel.webview.postMessage({ type: 'defaultEditorPreference', enabled: getDefaultEditorPreference() });
           void panel.webview.postMessage({
@@ -159,7 +164,30 @@ function activate(context) {
             text: document.getText(),
             filename: path.basename(document.uri.path),
             dirty: document.isDirty,
+            fileView: canRememberFileView ? normalizeFileView(context.globalState.get(fileViewKey)) : null,
+            canRememberFileView,
           });
+          return;
+        }
+
+        if (message?.type === 'saveFileView' && typeof message.enabled === 'boolean') {
+          const previous = fileViewWrites.get(fileViewKey) || Promise.resolve();
+          const operation = previous.catch(() => {}).then(async () => {
+            try {
+              if (!canRememberFileView) throw new Error('Save this file before remembering its view.');
+              const view = message.enabled ? normalizeFileView(message.view) : undefined;
+              if (message.enabled && !view) throw new Error('The view settings are invalid.');
+              await context.globalState.update(fileViewKey, view);
+              void panel.webview.postMessage({ type: 'fileViewSaved', requestId: message.requestId, enabled: Boolean(view) });
+            } catch (error) {
+              void vscode.window.showErrorMessage(`Could not save this file's view: ${error.message}`);
+              void panel.webview.postMessage({ type: 'fileViewSaved', requestId: message.requestId,
+                enabled: Boolean(normalizeFileView(context.globalState.get(fileViewKey))), error: true });
+            }
+          });
+          fileViewWrites.set(fileViewKey, operation);
+          await operation;
+          if (fileViewWrites.get(fileViewKey) === operation) fileViewWrites.delete(fileViewKey);
           return;
         }
 

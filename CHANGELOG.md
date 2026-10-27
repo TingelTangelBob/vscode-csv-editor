@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.6
+
+- Optionally remember manual column widths, filters, and sorting for an individual file in local VS Code storage.
+- Restore settings by unique column name, safely ignoring missing, renamed, or ambiguous columns.
+- Add controls to stop remembering a file or reset its saved view and current widths, filters, and sorting.
+
 ## 1.6.5
 
 - Preserve descenders in column titles with a taller text line box.

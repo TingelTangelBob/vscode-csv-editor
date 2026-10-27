@@ -2,7 +2,7 @@
 
 const vscode = acquireVsCodeApi();
 const { createEmptySheet, parseCsv, escapeCell, serializeCsv, planCsvImport,
-  isColumnFilterActive, filterRows, getColumnFilterValues } = CsvData;
+  isColumnFilterActive, filterRows, getColumnFilterValues, normalizeFileView, captureFileView, restoreFileView } = CsvData;
 const csvWorkerSourceUri = document.currentScript?.dataset.csvWorkerSrc;
 const WORKER_PARSE_THRESHOLD = 256 * 1024;
 let csvWorkerPromise = null;
@@ -209,6 +209,15 @@ Object.assign(TRANSLATIONS['pt-br'], { Interface: 'Interface', 'CSV settings': '
 Object.assign(TRANSLATIONS.ru, { Interface: '\u0418\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441', 'CSV settings': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 CSV' });
 Object.assign(TRANSLATIONS.ko, { Interface: '\uc778\ud130\ud398\uc774\uc2a4', 'CSV settings': 'CSV \uc124\uc815' });
 Object.assign(TRANSLATIONS.it, { Interface: 'Interfaccia', 'CSV settings': 'Impostazioni CSV' });
+Object.assign(TRANSLATIONS.de, { 'Remember view for this file': 'Ansicht für diese Datei merken', 'Reset saved view': 'Gespeicherte Ansicht zurücksetzen' });
+Object.assign(TRANSLATIONS.fr, { 'Remember view for this file': 'Mémoriser la vue de ce fichier', 'Reset saved view': 'Réinitialiser la vue enregistrée' });
+Object.assign(TRANSLATIONS.es, { 'Remember view for this file': 'Recordar vista de este archivo', 'Reset saved view': 'Restablecer vista guardada' });
+Object.assign(TRANSLATIONS.ja, { 'Remember view for this file': 'このファイルの表示を記憶', 'Reset saved view': '保存した表示をリセット' });
+Object.assign(TRANSLATIONS['zh-cn'], { 'Remember view for this file': '记住此文件的视图', 'Reset saved view': '重置保存的视图' });
+Object.assign(TRANSLATIONS['pt-br'], { 'Remember view for this file': 'Lembrar visualização deste arquivo', 'Reset saved view': 'Redefinir visualização salva' });
+Object.assign(TRANSLATIONS.ru, { 'Remember view for this file': 'Запомнить вид этого файла', 'Reset saved view': 'Сбросить сохранённый вид' });
+Object.assign(TRANSLATIONS.ko, { 'Remember view for this file': '이 파일의 보기 기억', 'Reset saved view': '저장된 보기 초기화' });
+Object.assign(TRANSLATIONS.it, { 'Remember view for this file': 'Ricorda vista per questo file', 'Reset saved view': 'Ripristina vista salvata' });
 const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', ja: 'ja-JP', 'zh-cn': 'zh-CN', 'pt-br': 'pt-BR', ru: 'ru-RU', ko: 'ko-KR', it: 'it-IT' };
 const savedState = vscode.getState() ?? {};
 const browserLanguage = navigator.language.toLowerCase();
@@ -267,6 +276,8 @@ const elements = {
   responsiveColumns: document.getElementById('responsive-columns'),
   appearanceSwitcher: document.getElementById('appearance-switcher'),
   openByDefault: document.getElementById('open-by-default'),
+  rememberFileView: document.getElementById('remember-file-view'),
+  resetFileView: document.querySelector('[data-action="reset-file-view"]'),
   language: document.getElementById('language-select'),
   filterPopover: document.getElementById('filter-popover'),
   filterLabel: document.getElementById('filter-label'),
@@ -314,6 +325,11 @@ let lastSerializedText = '';
 let documentLoaded = false;
 let isLoadingDocument = false;
 let documentLoadSequence = 0;
+let rememberFileView = false;
+let canRememberFileView = true;
+let savedFileView = null;
+let lastSentFileView = null;
+let fileViewRequestId = 0;
 let selectedRows = new Set();
 let columnFilters = [];
 let columnWidths = [];
@@ -381,6 +397,31 @@ function persistViewState() {
     theme,
     language,
   });
+  persistFileView();
+}
+
+function updateFileViewControls() {
+  elements.rememberFileView.checked = rememberFileView;
+  elements.rememberFileView.disabled = !canRememberFileView || !documentLoaded || isLoadingDocument;
+  elements.resetFileView.disabled = !rememberFileView || !documentLoaded || isLoadingDocument;
+}
+
+function persistFileView() {
+  if (!rememberFileView || !canRememberFileView || !documentLoaded || isLoadingDocument) return;
+  const view = captureFileView(sheet.headers, columnWidthOverrides, columnFilters, sortState);
+  const signature = JSON.stringify(view);
+  if (signature === lastSentFileView) return;
+  savedFileView = view;
+  lastSentFileView = signature;
+  vscode.postMessage({ type: 'saveFileView', requestId: ++fileViewRequestId, enabled: true, view });
+}
+
+function forgetFileView() {
+  rememberFileView = false;
+  savedFileView = null;
+  lastSentFileView = null;
+  updateFileViewControls();
+  vscode.postMessage({ type: 'saveFileView', requestId: ++fileViewRequestId, enabled: false });
 }
 
 function persistTablePreferences() {
@@ -430,7 +471,14 @@ function applyColumnColor(element, column) {
   else element.style.removeProperty('--column-color');
 }
 
-function setDocument(rawText, filename = lastFilename) {
+function setDocument(rawText, filename = lastFilename, initialFileView = undefined) {
+  const viewToRestore = initialFileView !== undefined ? normalizeFileView(initialFileView)
+    : rememberFileView ? (isLoadingDocument ? savedFileView : captureFileView(sheet.headers, columnWidthOverrides, columnFilters, sortState)) : null;
+  if (initialFileView !== undefined) {
+    savedFileView = viewToRestore;
+    rememberFileView = Boolean(viewToRestore);
+    lastSentFileView = viewToRestore ? JSON.stringify(viewToRestore) : null;
+  }
   stopSelectionDrag();
   elements.importDialog.close();
   pendingClipboardRequest = null;
@@ -456,6 +504,12 @@ function setDocument(rawText, filename = lastFilename) {
     cellSelection = null;
     sortState = null;
     columnFilters = Array(sheet.headers.length).fill(null);
+    if (viewToRestore) {
+      const restored = restoreFileView(viewToRestore, sheet.headers);
+      columnWidthOverrides = restored.widths;
+      columnFilters = restored.filters;
+      sortState = restored.sort;
+    }
     recalculateColumnWidths();
     elements.delimiter.value = sheet.delimiter === '\t' ? 'tab' : sheet.delimiter;
     closePopovers();
@@ -1144,6 +1198,8 @@ function renderTable() {
   renderHeader();
   renderBody();
   updateToolbar();
+  updateFileViewControls();
+  persistFileView();
 }
 
 function recalculateColumnWidths(columns = null) {
@@ -1855,6 +1911,13 @@ elements.replaceValuesPopover.addEventListener('click', (event) => {
 elements.toolbarReplaceFind.addEventListener('input', updateToolbarReplacementMatchCount);
 elements.toolbarReplaceWith.addEventListener('input', updateToolbarReplacementMatchCount);
 elements.settingsButton.addEventListener('click', openSettingsPopover);
+elements.rememberFileView.addEventListener('change', () => {
+  if (!elements.rememberFileView.checked) { forgetFileView(); return; }
+  rememberFileView = true;
+  lastSentFileView = null;
+  updateFileViewControls();
+  persistFileView();
+});
 elements.exportButton.addEventListener('click', () => openToolbarPopover(elements.exportPopover, elements.exportButton));
 elements.colorizeColumns.addEventListener('change', () => {
   colorizeColumns = elements.colorizeColumns.checked;
@@ -2220,7 +2283,15 @@ document.addEventListener('click', (event) => {
   const column = activeColumn;
   const target = contextTarget;
 
-  if (action === 'reset-column-widths') resetColumnWidths();
+  if (action === 'reset-file-view') {
+    forgetFileView();
+    columnWidthOverrides = sheet.headers.map(() => null);
+    columnFilters = sheet.headers.map(() => null);
+    sortState = null;
+    persistViewState();
+    renderTable();
+  }
+  else if (action === 'reset-column-widths') resetColumnWidths();
   else if (action === 'export-csv' || action === 'export-pdf') void exportTable(action === 'export-csv' ? 'csv' : 'pdf');
   else if (action === 'clear-filters') clearFilters();
   else if (action === 'clear-sort') clearSort();
@@ -2352,7 +2423,18 @@ window.addEventListener('message', (event) => {
     elements.pasteTable.disabled = false;
     pasteTable(message.text);
   }
-  if ((message.type === 'load' || message.type === 'editRejected') && typeof message.text === 'string') setDocument(message.text, message.filename);
+  if ((message.type === 'load' || message.type === 'editRejected') && typeof message.text === 'string') {
+    if (Object.prototype.hasOwnProperty.call(message, 'fileView')) {
+      canRememberFileView = message.canRememberFileView !== false;
+      setDocument(message.text, message.filename, message.fileView);
+    } else setDocument(message.text, message.filename);
+  }
+  if (message.type === 'fileViewSaved' && message.requestId === fileViewRequestId && message.error) {
+    rememberFileView = message.enabled === true;
+    if (!rememberFileView) savedFileView = null;
+    lastSentFileView = null;
+    updateFileViewControls();
+  }
   if (message.type === 'tablePreferences') applyTablePreferences(message.preferences);
   if (message.type === 'defaultEditorPreference' && typeof message.enabled === 'boolean') {
     elements.openByDefault.checked = message.enabled;

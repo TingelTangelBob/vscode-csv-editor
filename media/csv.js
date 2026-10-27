@@ -277,8 +277,62 @@
     return [...counts].map(([value, count]) => ({ value, count }));
   }
 
+  // Persist only view metadata. Column names are used as stable identifiers;
+  // ambiguous duplicate names are deliberately skipped when restoring.
+  function normalizeFileView(view) {
+    if (!view || view.version !== 1 || !Array.isArray(view.columns)) return null;
+    const columns = view.columns.map(column => {
+      if (!column || typeof column.name !== 'string') return null;
+      const width = Number.isFinite(column.width) && column.width >= 40 && column.width <= 1000000 ? column.width : null;
+      const filter = column.filter && typeof column.filter === 'object' ? {
+        query: typeof column.filter.query === 'string' ? column.filter.query : '',
+        values: Array.isArray(column.filter.values) ? [...new Set(column.filter.values.filter(value => typeof value === 'string'))] : null,
+      } : null;
+      return { name: column.name, width, filter };
+    });
+    if (columns.some(column => !column)) return null;
+    const sort = view.sort && typeof view.sort.name === 'string' && [1, -1].includes(view.sort.direction)
+      ? { name: view.sort.name, direction: view.sort.direction } : null;
+    return { version: 1, columns, sort };
+  }
+
+  function captureFileView(headers, widths, filters, sortState) {
+    return normalizeFileView({
+      version: 1,
+      columns: headers.map((name, index) => ({
+        name, width: widths[index],
+        filter: filters[index] ? { query: filters[index].query || '',
+          values: filters[index].values instanceof Set ? [...filters[index].values] : null } : null,
+      })),
+      sort: sortState && headers[sortState.column] !== undefined
+        ? { name: headers[sortState.column], direction: sortState.direction } : null,
+    });
+  }
+
+  function restoreFileView(view, headers) {
+    const saved = normalizeFileView(view);
+    const widths = headers.map(() => null);
+    const filters = headers.map(() => null);
+    if (!saved) return { widths, filters, sort: null };
+    const countNames = names => names.reduce((counts, name) => counts.set(name, (counts.get(name) || 0) + 1), new Map());
+    const currentCounts = countNames(headers);
+    const savedCounts = countNames(saved.columns.map(column => column.name));
+    const savedByName = new Map(saved.columns.map(column => [column.name, column]));
+    headers.forEach((name, index) => {
+      if (currentCounts.get(name) !== 1 || savedCounts.get(name) !== 1) return;
+      const column = savedByName.get(name);
+      widths[index] = column.width;
+      if (column.filter) filters[index] = { query: column.filter.query,
+        values: column.filter.values === null ? null : new Set(column.filter.values) };
+    });
+    const sortColumn = saved.sort ? headers.indexOf(saved.sort.name) : -1;
+    const sort = sortColumn >= 0 && currentCounts.get(saved.sort.name) === 1 && savedCounts.get(saved.sort.name) === 1
+      ? { column: sortColumn, direction: saved.sort.direction } : null;
+    return { widths, filters, sort };
+  }
+
   const api = { createEmptySheet, parseCsv, escapeCell, serializeCsv, planCsvImport,
-    isColumnFilterActive, filterRows, getColumnFilterValues };
+    isColumnFilterActive, filterRows, getColumnFilterValues, normalizeFileView, captureFileView, restoreFileView };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.CsvData = api;
 })();
