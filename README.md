@@ -28,7 +28,7 @@
 ## Get started
 
 1. Install **CSV Simple Editor** and open a `.csv` or `.tsv` file. The first row supplies the column names.
-2. Double-click a cell to edit. Click a column name to sort; hover over its heading to reveal the filter and column grip.
+2. Double-click a cell to edit. Hover over a heading and use its top or bottom arrow to sort; the filter and column grip appear on the right.
 3. Save with **Ctrl+S** / **Cmd+S**. Use the toolbar to paste data, replace text, export, or change settings.
 
 To choose the editor manually, right-click the file tab → **Reopen Editor With…** → **CSV Simple Editor**. Use **Open as Text** in the editor title bar to return to the source.

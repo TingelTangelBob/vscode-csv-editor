@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.5
+
+- Preserve descenders in column titles with a taller text line box.
+- Restrict header sorting to the top and bottom arrow areas at the cell borders; title clicks select columns and no longer change sorting.
+- Add subtle rounded hover gradients fading inward from each header border, with keyboard focus support.
+- Use the supplied replacement screenshots, retaining originals and adding the README's rounded frame and soft shadow.
+
 ## 1.6.4
 
 - Fix extension-detail screenshots by using public HTTPS URLs instead of data URLs removed by VS Code's Markdown sanitizer.

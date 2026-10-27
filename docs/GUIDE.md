@@ -8,7 +8,7 @@ Use **Ctrl+S / Cmd+S** to save and VS Code's normal Undo command to undo edits. 
 
 ## Sort, filter, and find
 
-Click a column name to sort. Hover over a heading to reveal its filter icon and column grip. Filters combine a case-insensitive text search with checked exact values; multiple column filters work together. Other active filters determine the available choices. **Show more values** expands long lists; searching covers the full list.
+Hover over a heading, then click its top arrow to sort ascending or its bottom arrow to sort descending. Only the small arrow areas sort; clicking the title selects the column. The filter icon and column grip appear on the right. Filters combine a case-insensitive text search with checked exact values; multiple column filters work together. Other active filters determine the available choices. **Show more values** expands long lists; searching covers the full list.
 
 Filter changes apply immediately. Escape closes the popup and keeps your filter. Use **Clear filter**, or clear all filters and sorting from settings. **Ctrl+F / Cmd+F** uses VS Code's Find across table rows.
 

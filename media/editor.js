@@ -328,7 +328,6 @@ let theme = ['system', 'light', 'dark'].includes(vscode.getState()?.theme) ? vsc
 let lastFilename = '';
 let selectedColumn = -1;
 const selectedColumns = new Set();
-let lastSortClick = { column: -1, time: 0 };
 let sortState = null;
 let visibleRows = [];
 let activeColumn = -1;
@@ -757,12 +756,9 @@ function renderHeader() {
     applyColumnColor(th, column);
 
     const layout = createElement('div', 'heading-content');
-    const sortButton = document.createElement('button');
-    sortButton.type = 'button';
-    sortButton.className = 'sort-button';
-    sortButton.dataset.sort = String(column);
-    sortButton.title = `${t('Sort by')} ${header.trim() || `${t('Column')} ${column + 1}`}`;
-    sortButton.setAttribute('aria-label', sortButton.title);
+    const sortButton = document.createElement('span');
+    sortButton.className = 'column-title';
+    sortButton.title = header.trim() || `${t('Column')} ${column + 1}`;
     if (sortState?.column === column) sortButton.classList.add('is-sorted');
     th.setAttribute('aria-sort', sortState?.column === column
       ? (sortState.direction > 0 ? 'ascending' : 'descending')
@@ -776,7 +772,6 @@ function renderHeader() {
       directionButton.dataset.sort = String(column);
       directionButton.dataset.sortDirection = String(direction);
       const isActiveSortDirection = sortState?.column === column && sortState.direction === direction;
-      directionButton.hidden = isActiveSortDirection;
       const arrowIcon = createElement('span', `material-arrow-icon material-arrow-small-${direction > 0 ? 'up' : 'down'}`);
       arrowIcon.setAttribute('aria-hidden', 'true');
       directionButton.append(arrowIcon);
@@ -825,7 +820,7 @@ function positionHeaderIcons() {
   const viewportRight = viewport.left + elements.tableScroll.clientWidth;
   elements.tableHead.querySelectorAll('th[data-column]').forEach((header) => {
     const layout = header.querySelector('.heading-content');
-    const name = header.querySelector('.sort-button > span:first-child');
+    const name = header.querySelector('.column-title > span:first-child');
     const indicators = header.querySelector('.sort-indicators');
     const filter = header.querySelector('.filter-button');
     const moveHandle = header.querySelector('.column-move-handle');
@@ -848,7 +843,7 @@ function positionHeaderIcons() {
     moveHandle.style.right = 'auto';
     layout.style.setProperty('--heading-right-padding', `${Math.max(26, layout.clientWidth - filterLeft + 4)}px`);
     const width = Math.min(name.scrollWidth, name.clientWidth);
-    indicators.style.setProperty('--sort-indicator-left', `${name.offsetLeft + width / 2}px`);
+    indicators.style.setProperty('--sort-indicator-left', `${Math.max(16, Math.min(layout.clientWidth - 16, name.offsetLeft + width / 2))}px`);
   });
 }
 
@@ -1162,7 +1157,7 @@ function recalculateColumnWidths(columns = null) {
   const probe = document.createElement('table');
   probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;top:0;left:0;';
   const th = probe.createTHead().insertRow().appendChild(document.createElement('th'));
-  const button = createElement('button', 'sort-button');
+  const button = createElement('span', 'column-title');
   th.append(button);
   const td = probe.createTBody().insertRow().insertCell();
   td.className = 'data-cell';
@@ -2055,7 +2050,7 @@ elements.table.addEventListener('click', (event) => {
     return;
   }
 
-  const sortButton = event.target.closest('[data-sort]');
+  const sortButton = event.target.closest('.sort-direction[data-sort-direction]');
   if (sortButton) {
     cellSelection = null;
     selectedRows.clear();
@@ -2067,22 +2062,10 @@ elements.table.addEventListener('click', (event) => {
       renderTable();
       return;
     }
-    const now = performance.now();
-    const isDoubleClick = lastSortClick.column === column && now - lastSortClick.time < 450;
-    lastSortClick = { column, time: isDoubleClick ? 0 : now };
-    if (isDoubleClick) {
-      if (sortState?.column === column) sortState = null;
-      selectedColumns.clear();
-      selectedColumn = -1;
-      renderTable();
-      return;
-    }
     selectedColumns.clear();
     selectedColumn = -1;
     const direction = Number(sortButton.dataset.sortDirection);
-    sortState = Number.isFinite(direction) && direction !== 0
-      ? { column, direction }
-      : (sortState?.column === column ? { column, direction: sortState.direction * -1 } : { column, direction: 1 });
+    sortState = { column, direction };
     renderTable();
     return;
   }
@@ -2159,7 +2142,6 @@ elements.table.addEventListener('dblclick', (event) => {
   }
   const heading = event.target.closest('th[data-column]');
   if (heading) {
-    if (!event.target.closest('[data-move-column]') && sortState?.column === Number(heading.dataset.column)) { sortState = null; renderTable(); }
     return;
   }
   const cell = event.target.closest('[data-row-id][data-column]');

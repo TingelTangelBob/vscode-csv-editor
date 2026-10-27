@@ -31,6 +31,8 @@ PDF 1.7 export uses bundled pdf-lib/fontkit and fonts in `media/pdf`, with upstr
 
 ## Screenshots and documentation
 
+Supplied screenshots are retained in `media/screenshots/light.png` and `dark.png`. Run `node scripts/frame-screenshots.cjs`, optionally passing a Playwright module path, to apply the README frame and shadow without recreating the screenshots.
+
 Run `node scripts/capture-screenshots.cjs`, optionally passing a Playwright module path. Captures use the actual editor with a small generated table, bundled fonts and icons, natural widths, and closed menus. Keep both PNGs in `media` and push them before distributing a package that references them.
 
 The editable icon is `media/csv-simple-editor-favicon.svg`; the Marketplace icon is `media/extension-icon.png`. Keep the README focused on installing and using the editor. Detailed usage belongs in the [user guide](GUIDE.md), and technical notes in this file.

@@ -25,13 +25,16 @@ const metadata = require('../package.json');
     await page.setContent(`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https:; style-src 'nonce-preview';">
       <style nonce="preview">body{font:14px/1.6 system-ui;max-width:820px;margin:24px auto;padding:0 16px;color:#24292f}img{max-width:100%;height:auto}table{border-collapse:collapse}td,th{padding:6px 12px;border:1px solid #d0d7de}a{color:#0969da}</style>${html}`);
     assert.equal(await page.locator('img').count(), 2);
+    let index = 0;
     for (const image of await page.locator('img').all()) {
       const dimensions = await image.evaluate(async element => {
         await element.decode();
         return { width: element.naturalWidth, height: element.naturalHeight, protocol: new URL(element.src).protocol };
       });
       assert.equal(dimensions.protocol, 'https:');
-      assert.ok(dimensions.width >= 1000 && dimensions.height >= 400, 'Screenshot did not load correctly.');
+      const expected = fs.readFileSync(path.join(root, 'media', `marketplace-${['light', 'dark'][index++]}.png`));
+      assert.equal(dimensions.width, expected.readUInt32BE(16), 'The public screenshot must match the current supplied image.');
+      assert.equal(dimensions.height, expected.readUInt32BE(20));
     }
     assert.equal(await page.locator('table').count(), 1);
     assert.equal(await page.locator('h2').count(), 4);

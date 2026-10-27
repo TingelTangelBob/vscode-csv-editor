@@ -39,7 +39,7 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   assert.equal(await page.locator('[data-move-column="1"]').isVisible(),false);
   await cell(1,0).hover();
   assert.equal(await page.locator('[data-move-column="0"]').isVisible(),false);
-  await page.locator('th[data-column="0"] .sort-button').focus();
+  await page.locator('th[data-column="0"] .sort-direction').first().focus();
   assert.equal(await page.locator('[data-move-column="0"]').isVisible(),true);
   await page.evaluate(()=>document.activeElement.blur());
   const originalCsv=await page.evaluate(()=>serializeCsv(sheet));
@@ -93,9 +93,10 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   await page.keyboard.press('Control+c');
   assert.equal(await page.evaluate(()=>messages.at(-1).text),'Zoe\t31\tBerlin\nAmy\t22\tBonn\nJoe\t40\tEssen');
   await page.keyboard.press('Escape');
-  await drag(page.locator('[data-sort="0"]').first(),page.locator('[data-sort="2"]').first());
+  await drag(page.locator('th[data-column="0"] .column-title'),page.locator('th[data-column="2"] .column-title'));
   assert.deepEqual(await page.evaluate(()=>[...selectedColumns]),[0,1,2]);
   assert.equal(await page.evaluate(()=>sortState),null);
+  await page.locator('th[data-column="0"]').hover();
   await page.locator('[data-sort="0"]').first().click();
   assert.deepEqual(await page.evaluate(()=>visibleRows.map(r=>r.id)),[2,3,1]);
   await drag(page.locator('[data-row-header="2"]'),page.locator('[data-row-header="3"]'));
@@ -187,26 +188,47 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
     assert.equal(await page.locator('#export-popover').isVisible(),false);
   }
   // Header titles align with cell values; arrows have their own vertical space.
-  await page.evaluate(()=>{responsiveColumns=false;sortState=null;columnWidthOverrides=[180,220,200];renderTable();positionHeaderIcons();elements.tableScroll.scrollLeft=0;elements.tableScroll.scrollTop=0;});
+  await page.evaluate(()=>{responsiveColumns=false;sortState=null;sheet.headers[0]='Region gyp';columnWidthOverrides=[180,220,200];renderTable();positionHeaderIcons();elements.tableScroll.scrollLeft=0;elements.tableScroll.scrollTop=0;});
   const heading=page.locator('th[data-column="0"]');
   await heading.hover();
   const metrics=await heading.evaluate(header=>{
-    const name=header.querySelector('.sort-button > span').getBoundingClientRect();
+    const name=header.querySelector('.column-title > span').getBoundingClientRect();
     const rect=header.getBoundingClientRect();
     const filter=header.querySelector('.filter-button').getBoundingClientRect();
     const grip=header.querySelector('.column-move-handle').getBoundingClientRect();
     const up=header.querySelector('[data-sort-direction="1"]').getBoundingClientRect();
     const down=header.querySelector('[data-sort-direction="-1"]').getBoundingClientRect();
     return {left:name.left-rect.left,filterGap:rect.right-filter.right,upGap:name.top-up.bottom,downGap:down.top-name.bottom,
+      textHeight:name.height,upBorder:up.top-rect.top,downBorder:rect.bottom-down.bottom,
       controlsAligned:Math.abs(grip.left-filter.left)<1 && grip.width===filter.width && grip.height===filter.height,
       topGap:grip.top-rect.top,bottomGap:rect.bottom-filter.bottom,
       sameIconSize:getComputedStyle(header.querySelector('.column-move-handle .codicon')).fontSize===getComputedStyle(header.querySelector('.filter-button .codicon')).fontSize};
   });
   assert.ok(Math.abs(metrics.left-9)<1,JSON.stringify(metrics));
   assert.ok(metrics.filterGap>=5 && metrics.filterGap<=8,JSON.stringify(metrics));
-  assert.ok(metrics.upGap>=3 && metrics.downGap>=3,JSON.stringify(metrics));
+  assert.ok(metrics.upGap>=1 && metrics.downGap>=1,JSON.stringify(metrics));
+  assert.ok(metrics.textHeight>=16 && metrics.upBorder<=1 && metrics.downBorder<=1,JSON.stringify(metrics));
   assert.ok(metrics.controlsAligned && metrics.sameIconSize,JSON.stringify(metrics));
   assert.ok(Math.abs(metrics.topGap-metrics.bottomGap)<=1,JSON.stringify(metrics));
+  await heading.locator('.column-title').click();
+  assert.equal(await page.evaluate(()=>sortState),null);
+  await heading.locator('.sort-direction[data-sort-direction="1"]').hover();
+  assert.ok(await heading.locator('.sort-direction[data-sort-direction="1"]').evaluate(element =>
+    getComputedStyle(element).backgroundImage.includes('linear-gradient')));
+  await heading.locator('.sort-direction[data-sort-direction="1"]').click();
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
+  await heading.locator('.column-title').dblclick();
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
+  await heading.click({position:{x:120,y:3}});
+  await heading.click({position:{x:120,y:39}});
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
+  await heading.locator('.sort-direction[data-sort-direction="-1"]').click();
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:-1});
+  await heading.locator('.sort-direction[data-sort-direction="-1"]').dblclick();
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:-1});
+  await heading.locator('.sort-direction[data-sort-direction="1"]').focus();
+  await page.keyboard.press('Enter');
+  assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
   if(process.env.CSV_EDITOR_HEADER_ARTIFACT) {
     await page.evaluate(()=>document.fonts.ready);
     await page.locator('thead').screenshot({path:process.env.CSV_EDITOR_HEADER_ARTIFACT});
@@ -219,7 +241,7 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   // Wide columns keep the filter close to their title, then visible after scrolling.
   await page.evaluate(()=>{columnWidthOverrides=[1400,180,180];renderTable();elements.tableScroll.scrollLeft=0;positionHeaderIcons();});
   assert.ok(await heading.evaluate(header=>{
-    const name=header.querySelector('.sort-button > span').getBoundingClientRect();
+    const name=header.querySelector('.column-title > span').getBoundingClientRect();
     return header.querySelector('.filter-button').getBoundingClientRect().left-name.right<12;
   }));
   await page.evaluate(()=>{elements.tableScroll.scrollLeft=500;positionHeaderIcons();});

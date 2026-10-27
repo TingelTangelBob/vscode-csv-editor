@@ -40,7 +40,7 @@ svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColo
 .tool-group { display: flex; align-items: center; gap: 2px; }
 .tool-button { position: relative; display: inline-grid; flex: none; place-items: center; width: 32px; height: 30px; padding: 0; border: 0; border-radius: 4px; outline: 0; background: transparent; color: var(--muted); }
 .tool-button:hover:not(:disabled), .tool-button[aria-expanded="true"] { background: var(--hover); color: var(--foreground); }
-.tool-button:focus-visible, .header-button:focus-visible, .sort-button:focus-visible, .menu-action:focus-visible, .dialog-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.tool-button:focus-visible, .header-button:focus-visible, .sort-direction:focus-visible, .menu-action:focus-visible, .dialog-button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 .tool-button > .codicon { font-size: 16px; }
 .table-add-icon { width: 16px; height: 16px; stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; }
 .replace-values-icon { width: 16px; height: 16px; fill: currentColor; stroke: none; stroke-width: 0; }
@@ -63,25 +63,30 @@ thead th:first-child { position: sticky; left: 0; z-index: 4; }
 .row-number-head input, .row-number-cell input { width: 12px; height: 12px; margin: 0; accent-color: var(--accent); }
 .row-number-head input { position: absolute; top: 50%; left: 50%; opacity: .7; transform: translate(-50%, -50%); }
 .heading-content { position: relative; width: 100%; min-width: 0; height: 42px; }
-.sort-button { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; overflow: hidden; padding: 0 var(--heading-right-padding, 26px) 0 6px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; line-height: 1; text-align: left; white-space: nowrap; }
-.sort-button:hover, .sort-button.is-sorted { color: var(--foreground); }
+.column-title { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; overflow: hidden; padding: 0 var(--heading-right-padding, 26px) 0 6px; border: 0; border-radius: 3px; outline: 0; background: transparent; color: inherit; font-size: 11px; font-weight: 600; line-height: 16px; text-align: left; white-space: nowrap; }
+.column-title:hover, .column-title.is-sorted { color: var(--foreground); }
 .column-move-handle { position: absolute; top: 2px; right: 6px; z-index: 2; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: var(--muted); cursor: grab; visibility: hidden; }
 .column-move-handle > .codicon { font-size: 12px; }
 th[data-column]:hover .column-move-handle, th[data-column]:focus-within .column-move-handle { visibility: visible; }
 .column-move-handle:hover, .column-move-handle:focus-visible { color: var(--accent); background: var(--hover); }
 .column-move-handle:active { cursor: grabbing; }
 thead th.is-column-drop-target { outline: 2px solid var(--accent); outline-offset: -2px; }
-.sort-button > span:first-child { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sort-indicators { position: absolute; top: 1px; bottom: 1px; left: var(--sort-indicator-left, 50%); width: 18px; visibility: hidden; pointer-events: none; transform: translateX(-50%); }
-.sort-direction { position: absolute; left: 0; display: grid; width: 18px; height: 11px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; }
-.sort-direction[data-sort-direction="1"] { top: 0; }
-.sort-direction[data-sort-direction="-1"] { bottom: 0; }
+.column-title > span:first-child { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sort-indicators { position: absolute; top: 0; bottom: 0; left: var(--sort-indicator-left, 50%); width: 32px; opacity: 0; pointer-events: none; transform: translateX(-50%); }
+.sort-direction { position: absolute; left: 0; display: grid; width: 32px; height: 12px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; cursor: pointer; }
+.sort-direction[data-sort-direction="1"] { top: 0; border-radius: 0 0 15px 15px; }
+.sort-direction[data-sort-direction="-1"] { bottom: 0; border-radius: 15px 15px 0 0; }
+.sort-direction:hover, .sort-direction:focus-visible { color: var(--accent); outline-offset: -2px; }
+.sort-direction[data-sort-direction="1"]:is(:hover, :focus-visible) { background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
+.sort-direction[data-sort-direction="-1"]:is(:hover, :focus-visible) { background: linear-gradient(to top, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
 .sort-direction[hidden] { display: none; }
 .sort-direction > .material-arrow-icon { font-family: material-product-icons; font-size: 12px; font-style: normal; line-height: 1; }
+.sort-direction[data-sort-direction="1"] > .material-arrow-icon { transform: translateY(-2px); }
+.sort-direction[data-sort-direction="-1"] > .material-arrow-icon { transform: translateY(2px); }
 .material-arrow-small-down::before { content: "\EA8E"; }
 .material-arrow-small-up::before { content: "\EA90"; }
 .sort-direction[aria-pressed="true"] { color: var(--accent); }
-th[data-column]:hover .sort-indicators, th[data-column]:focus-within .sort-indicators, th[data-column][aria-sort="ascending"] .sort-indicators, th[data-column][aria-sort="descending"] .sort-indicators { visibility: visible; }
+th[data-column]:hover .sort-indicators, th[data-column]:focus-within .sort-indicators, th[data-column][aria-sort="ascending"] .sort-indicators, th[data-column][aria-sort="descending"] .sort-indicators { opacity: 1; }
 .header-button { display: inline-grid; flex: none; place-items: center; width: 21px; height: 22px; padding: 0; border: 0; border-radius: 3px; outline: 0; background: transparent; color: var(--muted); }
 .header-button:hover, .header-button.is-active { color: var(--accent); background: var(--hover); }
 .header-button > .codicon { font-size: 12px; }
