@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.7
+
+- Show more of each column title when its filter and move controls are hidden, while reserving space when those controls are visible.
+- Reposition sort arrows when heading controls appear or disappear, including for keyboard focus and active filters.
+
 ## 1.6.6
 
 - Optionally remember manual column widths, filters, and sorting for an individual file in local VS Code storage.

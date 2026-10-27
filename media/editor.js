@@ -901,6 +901,17 @@ function positionHeaderIcons() {
   });
 }
 
+// Heading width changes when controls appear on hover or keyboard focus.
+// Recenter the arrows after that layout change without rerendering the table.
+function repositionOnHeadingChange(event) {
+  const heading = event.target.closest('th[data-column]');
+  if (!heading || heading.contains(event.relatedTarget)) return;
+  requestAnimationFrame(positionHeaderIcons);
+}
+for (const type of ['pointerover', 'pointerout', 'focusin', 'focusout']) {
+  elements.tableHead.addEventListener(type, repositionOnHeadingChange);
+}
+
 function renderBody() {
   const fragment = document.createDocumentFragment();
 

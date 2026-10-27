@@ -250,6 +250,32 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
     const numbers=document.querySelector('.row-number-head').getBoundingClientRect();
     return filter.left>=numbers.right && filter.right<window.innerWidth;
   }));
+  // A narrow heading uses all available space until its right-hand controls appear.
+  await page.mouse.move(1,1);
+  await page.evaluate(()=>{
+    document.activeElement.blur();
+    sheet.headers[0]='Enabled'; columnFilters=[null,null,null]; sortState=null;
+    columnWidthOverrides=[70,220,200]; elements.tableScroll.scrollLeft=0; renderTable(); positionHeaderIcons();
+  });
+  const titleFits = () => heading.locator('.column-title > span').evaluate(element => element.scrollWidth <= element.clientWidth);
+  assert.equal(await titleFits(),true,'The unhovered heading should use the space occupied by hidden controls.');
+  await heading.hover();
+  assert.equal(await titleFits(),false,'The hovered heading should make room for visible controls.');
+  assert.equal(await heading.locator('.filter-button').isVisible(),true);
+  await page.mouse.move(1,1);
+  assert.equal(await titleFits(),true,'The full title should return when the pointer leaves.');
+  await heading.locator('.sort-direction').first().focus();
+  assert.equal(await titleFits(),false,'Keyboard focus should reserve space for visible controls.');
+  await page.evaluate(()=>document.activeElement.blur());
+  assert.equal(await titleFits(),true);
+  await page.evaluate(()=>{columnFilters[0]={query:'x',values:null};renderTable();positionHeaderIcons();});
+  assert.equal(await heading.locator('.filter-button').isVisible(),true);
+  assert.equal(await titleFits(),false,'An active filter remains visible outside hover.');
+  await page.evaluate(()=>document.body.classList.add('is-resizing-column'));
+  assert.equal(await titleFits(),true,'Hidden controls must not reserve space during resizing.');
+  await page.evaluate(()=>{document.body.classList.remove('is-resizing-column');columnFilters[0]=null;renderTable();document.body.classList.add('vscode-high-contrast');positionHeaderIcons();});
+  assert.equal(await titleFits(),false,'High contrast mode keeps the filter control visible.');
+  await page.evaluate(()=>document.body.classList.remove('vscode-high-contrast'));
   assert.deepEqual(errors,[]);
   // Reopen a small file in a fresh webview with the state the extension saved.
   async function openRememberedView(text, fileView = null, canRememberFileView = true) {
