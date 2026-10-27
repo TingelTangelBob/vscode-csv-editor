@@ -214,7 +214,9 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   assert.equal(await page.evaluate(()=>sortState),null);
   await heading.locator('.sort-direction[data-sort-direction="1"]').hover();
   assert.ok(await heading.locator('.sort-direction[data-sort-direction="1"]').evaluate(element =>
-    getComputedStyle(element).backgroundImage.includes('linear-gradient')));
+    getComputedStyle(element, '::before').backgroundImage.includes('linear-gradient') &&
+    getComputedStyle(element, '::before').opacity === '1'));
+  if(process.env.CSV_EDITOR_SORT_PREVIEW_DIR) await page.locator('thead').screenshot({path:require('node:path').join(process.env.CSV_EDITOR_SORT_PREVIEW_DIR,'csv-sort-up-preview.png')});
   await heading.locator('.sort-direction[data-sort-direction="1"]').click();
   assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
   await heading.locator('.column-title').dblclick();
@@ -222,6 +224,10 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   await heading.click({position:{x:120,y:3}});
   await heading.click({position:{x:120,y:39}});
   assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:1});
+  await heading.locator('.sort-direction[data-sort-direction="-1"]').hover();
+  assert.ok(await heading.locator('.sort-direction[data-sort-direction="-1"]').evaluate(element =>
+    getComputedStyle(element, '::before').opacity === '1'));
+  if(process.env.CSV_EDITOR_SORT_PREVIEW_DIR) await page.locator('thead').screenshot({path:require('node:path').join(process.env.CSV_EDITOR_SORT_PREVIEW_DIR,'csv-sort-down-preview.png')});
   await heading.locator('.sort-direction[data-sort-direction="-1"]').click();
   assert.deepEqual(await page.evaluate(()=>sortState),{column:0,direction:-1});
   await heading.locator('.sort-direction[data-sort-direction="-1"]').dblclick();

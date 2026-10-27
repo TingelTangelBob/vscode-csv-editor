@@ -78,13 +78,15 @@ thead th.is-column-drop-target { outline: 2px solid var(--accent); outline-offse
 .column-title > span:first-child { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sort-indicators { position: absolute; top: 0; bottom: 0; left: var(--sort-indicator-left, 50%); width: 32px; opacity: 0; pointer-events: none; transform: translateX(-50%); }
 .sort-direction { position: absolute; left: 0; display: grid; width: 32px; height: 12px; place-items: center; padding: 0; border: 0; background: transparent; color: var(--muted); pointer-events: auto; cursor: pointer; }
-.sort-direction[data-sort-direction="1"] { top: 0; border-radius: 0 0 15px 15px; }
-.sort-direction[data-sort-direction="-1"] { bottom: 0; border-radius: 15px 15px 0 0; }
+.sort-direction[data-sort-direction="1"] { top: 0; }
+.sort-direction[data-sort-direction="-1"] { bottom: 0; }
 .sort-direction:hover, .sort-direction:focus-visible { color: var(--accent); outline-offset: -2px; }
-.sort-direction[data-sort-direction="1"]:is(:hover, :focus-visible) { background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
-.sort-direction[data-sort-direction="-1"]:is(:hover, :focus-visible) { background: linear-gradient(to top, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
+.sort-direction::before { content: ''; position: absolute; inset: 0; opacity: 0; pointer-events: none; -webkit-mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent); mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent); }
+.sort-direction[data-sort-direction="1"]::before { background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 18%, transparent), transparent); }
+.sort-direction[data-sort-direction="-1"]::before { background: linear-gradient(to top, color-mix(in srgb, var(--accent) 18%, transparent), transparent); }
+.sort-direction:is(:hover, :focus-visible)::before { opacity: 1; }
 .sort-direction[hidden] { display: none; }
-.sort-direction > .material-arrow-icon { font-family: material-product-icons; font-size: 12px; font-style: normal; line-height: 1; }
+.sort-direction > .material-arrow-icon { position: relative; font-family: material-product-icons; font-size: 12px; font-style: normal; line-height: 1; }
 .sort-direction[data-sort-direction="1"] > .material-arrow-icon { transform: translateY(-2px); }
 .sort-direction[data-sort-direction="-1"] > .material-arrow-icon { transform: translateY(2px); }
 .material-arrow-small-down::before { content: "\EA8E"; }

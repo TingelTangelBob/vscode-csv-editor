@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.8
+
+- Refine sort-arrow hover and focus feedback with a subtle edge-to-center fade and softly fading sides.
+
 ## 1.6.7
 
 - Show more of each column title when its filter and move controls are hidden, while reserving space when those controls are visible.
