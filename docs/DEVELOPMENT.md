@@ -11,6 +11,8 @@ npm run package
 
 The package script builds `csv-simple-editor-<version>.vsix` on Windows. It includes runtime assets and licenses, and uses HTTPS screenshot URLs in the packaged README. Local links to documentation are rewritten to their GitHub pages. Screenshots need an internet connection; the editor and exports do not.
 
+Before tagging a release, add a nonempty `## <version>` section to `CHANGELOG.md` and set the same version in `package.json`. The tag-triggered GitHub workflow publishes that section and any unreleased sections since the preceding published release. A missing or empty changelog section stops the release instead of publishing incomplete notes.
+
 If child processes are restricted, run `node --test --test-isolation=none`.
 
 ## Optional browser checks

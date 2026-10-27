@@ -2,7 +2,7 @@
   "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
   "description": "CSV and TSV table editor for VS Code. View, edit, sort, filter and import data; export CSV or searchable PDF. Works offline.",
-  "version": "1.6.8",
+  "version": "1.6.9",
   "publisher": "tingeltangelbob",
   "repository": {
     "type": "git",

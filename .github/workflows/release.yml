@@ -33,4 +33,12 @@ jobs:
           if ($env:GITHUB_REF_NAME -ne $expectedTag) { throw "Tag $env:GITHUB_REF_NAME does not match package version $($package.version)." }
           $vsixFile = "$($package.name)-$($package.version).vsix"
           if (-not (Test-Path -LiteralPath $vsixFile)) { throw "Missing package file: $vsixFile" }
-          gh release create $env:GITHUB_REF_NAME $vsixFile --generate-notes
+          $releaseList = Join-Path $env:RUNNER_TEMP 'csv-editor-releases.json'
+          $releaseNotes = Join-Path $env:RUNNER_TEMP 'csv-editor-release-notes.md'
+          $releaseJson = gh release list --limit 1000 --json tagName,isDraft
+          if ($LASTEXITCODE -ne 0) { throw 'Could not list previous releases.' }
+          [System.IO.File]::WriteAllText($releaseList, ($releaseJson -join "`n"), [System.Text.UTF8Encoding]::new($false))
+          node scripts/release-notes.cjs $package.version $releaseList $releaseNotes
+          if ($LASTEXITCODE -ne 0) { throw 'Could not prepare release notes from CHANGELOG.md.' }
+          gh release create $env:GITHUB_REF_NAME $vsixFile --verify-tag --notes-file $releaseNotes
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create the GitHub release.' }

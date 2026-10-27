@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.9
+
+- Publish GitHub release notes from the matching changelog sections, including versions since the preceding published release.
+
 ## 1.6.8
 
 - Refine sort-arrow hover and focus feedback with a subtle edge-to-center fade and softly fading sides.
