@@ -251,23 +251,68 @@
   }
 
   function isColumnFilterActive(filter) {
-    return Boolean(filter && (filter.query?.trim() || filter.values instanceof Set));
+    return Boolean(filter && (filter.query?.trim() || filter.values instanceof Set || filter.dateRange));
   }
 
   function filterRows(rows, filters, exceptColumn = -1) {
     const active = [];
     filters.forEach((filter, column) => {
-      if (column !== exceptColumn && isColumnFilterActive(filter)) {
-        active.push({ column, query: (filter.query || '').trim().toLocaleLowerCase(), values: filter.values });
-      }
+      if (column === exceptColumn || !isColumnFilterActive(filter)) return;
+      const range = filter.dateRange;
+      const format = range?.format || 'auto';
+      const min = range?.min ? parseDateTime(String(range.min), 'iso') : null;
+      const max = range?.max ? parseDateTime(String(range.max), 'iso') : null;
+      active.push({ column, query: (filter.query || '').trim().toLocaleLowerCase(), values: filter.values,
+        dateRange: range ? { valid: isValidDateRange(range), format, min, max } : null });
     });
     if (!active.length) return rows;
-    return rows.filter(row => active.every(({ column, query, values }) => {
+    return rows.filter(row => active.every(({ column, query, values, dateRange }) => {
       const value = String(row.cells[column] ?? '');
-      return (!query || value.toLocaleLowerCase().includes(query)) && (!(values instanceof Set) || values.has(value));
+      if (query && !value.toLocaleLowerCase().includes(query)) return false;
+      if (values instanceof Set && !values.has(value)) return false;
+      if (dateRange) {
+        if (!dateRange.valid) return false;
+        const time = parseDateTime(value, dateRange.format);
+        if (time === null || (dateRange.min !== null && time < dateRange.min) ||
+          (dateRange.max !== null && time >= dateRange.max + 86400000)) return false;
+      }
+      return true;
     }));
   }
 
+  const dateTimeSuffix = String.raw`(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?)?`;
+  const datePatterns = {
+    iso: new RegExp(String.raw`^(\d{4})-(\d{2})-(\d{2})${dateTimeSuffix}$`),
+    de: new RegExp(String.raw`^(\d{2})\.(\d{2})\.(\d{4})${dateTimeSuffix}$`),
+    slash: new RegExp(String.raw`^(\d{1,2})/(\d{1,2})/(\d{4})${dateTimeSuffix}$`),
+  };
+
+  function parseDateTime(value, format = 'auto') {
+    if (typeof value !== 'string') return null;
+    const text=value.trim(); let year,month,day,hour=0,minute=0,second=0,ms=0,offset=0,match;
+    if(format==='auto'||format==='iso'){
+      match=datePatterns.iso.exec(text);
+      if(match){year=+match[1];month=+match[2];day=+match[3];hour=+(match[4]||0);minute=+(match[5]||0);second=+(match[6]||0);ms=+(match[7]||'').padEnd(3,'0');
+      } else if(format==='iso') return null;
+    }
+    if(!match&&(format==='auto'||format==='de')){match=datePatterns.de.exec(text);if(match){day=+match[1];month=+match[2];year=+match[3];hour=+(match[4]||0);minute=+(match[5]||0);second=+(match[6]||0);ms=+(match[7]||'').padEnd(3,'0');}else if(format==='de')return null;}
+    if(!match&&(format==='slash-dmy'||format==='slash-mdy')){match=datePatterns.slash.exec(text);if(match){if(format==='slash-dmy'){day=+match[1];month=+match[2];}else{month=+match[1];day=+match[2];}year=+match[3];hour=+(match[4]||0);minute=+(match[5]||0);second=+(match[6]||0);ms=+(match[7]||'').padEnd(3,'0');}}
+    if (match?.[8] && match[8] !== 'Z') {
+      const sign = match[8][0] === '+' ? 1 : -1;
+      const hours = +match[8].slice(1, 3), minutes = +match[8].slice(4, 6);
+      if (hours > 14 || minutes > 59 || (hours === 14 && minutes !== 0)) return null;
+      offset = sign * (hours * 60 + minutes);
+    }
+    const leap=year%4===0&&(year%100!==0||year%400===0),days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+    if(!match||year<1||month<1||month>12||day<1||day>days[month-1]||hour>23||minute>59||second>59)return null;
+    const date=new Date(0);date.setUTCFullYear(year,month-1,day);date.setUTCHours(hour,minute,second,ms);return date.getTime()-offset*60000;
+  }
+  function isValidDateRange(range){
+    if(!range||typeof range!=='object'||!['auto','iso','de','slash-dmy','slash-mdy'].includes(range.format||'auto'))return false;
+    const min=range.min?parseDateTime(String(range.min),'iso'):null,max=range.max?parseDateTime(String(range.max),'iso'):null;
+    const valid=value=>!value||(/^\d{4}-\d{2}-\d{2}$/.test(String(value))&&parseDateTime(String(value),'iso')!==null);
+    return valid(range.min)&&valid(range.max)&&(min===null||max===null||min<=max);
+  }
   function getColumnFilterValues(rows, filters, column) {
     const counts = new Map();
     for (const row of filterRows(rows, filters, column)) {
@@ -287,6 +332,7 @@
       const filter = column.filter && typeof column.filter === 'object' ? {
         query: typeof column.filter.query === 'string' ? column.filter.query : '',
         values: Array.isArray(column.filter.values) ? [...new Set(column.filter.values.filter(value => typeof value === 'string'))] : null,
+        ...(isValidDateRange(column.filter.dateRange) ? { dateRange: { format: column.filter.dateRange.format || 'auto', min: column.filter.dateRange.min || null, max: column.filter.dateRange.max || null } } : {}),
       } : null;
       return { name: column.name, width, filter };
     });
@@ -302,7 +348,7 @@
       columns: headers.map((name, index) => ({
         name, width: widths[index],
         filter: filters[index] ? { query: filters[index].query || '',
-          values: filters[index].values instanceof Set ? [...filters[index].values] : null } : null,
+          values: filters[index].values instanceof Set ? [...filters[index].values] : null, ...(filters[index].dateRange ? { dateRange: filters[index].dateRange } : {}) } : null,
       })),
       sort: sortState && headers[sortState.column] !== undefined
         ? { name: headers[sortState.column], direction: sortState.direction } : null,
@@ -323,7 +369,7 @@
       const column = savedByName.get(name);
       widths[index] = column.width;
       if (column.filter) filters[index] = { query: column.filter.query,
-        values: column.filter.values === null ? null : new Set(column.filter.values) };
+        values: column.filter.values === null ? null : new Set(column.filter.values), ...(column.filter.dateRange ? { dateRange: column.filter.dateRange } : {}) };
     });
     const sortColumn = saved.sort ? headers.indexOf(saved.sort.name) : -1;
     const sort = sortColumn >= 0 && currentCounts.get(saved.sort.name) === 1 && savedCounts.get(saved.sort.name) === 1
@@ -332,7 +378,7 @@
   }
 
   const api = { createEmptySheet, parseCsv, escapeCell, serializeCsv, planCsvImport,
-    isColumnFilterActive, filterRows, getColumnFilterValues, normalizeFileView, captureFileView, restoreFileView };
+    isColumnFilterActive, filterRows, getColumnFilterValues, parseDateTime, isValidDateRange, normalizeFileView, captureFileView, restoreFileView };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.CsvData = api;
 })();

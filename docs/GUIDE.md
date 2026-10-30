@@ -10,7 +10,7 @@ Use **Ctrl+S / Cmd+S** to save and VS Code's normal Undo command to undo edits. 
 
 Hover over a heading, then click its top arrow to sort ascending or its bottom arrow to sort descending. Only the small arrow areas sort; clicking the title selects the column. The filter icon and column grip appear on the right. Filters combine a case-insensitive text search with checked exact values; multiple column filters work together. Other active filters determine the available choices. **Show more values** expands long lists; searching covers the full list.
 
-Filter changes apply immediately. Escape closes the popup and keeps your filter. Use **Clear filter**, or clear all filters and sorting from settings. **Ctrl+F / Cmd+F** uses VS Code's Find across table rows.
+Text and value filter changes apply immediately. In **Date filter**, choose a format and inclusive start and/or end dates, then select **Apply date filter**. Automatic detection supports strict ISO dates and DD.MM.YYYY; choose DD/MM/YYYY or MM/DD/YYYY explicitly for slash dates. Values that do not match the selected format, including blanks, are excluded while a date range is active. Times and offsets are compared in UTC; values without a time zone are treated as UTC. Clear both dates and apply to remove only the date range. Escape closes the popup and keeps your filter. Use **Clear filter**, or clear all filters and sorting from settings. **Ctrl+F / Cmd+F** uses VS Code's Find across table rows.
 
 ## Select, edit, and move
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.11
+
+- Filter dates and times by an inclusive date range, with strict ISO and German date detection and explicit day/month or month/day selection for slash dates.
+- Apply column context-menu actions to selected columns, including copy, resize, move, deselect and delete.
+
 ## 1.6.10
 
 - Subtly highlight the rows and columns intersecting a selected cell range, including their headings.

@@ -2,7 +2,7 @@
 
 const vscode = acquireVsCodeApi();
 const { createEmptySheet, parseCsv, escapeCell, serializeCsv, planCsvImport,
-  isColumnFilterActive, filterRows, getColumnFilterValues, normalizeFileView, captureFileView, restoreFileView } = CsvData;
+  parseDateTime, isValidDateRange, isColumnFilterActive, filterRows, getColumnFilterValues, normalizeFileView, captureFileView, restoreFileView } = CsvData;
 const csvWorkerSourceUri = document.currentScript?.dataset.csvWorkerSrc;
 const WORKER_PARSE_THRESHOLD = 256 * 1024;
 let csvWorkerPromise = null;
@@ -218,6 +218,17 @@ Object.assign(TRANSLATIONS['pt-br'], { 'Remember view for this file': 'Lembrar v
 Object.assign(TRANSLATIONS.ru, { 'Remember view for this file': 'Запомнить вид этого файла', 'Reset saved view': 'Сбросить сохранённый вид' });
 Object.assign(TRANSLATIONS.ko, { 'Remember view for this file': '이 파일의 보기 기억', 'Reset saved view': '저장된 보기 초기화' });
 Object.assign(TRANSLATIONS.it, { 'Remember view for this file': 'Ricorda vista per questo file', 'Reset saved view': 'Ripristina vista salvata' });
+Object.assign(TRANSLATIONS.de, { 'Deselect columns': 'Spalten abwählen', 'Fit columns to contents': 'Spaltenbreite an Inhalt anpassen', 'Copy visible columns (with headers)': 'Sichtbare Spalten samt Kopfzeile kopieren', 'Move columns left': 'Spalten nach links verschieben', 'Move columns right': 'Spalten nach rechts verschieben', 'Delete columns': 'Spalten löschen', 'Delete selected columns and all their values?': 'Ausgewählte Spalten und alle ihre Werte löschen?' });
+Object.assign(TRANSLATIONS.de, {
+  'Date filter': 'Datumsfilter', 'Date format': 'Datumsformat',
+  'Automatic (ISO and DD.MM.YYYY)': 'Automatisch (ISO und TT.MM.JJJJ)',
+  'From (inclusive)': 'Von (einschlie\u00dflich)', 'To (inclusive)': 'Bis (einschlie\u00dflich)',
+  'Apply date filter': 'Datumsfilter anwenden',
+  'Invalid date range': 'Ung\u00fcltiger Datumsbereich: Das Anfangsdatum muss vor dem Enddatum liegen.',
+  'Recognized values': 'Erkannte Werte',
+  'Dates and times are compared in UTC; values without a time zone are treated as UTC.': 'Datum und Uhrzeit werden in UTC verglichen; Werte ohne Zeitzone gelten als UTC.',
+  'Other values are excluded while a date filter is active. Slash dates require an explicit format.': 'Andere Werte werden bei aktivem Datumsfilter ausgeschlossen. F\u00fcr Datumsangaben mit Schr\u00e4gstrich bitte das Format ausw\u00e4hlen.',
+});
 const LOCALES = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', ja: 'ja-JP', 'zh-cn': 'zh-CN', 'pt-br': 'pt-BR', ru: 'ru-RU', ko: 'ko-KR', it: 'it-IT' };
 const savedState = vscode.getState() ?? {};
 const browserLanguage = navigator.language.toLowerCase();
@@ -286,6 +297,12 @@ const elements = {
   filterSelectAllLabel: document.getElementById('filter-select-all-label'),
   filterValues: document.getElementById('filter-values'),
   filterMore: document.getElementById('filter-more'),
+  dateFilter: document.getElementById('date-filter'),
+  dateFormat: document.getElementById('date-filter-format'),
+  dateMin: document.getElementById('date-filter-min'),
+  dateMax: document.getElementById('date-filter-max'),
+  dateStatus: document.getElementById('date-filter-status'),
+  dateApply: document.getElementById('date-filter-apply'),
   filterSelectionStatus: document.getElementById('filter-selection-status'),
   contextPopover: document.getElementById('context-popover'),
   contextCaption: document.getElementById('context-caption'),
@@ -1147,6 +1164,10 @@ function moveColumn(from, to) {
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < 0 || from >= count || to >= count || from === to) return;
   const order = Array.from({ length: count }, (_, index) => index);
   order.splice(to, 0, order.splice(from, 1)[0]);
+  applyColumnOrder(order);
+}
+
+function applyColumnOrder(order) {
   const reorder = (values) => order.map((index) => values[index]);
   sheet.headers = reorder(sheet.headers);
   sheet.rows.forEach((row) => { row.cells = reorder(row.cells).map((value) => value ?? ''); });
@@ -1634,12 +1655,17 @@ function openFilterPopover(column, anchor) {
   elements.filterLabel.textContent = `${t('Filter column')}: ${sheet.headers[column]?.trim() || `${t('Column')} ${column + 1}`}`;
   const current = columnFilters[column];
   elements.filterInput.value = current?.query || '';
+  elements.dateFormat.value = current?.dateRange?.format || 'auto';
+  elements.dateMin.value = current?.dateRange?.min || '';
+  elements.dateMax.value = current?.dateRange?.max || '';
+  elements.dateFilter.open = Boolean(current?.dateRange);
   filterGlobalValues = new Set(sheet.rows.map(row => String(row.cells[column] ?? '')));
   filterDraft = new Set(current?.values instanceof Set ? current.values : filterGlobalValues);
   filterOptions = getColumnFilterValues(sheet.rows, columnFilters, column)
     .sort((a, b) => (a.value === '' ? -1 : b.value === '' ? 1 : collator.compare(a.value, b.value)));
   elements.filterPopover.querySelector('[data-action="clear-column-filter"]').disabled = !isColumnFilterActive(current);
   renderFilterValues();
+  updateDateFilterStatus();
   positionPopover(elements.filterPopover, anchor);
   anchor.setAttribute('aria-expanded', 'true');
   elements.filterInput.focus();
@@ -1659,7 +1685,7 @@ function applyFilterSelection() {
   if (!filterDraft || activeColumn < 0) return;
   const query = elements.filterInput.value.trim();
   const allSelected = [...filterGlobalValues].every(value => filterDraft.has(value));
-  const filter = { query, values: allSelected ? null : new Set(filterDraft) };
+  const filter = { query, values: allSelected ? null : new Set(filterDraft), dateRange: columnFilters[activeColumn]?.dateRange || null };
   columnFilters[activeColumn] = isColumnFilterActive(filter) ? filter : null;
   elements.filterPopover.querySelector('[data-action="clear-column-filter"]').disabled = !isColumnFilterActive(filter);
   renderTable();
@@ -1719,6 +1745,46 @@ elements.filterSelectAll.addEventListener('change', () => {
 });
 elements.filterMore.addEventListener('click', appendFilterValues);
 
+function updateDateFilterStatus() {
+  const values = [...filterGlobalValues].filter(value => value.trim());
+  const recognized = values.filter(value => parseDateTime(value, elements.dateFormat.value) !== null).length;
+  elements.dateStatus.textContent = `${t('Recognized values')}: ${recognized}/${values.length}. ${t('Other values are excluded while a date filter is active. Slash dates require an explicit format.')} ${t('Dates and times are compared in UTC; values without a time zone are treated as UTC.')}`;
+}
+
+elements.dateFormat.addEventListener('change', updateDateFilterStatus);
+elements.dateApply.addEventListener('click', () => {
+  if (activeColumn < 0 || !filterDraft) return;
+  const min = elements.dateMin.value || null;
+  const max = elements.dateMax.value || null;
+  const dateRange = min || max ? { format: elements.dateFormat.value, min, max } : null;
+  if (dateRange && !isValidDateRange(dateRange)) {
+    elements.dateStatus.textContent = t('Invalid date range');
+    return;
+  }
+  const current = columnFilters[activeColumn] || { query: '', values: null };
+  columnFilters[activeColumn] = { ...current, dateRange };
+  updateDateFilterStatus();
+  applyFilterSelection();
+});
+
+
+function contextColumns(column) {
+  return selectedColumns.has(column) ? [...selectedColumns].sort((a, b) => a - b) : [column];
+}
+
+function moveContextColumns(column, direction) {
+  const columns = contextColumns(column);
+  if (columns[0] === 0 && direction < 0 || columns[columns.length - 1] === sheet.headers.length - 1 && direction > 0) return;
+  const order = Array.from({ length: sheet.headers.length }, (_, index) => index);
+  const moving = new Set(columns);
+  const indices = direction < 0 ? columns : [...columns].reverse();
+  for (const index of indices) {
+    const neighbor = index + direction;
+    if (!moving.has(order[neighbor])) [order[index], order[neighbor]] = [order[neighbor], order[index]];
+  }
+  applyColumnOrder(order);
+}
+
 function openContextPopover(column, rowId, kind, clientX, clientY) {
   closePopovers();
   activePopover = elements.contextPopover;
@@ -1743,12 +1809,25 @@ function openContextPopover(column, rowId, kind, clientX, clientY) {
   const filterValueButton = elements.contextPopover.querySelector('[data-action="filter-value"]');
   filterValueButton.disabled = !row;
   const deleteButton = elements.contextPopover.querySelector('[data-action="delete-column"]');
-  deleteButton.disabled = sheet.headers.length <= 1;
-  elements.contextPopover.querySelector('[data-action="move-column-left"]').disabled = column <= 0;
-  elements.contextPopover.querySelector('[data-action="move-column-right"]').disabled = column < 0 || column >= sheet.headers.length - 1;
+  const columns = contextColumns(column);
+  const multiple = columns.length > 1;
+  deleteButton.disabled = columns.length >= sheet.headers.length;
+  elements.contextPopover.querySelector('[data-action="move-column-left"]').disabled = column < 0 || columns[0] === 0;
+  elements.contextPopover.querySelector('[data-action="move-column-right"]').disabled = column < 0 || columns[columns.length - 1] === sheet.headers.length - 1;
+  for (const [action, single, plural] of [
+    ['fit-column-width', 'Fit column to contents', 'Fit columns to contents'],
+    ['copy-column-list', 'Copy visible column as list (with header)', 'Copy visible columns (with headers)'],
+    ['move-column-left', 'Move column left', 'Move columns left'],
+    ['move-column-right', 'Move column right', 'Move columns right'],
+    ['delete-column', 'Delete column', 'Delete columns']
+  ]) {
+    const label = elements.contextPopover.querySelector(`[data-action="${action}"] [data-i18n]`);
+    label.dataset.i18n = multiple ? plural : single;
+    label.textContent = t(label.dataset.i18n);
+  }
   const selectColumnButton = elements.contextPopover.querySelector('[data-action="select-column"]');
   const selectColumnLabel = selectColumnButton.querySelector('[data-i18n]');
-  selectColumnLabel.dataset.i18n = selectedColumns.has(column) ? 'Deselect column' : 'Select column';
+  selectColumnLabel.dataset.i18n = selectedColumns.has(column) ? (multiple ? 'Deselect columns' : 'Deselect column') : 'Select column';
   selectColumnLabel.textContent = t(selectColumnLabel.dataset.i18n);
   selectColumnButton.setAttribute('aria-pressed', String(selectedColumns.has(column)));
   elements.contextPopover.querySelector('[data-action="clear-sort-column"]').hidden = sortState?.column !== column;
@@ -1823,27 +1902,30 @@ async function renameColumn(column) {
 }
 
 async function deleteColumn(column) {
-  if (sheet.headers.length <= 1) return;
+  const columns = contextColumns(column);
+  if (columns.length >= sheet.headers.length) return;
   const columnName = sheet.headers[column]?.trim() || `Column ${column + 1}`;
   closePopovers();
-  const confirmed = await confirmAction(`Delete “${columnName}” and all values in this column?`);
+  const confirmed = await confirmAction(columns.length > 1 ? t('Delete selected columns and all their values?') : `Delete “${columnName}” and all values in this column?`);
   if (!confirmed) return;
 
-  sheet.headers.splice(column, 1);
-  cellSelection = null;
-  sheet.rows.forEach((row) => row.cells.splice(column, 1));
-  columnFilters.splice(column, 1);
-  columnWidths.splice(column, 1);
-  columnWidthOverrides.splice(column, 1);
-  persistViewState();
-  const remappedSelection = [...selectedColumns].filter((item) => item !== column).map((item) => item > column ? item - 1 : item);
-  selectedColumns.clear();
-  remappedSelection.forEach((item) => selectedColumns.add(item));
-  selectedColumn = selectedColumns.values().next().value ?? -1;
-  if (sortState) {
-    if (sortState.column === column) sortState = null;
-    else if (sortState.column > column) sortState.column -= 1;
+  for (const column of [...columns].reverse()) {
+    sheet.headers.splice(column, 1);
+    cellSelection = null;
+    sheet.rows.forEach((row) => row.cells.splice(column, 1));
+    columnFilters.splice(column, 1);
+    columnWidths.splice(column, 1);
+    columnWidthOverrides.splice(column, 1);
+    const remappedSelection = [...selectedColumns].filter((item) => item !== column).map((item) => item > column ? item - 1 : item);
+    selectedColumns.clear();
+    remappedSelection.forEach((item) => selectedColumns.add(item));
+    selectedColumn = selectedColumns.values().next().value ?? -1;
+    if (sortState) {
+      if (sortState.column === column) sortState = null;
+      else if (sortState.column > column) sortState.column -= 1;
+    }
   }
+  persistViewState();
   renderTable();
   sendEdit();
 }
@@ -2331,6 +2413,10 @@ document.addEventListener('click', (event) => {
   } else if (action === 'clear-column-filter' && column >= 0) {
     columnFilters[column] = null;
     elements.filterInput.value = '';
+    elements.dateFormat.value = 'auto';
+    elements.dateMin.value = '';
+    elements.dateMax.value = '';
+    updateDateFilterStatus();
     filterDraft = new Set(filterGlobalValues);
     renderFilterValues();
     elements.filterPopover.querySelector('[data-action="clear-column-filter"]').disabled = true;
@@ -2349,14 +2435,15 @@ document.addEventListener('click', (event) => {
     closePopovers();
     vscode.postMessage({ type: 'copyToClipboard', text: row.cells.map((value) => String(value ?? '')).join('\n') });
   } else if (action === 'copy-column-list' && column >= 0) {
-    const values = [sheet.headers[column] || 'Column ' + (column + 1)];
-    visibleRows.forEach((row) => values.push(String(row.cells[column] ?? '')));
+    const columns = contextColumns(column);
+    const values = [columns.map((item) => escapeCell(sheet.headers[item] || 'Column ' + (item + 1), '\t')).join('\t')];
+    visibleRows.forEach((row) => values.push(columns.map((item) => escapeCell(String(row.cells[item] ?? ''), '\t')).join('\t')));
     closePopovers();
     vscode.postMessage({ type: 'copyToClipboard', text: values.join('\n') });
   } else if (action === 'select-column' && column >= 0) {
     selectedRows.clear();
     cellSelection = null;
-    if (selectedColumns.has(column)) selectedColumns.delete(column);
+    if (selectedColumns.has(column)) contextColumns(column).forEach((item) => selectedColumns.delete(item));
     else selectedColumns.add(column);
     selectedColumn = selectedColumns.has(column) ? column : (selectedColumns.values().next().value ?? -1);
     closePopovers();
@@ -2391,9 +2478,9 @@ document.addEventListener('click', (event) => {
   } else if (action === 'rename-column' && column >= 0) {
     void renameColumn(column);
   } else if (action === 'move-column-left' && column >= 0) {
-    moveColumn(column, column - 1);
+    moveContextColumns(column, -1);
   } else if (action === 'move-column-right' && column >= 0) {
-    moveColumn(column, column + 1);
+    moveContextColumns(column, 1);
   } else if (action === 'delete-column' && column >= 0) {
     void deleteColumn(column);
   }

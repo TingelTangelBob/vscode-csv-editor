@@ -302,3 +302,10 @@ body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switche
 @media (prefers-reduced-motion: reduce) {
   body, .popover, .menu-action, .setting-toggle, .tool-button, .appearance-switcher, .appearance-option { transition-duration: 0ms; }
 }
+
+.date-filter { margin-top: 8px; font-size: 11px; }
+.date-filter summary { cursor: pointer; padding: 4px 0; }
+.date-filter-field { display: grid; gap: 4px; margin: 6px 0; color: var(--muted); }
+.date-filter-bounds { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.date-filter-field input { min-width: 0; width: 100%; height: 30px; padding: 0 4px; border: 1px solid var(--vscode-input-border, var(--border)); border-radius: 4px; color: var(--foreground); background: var(--vscode-input-background, var(--background)); font-size: 11px; }
+.date-filter-status { margin: 5px 0; color: var(--muted); line-height: 1.35; }

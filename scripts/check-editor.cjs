@@ -363,6 +363,21 @@ const root = process.env.CSV_EDITOR_ROOT || require('node:path').resolve(__dirna
   const untitledView = await openRememberedView(sampleText,null,false);
   assert.equal(await untitledView.locator('#remember-file-view').isDisabled(),true);
   await untitledView.close();
+  // Date filters combine with value filters and require an explicit slash format.
+  await load('Date,Name\n03/04/2025,A\n04/03/2025,B\ninvalid,C');
+  await page.evaluate(() => openFilterPopover(0, document.querySelector('th[data-column="0"] [data-filter-toggle]')));
+  await page.locator('#date-filter summary').click();
+  await page.locator('#date-filter-format').selectOption('slash-dmy');
+  await page.locator('#date-filter-min').fill('2025-04-03');
+  await page.locator('#date-filter-max').fill('2025-04-03');
+  await page.locator('#date-filter-apply').click();
+  assert.deepEqual(await page.evaluate(() => visibleRows.map(row => row.cells[1])), ['A']);
+  await page.locator('#date-filter-format').selectOption('slash-mdy');
+  await page.locator('#date-filter-apply').click();
+  assert.deepEqual(await page.evaluate(() => visibleRows.map(row => row.cells[1])), ['B']);
+  await page.locator('[data-action="clear-column-filter"]').click();
+  assert.equal(await page.evaluate(() => visibleRows.length), 3);
+  await page.evaluate(() => closePopovers());
   // Exercise the real webview CSP and lazy PDF resources as a separate page.
   const cspPage=await browser.newPage({viewport:{width:1000,height:600}});
   const origin='http://csv-offline.local';

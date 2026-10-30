@@ -158,6 +158,24 @@
     <div class="popover filter-popover" id="filter-popover" hidden role="dialog" aria-labelledby="filter-label">
       <label class="menu-label" id="filter-label" for="column-filter-input">Filter column</label>
       <input id="column-filter-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search values…" data-i18n-placeholder="Search values…">
+      <details class="date-filter" id="date-filter">
+        <summary data-i18n="Date filter">Date filter</summary>
+        <label class="date-filter-field"><span data-i18n="Date format">Date format</span>
+          <select id="date-filter-format">
+            <option value="auto" data-i18n="Automatic (ISO and DD.MM.YYYY)">Automatic (ISO and DD.MM.YYYY)</option>
+            <option value="iso">YYYY-MM-DD</option>
+            <option value="de">DD.MM.YYYY</option>
+            <option value="slash-dmy">DD/MM/YYYY</option>
+            <option value="slash-mdy">MM/DD/YYYY</option>
+          </select>
+        </label>
+        <div class="date-filter-bounds">
+          <label class="date-filter-field"><span data-i18n="From (inclusive)">From (inclusive)</span><input id="date-filter-min" type="date"></label>
+          <label class="date-filter-field"><span data-i18n="To (inclusive)">To (inclusive)</span><input id="date-filter-max" type="date"></label>
+        </div>
+        <div id="date-filter-status" class="date-filter-status" aria-live="polite"></div>
+        <button class="dialog-button" id="date-filter-apply" type="button" data-i18n="Apply date filter">Apply date filter</button>
+      </details>
       <div class="filter-select-row">
         <label class="filter-select-all"><input id="filter-select-all" type="checkbox"><span class="filter-select-all-label" id="filter-select-all-label" data-i18n="Select all values">Select all values</span><span class="filter-selection-status" id="filter-selection-status" aria-live="polite"></span></label>
         <button class="dialog-button clear-column-filter" type="button" data-action="clear-column-filter" title="Clear filter" aria-label="Clear filter" data-i18n-title="Clear filter"><span class="codicon codicon-clear-all" aria-hidden="true"></span></button>
