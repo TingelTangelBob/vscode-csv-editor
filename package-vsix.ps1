@@ -31,6 +31,7 @@ try {
   New-Item -ItemType Directory -Path $mediaRoot -Force | Out-Null
   $runtimeAssets = @(
     'index.html', 'editor.css', 'editor.js', 'csv.js', 'export.js',
+    'compare.html', 'compare.css', 'compare.js', 'csv-diff.js',
     'codicon.css', 'codicon.ttf', 'material-icons.woff',
     'MATERIAL-PRODUCT-ICONS-LICENSE.txt', 'extension-icon.png',
     'csv-table-light.svg', 'csv-table-dark.svg'

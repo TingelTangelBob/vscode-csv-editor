@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src {{CSP_SOURCE}}; style-src {{CSP_SOURCE}}; script-src {{CSP_SOURCE}} 'nonce-{{NONCE}}';">
+  <title>Compare CSV</title>
+  <link rel="stylesheet" href="{{CODICON_STYLESHEET_URI}}">
+  <link rel="stylesheet" href="{{STYLESHEET_URI}}">
+</head>
+<body>
+  <main class="compare-shell">
+    <header class="compare-toolbar">
+      <span id="compare-status" role="status" aria-live="polite">Waiting for files…</span>
+      <div class="compare-actions">
+        <div class="change-navigation" role="group" aria-label="Change navigation">
+          <button class="compare-action change-navigation-button" id="previous-change" type="button" title="Previous changed row" aria-label="Previous changed row" aria-controls="before-scroll after-scroll" disabled>
+            <svg aria-hidden="true" viewBox="0 0 16 16"><path d="m3.5 10 4.5-4.5 4.5 4.5" /></svg>
+          </button>
+          <button class="compare-action change-navigation-button" id="next-change" type="button" title="Next changed row" aria-label="Next changed row" aria-controls="before-scroll after-scroll" disabled>
+            <svg aria-hidden="true" viewBox="0 0 16 16"><path d="m3.5 6 4.5 4.5L12.5 6" /></svg>
+          </button>
+          <span class="visually-hidden" id="change-navigation-status" role="status" aria-live="polite"></span>
+        </div>
+        <button class="compare-action settings-button" id="settings-button" type="button" title="Table settings" aria-label="Table settings" aria-haspopup="true" aria-expanded="false">
+          <span class="codicon codicon-settings" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+    <div class="settings-popover" id="settings-popover" role="dialog" aria-label="Table settings" hidden>
+      <div class="settings-section-label" data-i18n="Display">Display</div>
+      <label class="settings-row" for="row-height">
+        <span data-i18n="Row height">Row height</span>
+        <select id="row-height" aria-label="Row height">
+          <option value="compact" data-i18n="Compact">Compact</option>
+          <option value="normal" data-i18n="Normal">Normal</option>
+        </select>
+      </label>
+      <label class="settings-row" for="show-gridlines">
+        <span data-i18n="Show table gridlines">Show table gridlines</span>
+        <input id="show-gridlines" type="checkbox">
+      </label>
+      <label class="settings-row" for="theme-select">
+        <span data-i18n="Appearance">Appearance</span>
+        <select id="theme-select" aria-label="Appearance">
+          <option value="system" data-i18n="System">System</option>
+          <option value="light" data-i18n="Light">Light</option>
+          <option value="dark" data-i18n="Dark">Dark</option>
+        </select>
+      </label>
+      <label class="settings-row" for="language-select">
+        <span data-i18n="Language">Language</span>
+        <select id="language-select" aria-label="Language">
+          <option value="en">English</option><option value="de">Deutsch</option><option value="fr">Français</option>
+          <option value="es">Español</option><option value="ja">日本語</option><option value="zh-cn">简体中文</option>
+          <option value="pt-br">Português (Brasil)</option><option value="ru">Русский</option><option value="ko">한국어</option><option value="it">Italiano</option>
+        </select>
+      </label>
+    </div>
+    <section class="compare-panes" aria-label="Side-by-side CSV comparison">
+      <article class="pane" aria-label="Original file">
+        <h2 id="before-name">Original</h2>
+        <div class="pane-scroll" id="before-scroll" tabindex="0">
+          <table id="before-table"><thead></thead><tbody></tbody></table>
+        </div>
+      </article>
+      <article class="pane" aria-label="Modified file">
+        <h2 id="after-name">Modified</h2>
+        <div class="pane-scroll" id="after-scroll" tabindex="0">
+          <table id="after-table"><thead></thead><tbody></tbody></table>
+        </div>
+      </article>
+    </section>
+  </main>
+  <script nonce="{{NONCE}}" src="{{CSV_SCRIPT_URI}}"></script>
+  <script nonce="{{NONCE}}" src="{{DIFF_SCRIPT_URI}}"></script>
+  <script nonce="{{NONCE}}" src="{{SCRIPT_URI}}"></script>
+</body>
+</html>

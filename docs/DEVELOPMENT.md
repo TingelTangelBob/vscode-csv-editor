@@ -23,6 +23,8 @@ Install Playwright and its Chromium browser in a development environment, then r
 npm run test:ui -- D:/path/to/node_modules/playwright
 ```
 
+`npm run test:compare` checks the comparison webview: change navigation, synchronized scrolling, settings, language changes, and live updates. It accepts the same optional Playwright module path. If Chromium is installed in a custom directory, set `PLAYWRIGHT_BROWSERS_PATH` to that directory before running the browser checks.
+
 `test:large` generates its own 22-column CSV and checks worker parsing, virtual scrolling, and stale-load protection. Only pass a real CSV path explicitly when you intend to load that entire file. For a small inspection, create a separate sample first. `CSV_EDITOR_ROOT` can point to an extracted VSIX's `extension` directory to test packaged assets.
 
 ## PDF resources

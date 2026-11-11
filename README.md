@@ -17,6 +17,7 @@
 ## What you can do
 
 - **Open CSV or TSV:** automatically detect commas, semicolons, tabs, and pipes.
+- **Compare tables:** run **CSV Simple Editor: Compare Tables** or select two CSV files in Explorer and use the context menu. Changed values, added or removed rows, and missing fields are highlighted. The comparison is read-only and updates when open documents change. Open a file in the table editor to edit or export it; use the compare settings to adjust row height, gridlines, theme, and language.
 - **Edit your table:** change cells, add or delete rows and columns, and move columns.
 - **Find and clean data:** sort columns, combine value filters, search, and replace text.
 - **Filter dates and times:** select an inclusive date range for ISO and German dates, or explicitly choose day/month or month/day for slash-separated dates. Invalid and unmatched values are excluded.

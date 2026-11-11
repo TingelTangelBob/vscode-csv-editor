@@ -2,7 +2,7 @@
   "name": "csv-simple-editor",
   "displayName": "CSV Simple Editor",
   "description": "CSV and TSV editor for VS Code. Edit, sort, filter dates and values, import data, and export CSV or searchable PDF. Works offline.",
-  "version": "1.6.11",
+  "version": "1.6.19",
   "publisher": "tingeltangelbob",
   "repository": {
     "type": "git",
@@ -53,6 +53,7 @@
   "scripts": {
     "test": "node --test",
     "test:ui": "node scripts/check-editor.cjs",
+    "test:compare": "node scripts/check-compare.cjs",
     "test:readme": "node scripts/check-readme.cjs",
     "test:large": "node scripts/check-large-csv.cjs",
     "test:pdf": "node scripts/check-pdf.cjs",
@@ -97,6 +98,11 @@
         "command": "tingeltangelbob.csv-simple-editor.openAsText",
         "title": "Open as Text",
         "icon": "$(file-code)"
+      },
+      {
+        "command": "tingeltangelbob.csv-simple-editor.compare",
+        "title": "CSV Simple Editor: Compare Tables",
+        "icon": "$(compare-changes)"
       }
     ],
     "customEditors": [
@@ -104,10 +110,18 @@
         "viewType": "tingeltangelbob.csv-simple-editor.csvGrid",
         "displayName": "CSV Simple Editor",
         "selector": [
-          { "filenamePattern": "*.csv" },
-          { "filenamePattern": "*.CSV" },
-          { "filenamePattern": "*.tsv" },
-          { "filenamePattern": "*.TSV" }
+          {
+            "filenamePattern": "*.csv"
+          },
+          {
+            "filenamePattern": "*.CSV"
+          },
+          {
+            "filenamePattern": "*.tsv"
+          },
+          {
+            "filenamePattern": "*.TSV"
+          }
         ],
         "priority": "default"
       }
@@ -123,6 +137,23 @@
           "command": "tingeltangelbob.csv-simple-editor.openAsText",
           "when": "activeCustomEditorId == tingeltangelbob.csv-simple-editor.csvGrid",
           "group": "navigation@1"
+        },
+        {
+          "command": "tingeltangelbob.csv-simple-editor.compare",
+          "when": "activeCustomEditorId == tingeltangelbob.csv-simple-editor.csvGrid",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tingeltangelbob.csv-simple-editor.openAsText",
+          "when": "activeWebviewPanelId == tingeltangelbob.csv-simple-editor.compare",
+          "group": "navigation@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tingeltangelbob.csv-simple-editor.compare",
+          "when": "resourceExtname =~ /\\.(csv|tsv)$/i",
+          "group": "navigation"
         }
       ]
     }

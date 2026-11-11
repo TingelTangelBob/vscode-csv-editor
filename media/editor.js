@@ -1369,6 +1369,8 @@ function focusNeighbor(rowId, column, direction) {
   if (nextRow >= 0 && nextRow < visibleRows.length) focusCell(visibleRows[nextRow].id, nextColumn);
 }
 
+let activeCellCommit = null;
+
 function beginCellEdit(cell) {
   if (!cell || cell.querySelector('textarea')) return;
   const rowId = Number(cell.dataset.rowId);
@@ -1390,6 +1392,7 @@ function beginCellEdit(cell) {
   const finish = (save, moveDirection = 0, fromBlur = false) => {
     if (finished) return;
     finished = true;
+    activeCellCommit = null;
     if (save) {
       row.cells[column] = editor.value;
       recalculateColumnWidths([column]);
@@ -1408,9 +1411,16 @@ function beginCellEdit(cell) {
     else if (!fromBlur) focusCell(rowId, column);
   };
 
+  activeCellCommit = () => finish(true);
+
   editor.addEventListener('keydown', (event) => {
     if (event.isComposing) return;
-    if (event.key === 'Escape') {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      event.stopPropagation();
+      finish(true);
+      vscode.postMessage({ type: 'saveDocument' });
+    } else if (event.key === 'Escape') {
       event.preventDefault();
       finish(false);
     } else if (event.key === 'Enter' && !event.shiftKey) {
@@ -2523,6 +2533,11 @@ document.addEventListener('keydown', (event) => {
 window.addEventListener('message', (event) => {
   const message = event.data;
   if (!message || typeof message !== 'object') return;
+  if (message.type === 'flushBeforeSave' && Number.isInteger(message.requestId)) {
+    activeCellCommit?.();
+    vscode.postMessage({ type: 'saveFlushComplete', requestId: message.requestId });
+    return;
+  }
   if (message.type === 'exportFinished') {
     exportInProgress = false;
     updateToolbar();

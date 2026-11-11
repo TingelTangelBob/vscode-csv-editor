@@ -1,4 +1,6 @@
 node_modules/
+.npm-cache/
+.playwright-browsers/
 *.vsix
 .vscode-test/
 *.log

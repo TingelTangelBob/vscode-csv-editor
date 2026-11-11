@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.6.19
+
+- Keep the comparison scroll position during live updates and update translated labels immediately without resetting change navigation.
+- Wrap long PDF titles completely and report titles that cannot fit on a page.
+- Reuse comparison source detection, avoid recalculating CSV differences for display settings, and reduce memory use when comparing long text with empty cells.
+- Add browser regression checks for comparison navigation, settings, synchronized scrolling, keyboard focus, and multiline rows.
+
+## 1.6.18
+
+- Match the settings icon to the table editor and highlight changed text in cells and column headings rather than whole cells.
+- Share CSV parsing between the editor and comparison, retry failed comparisons, and debounce updates.
+
+## 1.6.17
+
+- Remove the Original and Modified buttons from the comparison toolbar.
+
+## 1.6.16
+
+- Simplify the comparison toolbar and highlight changed text within cells.
+
+## 1.6.15
+
+- Use VS Code diff colors to highlight changed rows and cells in table comparisons.
+- Add comparison settings for compact or normal row height, gridlines, theme and language; open either side in the table editor or both as a text diff.
+- Reduce comparison header heights and display Windows drive letters in uppercase.
+
+## 1.6.14
+
+- Match the comparison view to the table editor appearance and language.
+- Close the redundant unmodified diff tab when switching to the table comparison.
+
+## 1.6.13
+
+- Open the table comparison from supported CSV diff editors and synchronize scrolling in both directions.
+- Align inserted or removed columns by their headers when comparing tables.
+
+## 1.6.12
+
+- Compare CSV and TSV tables side by side, highlighting changed values, added and removed rows, and missing fields.
+- Commit the active cell when saving with the keyboard.
+
 ## 1.6.11
 
 - Filter dates and times by an inclusive date range, with strict ISO and German date detection and explicit day/month or month/day selection for slash dates.

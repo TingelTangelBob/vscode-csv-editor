@@ -140,6 +140,9 @@
     const width = landscape ? 841.89 : 595.28;
     const height = landscape ? 595.28 : 841.89;
     const available = width - margin * 2;
+    const titleContext = { measureText: (value) => ({ width: measure(value, 12) }) };
+    const titleLines = wrapText(titleContext, title, available);
+    const titleHeight = titleLines.length * 16 + 12;
     const maxColumns = Math.floor(available / 42);
     const ink = PDFLib.rgb(0.09, 0.125, 0.165);
     let page;
@@ -165,6 +168,10 @@
         const lines = wrapText(context, name, widths[index] - padding * 2);
         return lines.length <= 8 ? lines : [...lines.slice(0, 7), '…'];
       });
+      const headerLineCount = Math.max(1, ...headerLines.map((lines) => lines.length));
+      if (margin + titleHeight + 14 + headerLineCount * lineHeight + padding * 4 + lineHeight > height - margin) {
+        throw new Error('The PDF title is too long to fit on a page. Use a shorter title.');
+      }
       const drawRow = (lines, start, count, header = false) => {
         const rowHeight = count * lineHeight + padding * 2;
         let x = margin;
@@ -179,14 +186,13 @@
       };
       const newPage = () => {
         page = pdf.addPage([width, height]);
-        const titleContext = { measureText: (value) => ({ width: measure(value, 12) }) };
-        text(wrapText(titleContext, title, available)[0], margin, margin + 12, 12);
-        y = margin + 28;
+        titleLines.forEach((line, index) => text(line, margin, margin + 12 + index * 16, 12));
+        y = margin + titleHeight;
         if (headers.length > maxColumns) {
           text(`${first + 1}–${last} / ${headers.length}`, margin, y, 8);
           y += 14;
         }
-        drawRow(headerLines, 0, Math.max(1, ...headerLines.map((lines) => lines.length)), true);
+        drawRow(headerLines, 0, headerLineCount, true);
       };
       newPage();
       for (const row of rows) {

@@ -56,6 +56,21 @@ test('unsupported glyphs cause a clear error rather than silently dropping data'
   await assert.rejects(createTablePdf(['Value'], [{ cells: ['\u{10FFFF}'] }], 'Test'), /U\+10FFFF/);
 });
 
+test('PDF titles wrap completely and leave room for table data', async () => {
+  const title = 'X'.repeat(200);
+  const pdf = await PDFDocument.load(await createTablePdf(['Value'], [{ cells: ['kept'] }], title));
+  assert.equal(pdf.getTitle(), title);
+  const streams = pdf.getPage(0).node.Contents().asArray().map(reference => pdf.context.lookup(reference));
+  const content = streams.map(stream => Buffer.from(decodePDFRawStream(stream).decode()).toString('latin1')).join('\n');
+  const titleOperations = [...content.matchAll(/BT\s+[\s\S]*?\sET/g)]
+    .map(match => match[0]).filter(operation => /\/\S+ 12 Tf/.test(operation));
+  assert.ok(titleOperations.length > 1, 'Long titles must use more than one line.');
+  const glyphCount = titleOperations.reduce((count, operation) =>
+    count + [...operation.matchAll(/<([0-9A-F]+)> Tj/gi)].reduce((total, match) => total + match[1].length / 4, 0), 0);
+  assert.equal(glyphCount, title.length, 'Every title glyph must be drawn.');
+  await assert.rejects(createTablePdf(['Value'], [{ cells: ['kept'] }], 'X'.repeat(10000)), /title is too long/);
+});
+
 test('PDF wrapping preserves multiline values and splits long words without overflow', () => {
   const context = { measureText: (text) => ({ width: Array.from(text).length }) };
   assert.deepEqual(wrapText(context, 'Alpha Beta', 6), ['Alpha', 'Beta']);

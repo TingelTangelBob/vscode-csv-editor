@@ -148,11 +148,16 @@
     return { records, lineEnding: lineEnding ?? '\n', errors };
   }
 
-  function parseCsv(rawText, fallbackDelimiter = ',') {
+  function parseCsvRecords(rawText, fallbackDelimiter = ',') {
     const bom = rawText.charCodeAt(0) === 0xfeff;
     const text = bom ? rawText.slice(1) : rawText;
     const delimiter = detectDelimiter(text, fallbackDelimiter);
     const { records, lineEnding } = parseRecords(text, delimiter);
+    return { records, delimiter, lineEnding, bom, trailingNewline: /(?:\r\n|\r|\n)$/.test(text) };
+  }
+
+  function parseCsv(rawText, fallbackDelimiter = ',') {
+    const { records, delimiter, lineEnding, bom, trailingNewline } = parseCsvRecords(rawText, fallbackDelimiter);
     const columnCount = records.reduce((maximum, record) => Math.max(maximum, record.length), 1);
     const headers = (records[0] || []).slice();
     while (headers.length < columnCount) headers.push('');
@@ -169,7 +174,7 @@
       delimiter,
       lineEnding,
       bom,
-      trailingNewline: /(?:\r\n|\r|\n)$/.test(text),
+      trailingNewline,
     };
   }
 
@@ -377,7 +382,7 @@
     return { widths, filters, sort };
   }
 
-  const api = { createEmptySheet, parseCsv, escapeCell, serializeCsv, planCsvImport,
+  const api = { createEmptySheet, parseCsv, parseCsvRecords, escapeCell, serializeCsv, planCsvImport,
     isColumnFilterActive, filterRows, getColumnFilterValues, parseDateTime, isValidDateRange, normalizeFileView, captureFileView, restoreFileView };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.CsvData = api;

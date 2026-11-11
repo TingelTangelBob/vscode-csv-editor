@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { createEmptySheet, parseCsv, escapeCell, serializeCsv } = require('../media/csv');
+const { createEmptySheet, parseCsv, parseCsvRecords, escapeCell, serializeCsv } = require('../media/csv');
 
 function values(sheet) {
   return [sheet.headers, ...sheet.rows.map((row) => row.cells)];
@@ -75,6 +75,17 @@ test('preserves empty rows and trailing empty fields', () => {
 test('pads short rows without discarding extra columns', () => {
   const sheet = parseCsv('A,B\n1\n2,3,4');
   assert.deepEqual(values(sheet), [['A', 'B', ''], ['1', '', ''], ['2', '3', '4']]);
+});
+
+test('returns detected raw records without padding for CSV comparison', () => {
+  const parsed = parseCsvRecords('\ufeffA;B\r\n1;"two;parts"\r\n2');
+  assert.deepEqual(parsed, {
+    records: [['A', 'B'], ['1', 'two;parts'], ['2']],
+    delimiter: ';', lineEnding: '\r\n', bom: true, trailingNewline: false,
+  });
+  assert.deepEqual(parseCsvRecords('').records, []);
+  // The table API still pads short records for its existing editor behavior.
+  assert.deepEqual(values(parseCsv('A,B\n1')), [['A', 'B'], ['1', '']]);
 });
 
 test('uses a TSV fallback for single-column documents', () => {
